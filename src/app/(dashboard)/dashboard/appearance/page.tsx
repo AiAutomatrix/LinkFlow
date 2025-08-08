@@ -29,7 +29,7 @@ import { doc, getDoc, writeBatch, collection, query, orderBy, onSnapshot, update
 import { getAuth, updateProfile } from "firebase/auth";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useToast } from "@/hooks/use-toast";
-import { debounce } from "lodash";
+import debounce from "lodash/debounce";
 import PublicProfilePreview from "./_components/public-profile-preview";
 import type { Link, UserProfile } from "@/lib/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -396,3 +396,5 @@ export default function AppearancePage() {
     </div>
   );
 }
+
+    
