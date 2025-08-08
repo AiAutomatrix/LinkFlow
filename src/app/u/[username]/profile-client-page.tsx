@@ -12,10 +12,11 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
         return name.split(' ').map(n => n[0]).join('')
     }
 
-    const handleLinkClick = async (linkId: string, url: string) => {
+    const handleLinkClick = (linkId: string, url: string) => {
         if (!user) return;
         try {
-            // Fire and forget, no need to await
+            // Fire and forget, no need to await. keepalive ensures the request is sent
+            // even if the page is being unloaded.
             fetch('/api/clicks', {
                 method: 'POST',
                 body: JSON.stringify({ userId: user.uid, linkId }),

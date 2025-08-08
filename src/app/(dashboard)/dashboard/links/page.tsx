@@ -58,6 +58,8 @@ export default function LinksPage() {
         return {
           id: doc.id,
           ...data,
+          // Ensure Timestamps are converted to JS Date objects for consistency
+          createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : data.createdAt,
           startDate: data.startDate instanceof Timestamp ? data.startDate.toDate() : data.startDate,
           endDate: data.endDate instanceof Timestamp ? data.endDate.toDate() : data.endDate,
         } as Link;

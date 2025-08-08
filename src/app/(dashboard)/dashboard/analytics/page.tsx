@@ -36,9 +36,17 @@ export default function AnalyticsPage() {
     const q = query(linksCollection, orderBy("clicks", "desc"));
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const linksData = querySnapshot.docs.map(
-        (doc) => ({ id: doc.id, ...doc.data() } as Link)
-      );
+      const linksData = querySnapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          // Ensure Timestamps are converted to JS Date objects for consistency
+          createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : data.createdAt,
+          startDate: data.startDate instanceof Timestamp ? data.startDate.toDate() : data.startDate,
+          endDate: data.endDate instanceof Timestamp ? data.endDate.toDate() : data.endDate,
+        } as Link;
+      });
       setLinks(linksData);
       setLoading(false);
     }, (error) => {

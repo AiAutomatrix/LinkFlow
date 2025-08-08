@@ -32,7 +32,7 @@ async function getUserData(username: string): Promise<UserProfile | null> {
         bio: profileData.bio,
         photoURL: profileData.photoURL,
         plan: profileData.plan,
-        theme: profileData.theme, // <-- This was missing
+        theme: profileData.theme,
         // Convert timestamp to ISO string
         createdAt: profileData.createdAt ? (profileData.createdAt as Timestamp).toDate().toISOString() : new Date().toISOString()
     } as UserProfile;
@@ -75,7 +75,7 @@ async function getUserLinks(uid: string): Promise<LinkType[]> {
         createdAt: link.createdAt ? ((link.createdAt as unknown) as Timestamp).toDate().toISOString() : new Date().toISOString(),
         startDate: link.startDate ? ((link.startDate as unknown) as Timestamp).toDate().toISOString() : undefined,
         endDate: link.endDate ? ((link.endDate as unknown) as Timestamp).toDate().toISOString() : undefined,
-    })) as unknown as LinkType[];
+    }));
 }
 
 
