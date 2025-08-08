@@ -94,7 +94,7 @@ export default {
           '50%': { backgroundPosition: '100% 50%' },
           '100%': { backgroundPosition: '0% 50%' },
         },
-        blob: {
+        'blob': {
           "0%": {
             transform: "translate(0px, 0px) scale(1)",
           },
