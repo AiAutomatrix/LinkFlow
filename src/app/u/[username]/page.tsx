@@ -30,17 +30,17 @@ async function getUserLinks(uid: string): Promise<LinkType[]> {
   const linksCollection = collection(firestore, 'users', uid, 'links');
   const now = Timestamp.now();
   
-  const q = query(
-    linksCollection, 
-    where('active', '==', true),
-    orderBy('order', 'asc')
-    );
+  // Simplified query to avoid needing a composite index.
+  // We will filter for active and scheduled links in the code.
+  const q = query(linksCollection, orderBy('order', 'asc'));
     
   const linksSnapshot = await getDocs(q);
-  const links = linksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LinkType));
+  const allLinks = linksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LinkType));
 
-  // Filter for scheduled links client-side for now, as Firestore requires composite indexes for this
-  return links.filter(link => {
+  // Filter for active and scheduled links
+  return allLinks.filter(link => {
+    if (!link.active) return false;
+
     const hasStartDate = !!link.startDate;
     const hasEndDate = !!link.endDate;
     
