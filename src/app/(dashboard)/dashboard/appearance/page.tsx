@@ -187,7 +187,9 @@ export default function AppearancePage() {
 
         await batch.commit();
         
-        setUser(prevUser => prevUser ? { ...prevUser, ...profileData } : null);
+        // This is the correct place to update the user context
+        const updatedUser = { ...user, ...profileData };
+        setUser(updatedUser);
         setInitialUsername(values.username);
 
         toast({ title: "Profile updated successfully!" });
