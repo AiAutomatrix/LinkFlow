@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +17,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { firestore } from "@/lib/firebase";
 import type { Link } from "@/lib/types";
 import { collection, query, onSnapshot, orderBy } from "firebase/firestore";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AnalyticsPage() {
@@ -25,7 +26,10 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+        setLoading(false);
+        return;
+    };
 
     const linksCollection = collection(firestore, "users", user.uid, "links");
     const q = query(linksCollection, orderBy("clicks", "desc"));
@@ -36,13 +40,81 @@ export default function AnalyticsPage() {
       );
       setLinks(linksData);
       setLoading(false);
+    }, (error) => {
+        console.error("Error fetching real-time analytics:", error);
+        setLoading(false);
     });
 
     return () => unsubscribe();
   }, [user]);
 
-  const totalClicks = links.reduce((acc, link) => acc + (link.clicks || 0), 0);
-  const chartData = links.slice(0, 10).map(link => ({ name: link.title, clicks: link.clicks || 0 }));
+  const totalClicks = useMemo(() => {
+    return links.reduce((acc, link) => acc + (link.clicks || 0), 0);
+  }, [links]);
+  
+  const totalLinks = useMemo(() => links.length, [links]);
+  
+  const avgClicks = useMemo(() => {
+    return totalLinks > 0 ? (totalClicks / totalLinks).toFixed(2) : 0;
+  }, [totalClicks, totalLinks]);
+
+  const chartData = useMemo(() => {
+    return links.slice(0, 10).map(link => ({ name: link.title, clicks: link.clicks || 0 }));
+  }, [links]);
+
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+         <div>
+            <h1 className="text-2xl font-bold">Analytics</h1>
+            <p className="text-muted-foreground">
+              Understand how your audience engages with your links.
+            </p>
+          </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Clicks</CardTitle>
+                    <Eye className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <Skeleton className="h-8 w-1/4" />
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Links</CardTitle>
+                    <LinkIcon className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <Skeleton className="h-8 w-1/4" />
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Avg. Clicks/Link</CardTitle>
+                    <BarChart className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <Skeleton className="h-8 w-1/4" />
+                </CardContent>
+            </Card>
+        </div>
+        <Card>
+            <CardHeader>
+                <CardTitle>Top 10 Links by Clicks</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <ResponsiveContainer width="100%" height={350}>
+                    <Skeleton className="h-full w-full" />
+                </ResponsiveContainer>
+            </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
 
   return (
     <div className="space-y-6">
@@ -59,7 +131,7 @@ export default function AnalyticsPage() {
             <Eye className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {loading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{totalClicks}</div>}
+            <div className="text-2xl font-bold">{totalClicks}</div>
           </CardContent>
         </Card>
         <Card>
@@ -68,7 +140,7 @@ export default function AnalyticsPage() {
             <LinkIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {loading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{links.length}</div>}
+            <div className="text-2xl font-bold">{totalLinks}</div>
           </CardContent>
         </Card>
         <Card>
@@ -77,7 +149,7 @@ export default function AnalyticsPage() {
             <BarChart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {loading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{links.length > 0 ? (totalClicks / links.length).toFixed(2) : 0}</div>}
+            <div className="text-2xl font-bold">{avgClicks}</div>
           </CardContent>
         </Card>
       </div>
@@ -87,23 +159,30 @@ export default function AnalyticsPage() {
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={350}>
-            {loading ? <Skeleton className="h-full w-full" /> : 
-            <RechartsBarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-              <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "hsl(var(--background))",
-                  borderColor: "hsl(var(--border))",
-                }}
-              />
-              <Legend />
-              <Bar dataKey="clicks" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-            </RechartsBarChart>}
+            {totalLinks > 0 ? (
+                <RechartsBarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
+                <Tooltip
+                    contentStyle={{
+                    backgroundColor: "hsl(var(--background))",
+                    borderColor: "hsl(var(--border))",
+                    }}
+                />
+                <Legend />
+                <Bar dataKey="clicks" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                </RechartsBarChart>
+            ) : (
+                <div className="flex h-full w-full flex-col items-center justify-center">
+                    <p className="text-muted-foreground">No link data to display.</p>
+                    <p className="text-sm text-muted-foreground">Click your links on the public page to see data here.</p>
+                </div>
+            )}
           </ResponsiveContainer>
         </CardContent>
       </Card>
     </div>
   );
 }
+
