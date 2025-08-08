@@ -3,6 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import type { Link } from "@/lib/types";
 
 type PreviewProps = {
   user: {
@@ -11,9 +12,10 @@ type PreviewProps = {
     bio?: string;
   };
   photoURL?: string;
+  links?: Link[];
 };
 
-export default function PublicProfilePreview({ user, photoURL }: PreviewProps) {
+export default function PublicProfilePreview({ user, photoURL, links = [] }: PreviewProps) {
   const getInitials = (name: string = "") => {
     return name.split(" ").map((n) => n[0]).join("");
   };
@@ -30,9 +32,20 @@ export default function PublicProfilePreview({ user, photoURL }: PreviewProps) {
             <p className="text-muted-foreground text-sm">@{user.username || "username"}</p>
             <p className="text-center mt-2 text-sm">{user.bio || "Your bio will appear here."}</p>
             <div className="mt-8 space-y-4 w-full">
-                <Button className="w-full">Example Link 1</Button>
-                <Button className="w-full">Example Link 2</Button>
-                <Button variant="secondary" className="w-full">Example Link 3</Button>
+                {links.length > 0 ? (
+                  links.slice(0, 3).map((link, index) => (
+                    <Button key={link.id} variant={index > 1 ? "secondary" : "default"} className="w-full">
+                      {link.title}
+                    </Button>
+                  ))
+                ) : (
+                  <>
+                    <Button className="w-full">Example Link 1</Button>
+                    <Button className="w-full">Example Link 2</Button>
+                    <Button variant="secondary" className="w-full">Example Link 3</Button>
+                  </>
+                )}
+                {links.length > 3 && <p className="text-center text-sm text-muted-foreground">...</p>}
             </div>
         </div>
       </CardContent>

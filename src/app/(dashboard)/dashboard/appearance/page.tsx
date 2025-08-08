@@ -25,11 +25,12 @@ import {
 } from "@/components/ui/form";
 import { useEffect, useState, useCallback } from "react";
 import { firestore } from "@/lib/firebase";
-import { doc, getDoc, writeBatch } from "firebase/firestore";
+import { doc, getDoc, writeBatch, collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { debounce } from "lodash";
 import { Loader2 } from "lucide-react";
 import PublicProfilePreview from "./_components/public-profile-preview";
+import type { Link } from "@/lib/types";
 
 const profileSchema = z.object({
   displayName: z.string().min(2, "Name must be at least 2 characters.").max(50),
@@ -48,6 +49,7 @@ export default function AppearancePage() {
   const { user, setUser } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [links, setLinks] = useState<Link[]>([]);
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
   const [initialUsername, setInitialUsername] = useState("");
 
@@ -72,6 +74,22 @@ export default function AppearancePage() {
       setInitialUsername(user.username);
     }
   }, [user, form]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const linksCollection = collection(firestore, "users", user.uid, "links");
+    const q = query(linksCollection, orderBy("order", "asc"));
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const linksData = querySnapshot.docs.map(
+        (doc) => ({ id: doc.id, ...doc.data() } as Link)
+      );
+      setLinks(linksData);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
 
   const checkUsername = useCallback(
     debounce(async (username: string) => {
@@ -214,7 +232,7 @@ export default function AppearancePage() {
         </Form>
       </div>
       <div className="md:col-span-1">
-        <PublicProfilePreview user={watchedValues} photoURL={user?.photoURL} />
+        <PublicProfilePreview user={watchedValues} photoURL={user?.photoURL} links={links} />
       </div>
     </div>
   );
