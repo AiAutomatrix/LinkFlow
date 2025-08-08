@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAuth } from "@/contexts/auth-context";
@@ -14,10 +15,12 @@ import {
   SidebarInset,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { BarChart2, Link, Paintbrush, Settings } from "lucide-react";
+import { BarChart2, Link as LinkIcon, Paintbrush, Settings, ExternalLink } from "lucide-react";
 import Logo from "@/components/logo";
 import { UserNav } from "@/components/user-nav";
 import { usePathname } from 'next/navigation';
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function DashboardLayout({
   children,
@@ -44,7 +47,7 @@ export default function DashboardLayout({
   }
 
   const navItems = [
-    { href: "/dashboard/links", icon: Link, label: "Links" },
+    { href: "/dashboard/links", icon: LinkIcon, label: "Links" },
     { href: "/dashboard/appearance", icon: Paintbrush, label: "Appearance" },
     { href: "/dashboard/analytics", icon: BarChart2, label: "Analytics" },
     { href: "/dashboard/settings", icon: Settings, label: "Settings" },
@@ -79,7 +82,13 @@ export default function DashboardLayout({
         <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
           <SidebarTrigger />
           <div className="flex items-center gap-4">
-             <UserNav />
+            <Button variant="outline" asChild>
+                <Link href={`/u/${user.username}`} target="_blank">
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    View Profile
+                </Link>
+            </Button>
+            <UserNav />
           </div>
         </header>
         <main className="flex-1 p-4 sm:p-6">{children}</main>
