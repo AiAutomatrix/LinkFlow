@@ -181,15 +181,13 @@ export default function AppearancePage() {
     setUploading(true);
 
     try {
-      const storageRef = ref(storage, `profile_pictures/${user.uid}`);
+      const storageRef = ref(storage, `profile_pictures/${user.uid}/profile.jpg`);
       await uploadBytes(storageRef, file);
       const newPhotoURL = await getDownloadURL(storageRef);
 
       const auth = getAuth();
       if (auth.currentUser) {
-        await updateProfile(auth.currentUser, {
-          photoURL: newPhotoURL
-        });
+        await updateProfile(auth.currentUser, { photoURL: newPhotoURL });
       }
       
       const userDocRef = doc(firestore, "users", user.uid);
