@@ -32,6 +32,7 @@ async function getUserData(username: string): Promise<UserProfile | null> {
         bio: profileData.bio,
         photoURL: profileData.photoURL,
         plan: profileData.plan,
+        theme: profileData.theme, // <-- This was missing
         // Convert timestamp to ISO string
         createdAt: profileData.createdAt ? (profileData.createdAt as Timestamp).toDate().toISOString() : new Date().toISOString()
     } as UserProfile;
