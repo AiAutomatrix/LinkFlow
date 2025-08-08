@@ -41,8 +41,8 @@ export default function AnalyticsPage() {
     return () => unsubscribe();
   }, [user]);
 
-  const totalClicks = links.reduce((acc, link) => acc + link.clicks, 0);
-  const chartData = links.slice(0, 10).map(link => ({ name: link.title, clicks: link.clicks }));
+  const totalClicks = links.reduce((acc, link) => acc + (link.clicks || 0), 0);
+  const chartData = links.slice(0, 10).map(link => ({ name: link.title, clicks: link.clicks || 0 }));
 
   return (
     <div className="space-y-6">
