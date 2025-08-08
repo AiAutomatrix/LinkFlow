@@ -15,16 +15,18 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
     const handleLinkClick = async (linkId: string, url: string) => {
         if (!user) return;
         try {
+            // Fire and forget, no need to await
             fetch('/api/clicks', {
                 method: 'POST',
                 body: JSON.stringify({ userId: user.uid, linkId }),
                 headers: { 'Content-Type': 'application/json' },
-                keepalive: true,
+                keepalive: true, // Ensures request is sent even if page is closed
             });
         } catch (error) {
             console.error("Failed to record click", error);
         }
 
+        // Open link in a new tab for a better user experience
         window.open(url, '_blank', 'noopener,noreferrer');
     }
 

@@ -23,11 +23,18 @@ async function getUserData(username: string): Promise<UserProfile | null> {
     }
 
     const profileData = userDoc.data();
+    // Manually serialize complex objects to be plain objects
     return { 
         uid: userDoc.id, 
-        ...profileData,
+        username: profileData.username,
+        email: profileData.email,
+        displayName: profileData.displayName,
+        bio: profileData.bio,
+        photoURL: profileData.photoURL,
+        plan: profileData.plan,
+        // Convert timestamp to ISO string
         createdAt: profileData.createdAt ? (profileData.createdAt as Timestamp).toDate().toISOString() : new Date().toISOString()
-    } as unknown as UserProfile;
+    } as UserProfile;
 }
 
 async function getUserLinks(uid: string): Promise<LinkType[]> {
@@ -42,8 +49,6 @@ async function getUserLinks(uid: string): Promise<LinkType[]> {
         return { 
           id: doc.id, 
           ...data,
-          startDate: data.startDate ? (data.startDate as Timestamp) : undefined,
-          endDate: data.endDate ? (data.endDate as Timestamp) : undefined,
       } as LinkType
     });
   
@@ -62,11 +67,13 @@ async function getUserLinks(uid: string): Promise<LinkType[]> {
       return true;
     });
 
+    // Manually serialize complex objects to be plain objects
     return activeLinks.map(link => ({
         ...link,
-        createdAt: link.createdAt ? (link.createdAt as any).toDate().toISOString() : new Date().toISOString(),
-        startDate: link.startDate ? (link.startDate as Timestamp).toDate().toISOString() : undefined,
-        endDate: link.endDate ? (link.endDate as Timestamp).toDate().toISOString() : undefined,
+        // Convert any Timestamps to ISO strings
+        createdAt: link.createdAt ? ((link.createdAt as unknown) as Timestamp).toDate().toISOString() : new Date().toISOString(),
+        startDate: link.startDate ? ((link.startDate as unknown) as Timestamp).toDate().toISOString() : undefined,
+        endDate: link.endDate ? ((link.endDate as unknown) as Timestamp).toDate().toISOString() : undefined,
     })) as unknown as LinkType[];
 }
 

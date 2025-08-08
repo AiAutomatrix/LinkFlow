@@ -1,3 +1,4 @@
+
 import type { Timestamp } from 'firebase/firestore';
 
 export interface UserProfile {
@@ -8,7 +9,8 @@ export interface UserProfile {
   bio: string;
   photoURL: string;
   plan: 'free' | 'pro';
-  createdAt: Timestamp;
+  // Allow string for serialized data from server components
+  createdAt: Timestamp | string; 
 }
 
 export interface Link {
@@ -18,7 +20,8 @@ export interface Link {
   order: number;
   active: boolean;
   clicks: number;
-  // Accept both Timestamp and Date for flexibility between server/client
-  startDate?: Timestamp | Date;
-  endDate?: Timestamp | Date;
+  // Allow string for serialized data from server components
+  createdAt?: Timestamp | Date | string;
+  startDate?: Timestamp | Date | string;
+  endDate?: Timestamp | Date | string;
 }

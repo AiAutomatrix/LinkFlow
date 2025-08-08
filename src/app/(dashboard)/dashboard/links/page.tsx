@@ -59,8 +59,9 @@ export default function LinksPage() {
         return {
           id: doc.id,
           ...data,
-          startDate: data.startDate,
-          endDate: data.endDate,
+          // Ensure timestamps are converted to Dates for client-side usage
+          startDate: data.startDate instanceof Timestamp ? data.startDate.toDate() : data.startDate,
+          endDate: data.endDate instanceof Timestamp ? data.endDate.toDate() : data.endDate,
         } as Link;
       });
       setLinks(linksData);
@@ -79,7 +80,7 @@ export default function LinksPage() {
         url,
         order: links.length,
         active: true,
-        clicks: 0,
+        clicks: 0, // Initialize clicks to 0
         createdAt: serverTimestamp(),
     };
 
