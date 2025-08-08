@@ -186,3 +186,4 @@ export default function UserProfilePage({ params }: { params: { username: string
         </div>
     );
 }
+
