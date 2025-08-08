@@ -99,12 +99,13 @@ export default function AppearancePage() {
 
   useEffect(() => {
     if (user) {
-      form.reset({
+      const initialValues = {
         displayName: user.displayName || "",
         username: user.username || "",
         bio: user.bio || "",
         theme: user.theme || "light",
-      });
+      };
+      form.reset(initialValues);
       setInitialUsername(user.username || "");
       setPhotoURL(user.photoURL || "");
     }
@@ -148,9 +149,6 @@ export default function AppearancePage() {
     const subscription = form.watch((value, { name }) => {
       if (name === "username" && value.username) {
         checkUsername(value.username);
-      }
-      if (name === 'theme' && value.theme) {
-        handleThemeUpdate(value.theme);
       }
     });
     return () => subscription.unsubscribe();
@@ -240,19 +238,6 @@ export default function AppearancePage() {
   const getInitials = (name: string = "") => {
     return name.split(" ").map((n) => n[0]).join("");
   };
-
-  const handleThemeUpdate = async (themeId: string) => {
-    if (!user) return;
-    try {
-      const userDocRef = doc(firestore, 'users', user.uid);
-      await updateDoc(userDocRef, { theme: themeId });
-      setUser(prev => prev ? ({...prev, theme: themeId}) : null);
-    } catch (error) {
-      toast({ variant: 'destructive', title: 'Failed to update theme' });
-      console.error(error);
-    }
-  };
-
 
   return (
     <div className="grid md:grid-cols-3 gap-8">
@@ -409,5 +394,3 @@ export default function AppearancePage() {
     </div>
   );
 }
-
-    
