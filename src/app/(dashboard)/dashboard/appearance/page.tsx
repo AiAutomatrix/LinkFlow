@@ -26,13 +26,14 @@ import {
 import { useEffect, useState, useCallback, useRef } from "react";
 import { firestore, storage } from "@/lib/firebase";
 import { doc, getDoc, writeBatch, collection, query, orderBy, onSnapshot, updateDoc } from "firebase/firestore";
+import { getAuth, updateProfile } from "firebase/auth";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useToast } from "@/hooks/use-toast";
 import { debounce } from "lodash";
-import { Loader2, Camera } from "lucide-react";
 import PublicProfilePreview from "./_components/public-profile-preview";
 import type { Link, UserProfile } from "@/lib/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Camera, Loader2 } from "lucide-react";
 
 const profileSchema = z.object({
   displayName: z.string().min(2, "Name must be at least 2 characters.").max(50),
@@ -79,7 +80,7 @@ export default function AppearancePage() {
       setInitialUsername(user.username || "");
       setPhotoURL(user.photoURL || "");
     }
-  }, [user]);
+  }, [user, form]);
 
   useEffect(() => {
     if (!user) return;
@@ -184,6 +185,13 @@ export default function AppearancePage() {
       await uploadBytes(storageRef, file);
       const newPhotoURL = await getDownloadURL(storageRef);
 
+      const auth = getAuth();
+      if (auth.currentUser) {
+        await updateProfile(auth.currentUser, {
+          photoURL: newPhotoURL
+        });
+      }
+      
       const userDocRef = doc(firestore, "users", user.uid);
       await updateDoc(userDocRef, { photoURL: newPhotoURL });
       
@@ -310,8 +318,10 @@ export default function AppearancePage() {
         </Form>
       </div>
       <div className="md:col-span-1">
-        <PublicProfilePreview profile={{...watchedValues, photoURL: photoURL, username: user?.username}} links={links} />
+        <PublicProfilePreview profile={{...watchedValues, photoURL: photoURL}} links={links} />
       </div>
     </div>
   );
 }
+
+    
