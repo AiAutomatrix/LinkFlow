@@ -9,8 +9,8 @@ type LogoProps = {
 export default function Logo({ className }: LogoProps) {
   return (
     <Link href="/" className={cn('flex items-center gap-2 group', className)}>
-      <Link2 className="h-6 w-6 text-primary transition-colors group-hover:text-white" />
-      <span className="text-xl font-bold text-foreground transition-colors group-hover:text-white">LinkFlow</span>
+      <Link2 className={cn("h-6 w-6 text-primary transition-colors group-hover:text-white", className && "text-white")} />
+      <span className={cn("text-xl font-bold text-foreground transition-colors group-hover:text-white", className && "text-white")}>LinkFlow</span>
     </Link>
   );
 }

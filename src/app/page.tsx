@@ -7,16 +7,15 @@ import Logo from '@/components/logo';
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-900 text-white">
-       <div className="absolute inset-0 -z-10 h-full w-full bg-white [background:radial-gradient(125%_125%_at_50%_10%,#fff_40%,#63e_100%)]"></div>
-       <div
+      <div
         style={{
-          backgroundSize: '200% 200%',
+          backgroundSize: '400% 400%',
           animation: 'gradient-animation 15s ease infinite',
         }}
-        className="absolute inset-0 -z-20 h-full w-full bg-gradient-to-r from-purple-600 via-pink-500 to-blue-500"
+        className="absolute inset-0 -z-10 h-full w-full bg-gradient-to-r from-rose-400 via-fuchsia-500 to-indigo-500"
       ></div>
       <header className="container mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-        <Logo />
+        <Logo className="text-white" />
         <div className="flex items-center gap-4">
           <Button variant="ghost" className="text-white hover:text-white hover:bg-white/10" asChild>
             <Link href="/login">Login</Link>
