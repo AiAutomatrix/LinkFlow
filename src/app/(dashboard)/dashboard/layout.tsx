@@ -22,9 +22,6 @@ import { usePathname } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
-
 
 function ShareButton() {
     const { user } = useAuth();
@@ -84,7 +81,6 @@ export default function DashboardLayout({
   ];
 
   return (
-    <DndProvider backend={HTML5Backend}>
       <SidebarProvider>
         <Sidebar>
           <SidebarHeader>
@@ -126,6 +122,5 @@ export default function DashboardLayout({
           <main className="flex-1 p-4 sm:p-6">{children}</main>
         </SidebarInset>
       </SidebarProvider>
-    </DndProvider>
   );
 }

@@ -26,7 +26,7 @@ import {
   serverTimestamp,
   Timestamp,
 } from "firebase/firestore";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import LinkCard from "./_components/link-card";
 import {
@@ -58,7 +58,6 @@ export default function LinksPage() {
         return {
           id: doc.id,
           ...data,
-          // Ensure timestamps are converted to Dates for client-side usage
           startDate: data.startDate instanceof Timestamp ? data.startDate.toDate() : data.startDate,
           endDate: data.endDate instanceof Timestamp ? data.endDate.toDate() : data.endDate,
         } as Link;
@@ -120,29 +119,32 @@ export default function LinksPage() {
     await batch.commit();
   };
 
-  const moveLink = useCallback((dragIndex: number, hoverIndex: number) => {
-    setLinks((prevLinks) => {
-        const newLinks = [...prevLinks];
-        const [draggedItem] = newLinks.splice(dragIndex, 1);
-        newLinks.splice(hoverIndex, 0, draggedItem);
-        return newLinks;
-    });
-  }, []);
-
-  const handleDrop = useCallback(async () => {
+  const handleMoveLink = async (linkId: string, direction: 'up' | 'down') => {
     if (!user) return;
+
+    const currentIndex = links.findIndex(link => link.id === linkId);
+    if (currentIndex === -1) return;
+
+    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (newIndex < 0 || newIndex >= links.length) return;
+
+    const newLinks = [...links];
+    const [movedLink] = newLinks.splice(currentIndex, 1);
+    newLinks.splice(newIndex, 0, movedLink);
+
     const batch = writeBatch(firestore);
-    links.forEach((link, index) => {
-      const docRef = doc(firestore, "users", user.uid, "links", link.id);
+    newLinks.forEach((link, index) => {
+      const docRef = doc(firestore, 'users', user.uid, 'links', link.id);
       batch.update(docRef, { order: index });
     });
+
     try {
-        await batch.commit();
+      await batch.commit();
     } catch (error) {
-        console.error("Failed to reorder links:", error);
+      console.error("Failed to reorder links:", error);
+      // Optionally revert state on error
     }
-  }, [user, links]);
-  
+  };
 
   return (
     <div className="space-y-6">
@@ -171,7 +173,7 @@ export default function LinksPage() {
       <Card>
         <CardHeader>
           <CardTitle>Your Links</CardTitle>
-          <CardDescription>Drag and drop to reorder.</CardDescription>
+          <CardDescription>Click the arrows to reorder.</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -186,11 +188,11 @@ export default function LinksPage() {
                   <LinkCard 
                     key={link.id} 
                     index={index}
+                    totalLinks={links.length}
                     link={link} 
                     onUpdate={handleUpdateLink}
                     onDelete={handleDeleteLink}
-                    onMove={moveLink}
-                    onDrop={handleDrop}
+                    onMove={handleMoveLink}
                   />
                 ))}
               </div>
