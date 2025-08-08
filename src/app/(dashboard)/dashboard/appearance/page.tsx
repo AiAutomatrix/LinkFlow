@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAuth } from "@/contexts/auth-context";
@@ -59,9 +60,9 @@ export default function AppearancePage() {
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      displayName: "",
-      username: "",
-      bio: "",
+      displayName: user?.displayName || "",
+      username: user?.username || "",
+      bio: user?.bio || "",
     },
   });
   
