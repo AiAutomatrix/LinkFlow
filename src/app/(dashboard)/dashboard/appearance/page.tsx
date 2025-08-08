@@ -80,7 +80,7 @@ export default function AppearancePage() {
       setInitialUsername(user.username || "");
       setPhotoURL(user.photoURL || "");
     }
-  }, [user, form]);
+  }, [user, form.reset]);
 
   useEffect(() => {
     if (!user) return;
@@ -270,7 +270,7 @@ export default function AppearancePage() {
                         <Input placeholder="your_unique_name" {...field} />
                         {usernameStatus === 'checking' && <Loader2 className="absolute right-2 top-2 h-5 w-5 animate-spin text-muted-foreground" />}
                       </div>
-                      {usernameStatus === 'available' && <p className="text-sm text-success">Username is available!</p>}
+                      {usernameStatus === 'available' && <p className="text-sm text-green-600">Username is available!</p>}
                       {usernameStatus === 'taken' && <p className="text-sm text-destructive">Username is taken.</p>}
                       <FormMessage />
                     </FormItem>
@@ -318,10 +318,8 @@ export default function AppearancePage() {
         </Form>
       </div>
       <div className="md:col-span-1">
-        <PublicProfilePreview profile={{...watchedValues, photoURL: photoURL}} links={links} />
+        <PublicProfilePreview profile={{...watchedValues, photoURL}} links={links} />
       </div>
     </div>
   );
 }
-
-    
