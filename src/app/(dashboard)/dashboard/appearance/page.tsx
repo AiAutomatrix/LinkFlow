@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -23,14 +22,16 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useEffect, useState, useCallback } from "react";
-import { firestore } from "@/lib/firebase";
-import { doc, getDoc, writeBatch, collection, query, orderBy, onSnapshot } from "firebase/firestore";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { firestore, storage } from "@/lib/firebase";
+import { doc, getDoc, writeBatch, collection, query, orderBy, onSnapshot, updateDoc } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useToast } from "@/hooks/use-toast";
 import { debounce } from "lodash";
-import { Loader2 } from "lucide-react";
+import { Loader2, Camera } from "lucide-react";
 import PublicProfilePreview from "./_components/public-profile-preview";
-import type { Link } from "@/lib/types";
+import type { Link, UserProfile } from "@/lib/types";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const profileSchema = z.object({
   displayName: z.string().min(2, "Name must be at least 2 characters.").max(50),
@@ -49,9 +50,11 @@ export default function AppearancePage() {
   const { user, setUser } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [links, setLinks] = useState<Link[]>([]);
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
   const [initialUsername, setInitialUsername] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
@@ -71,9 +74,9 @@ export default function AppearancePage() {
         username: user.username || "",
         bio: user.bio || "",
       });
-      setInitialUsername(user.username);
+      setInitialUsername(user.username || "");
     }
-  }, [user, form]);
+  }, [user, form.reset]);
 
   useEffect(() => {
     if (!user) return;
@@ -130,11 +133,13 @@ export default function AppearancePage() {
     try {
         const batch = writeBatch(firestore);
         const userDocRef = doc(firestore, "users", user.uid);
-        batch.update(userDocRef, {
+        
+        const profileData: Partial<UserProfile> = {
             displayName: values.displayName,
             bio: values.bio,
             username: values.username,
-        });
+        }
+        batch.update(userDocRef, profileData);
 
         if (values.username !== initialUsername) {
             const newUsernameDocRef = doc(firestore, "usernames", values.username);
@@ -148,24 +153,93 @@ export default function AppearancePage() {
 
         await batch.commit();
         
-        // Update user context
-        const updatedUser = { ...user, ...values };
-        setUser(updatedUser);
+        setUser(prevUser => prevUser ? { ...prevUser, ...profileData } : null);
         setInitialUsername(values.username);
 
         toast({ title: "Profile updated successfully!" });
     } catch (error) {
         toast({ variant: 'destructive', title: "Failed to update profile."});
+        console.error(error);
     } finally {
         setLoading(false);
     }
   }
 
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files || event.target.files.length === 0 || !user) {
+      return;
+    }
+    const file = event.target.files[0];
+    setUploading(true);
+
+    try {
+      const storageRef = ref(storage, `profile_pictures/${user.uid}`);
+      await uploadBytes(storageRef, file);
+      const photoURL = await getDownloadURL(storageRef);
+
+      const userDocRef = doc(firestore, "users", user.uid);
+      await updateDoc(userDocRef, { photoURL });
+      
+      setUser(prevUser => prevUser ? { ...prevUser, photoURL } : null);
+
+      toast({ title: "Profile picture updated!" });
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Upload failed', description: 'Could not upload your profile picture.' });
+      console.error(error);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const getInitials = (name: string = "") => {
+    return name.split(" ").map((n) => n[0]).join("");
+  };
+
+
   return (
     <div className="grid md:grid-cols-3 gap-8">
-      <div className="md:col-span-2">
+      <div className="md:col-span-2 space-y-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Profile Picture</CardTitle>
+                    <CardDescription>
+                        Click on the avatar to upload a new photo.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="relative w-24 h-24 group cursor-pointer" onClick={handleAvatarClick}>
+                        {uploading ? (
+                            <div className="w-full h-full flex items-center justify-center rounded-full bg-muted">
+                                <Loader2 className="animate-spin text-muted-foreground" />
+                            </div>
+                        ) : (
+                            <>
+                                <Avatar className="w-24 h-24">
+                                    <AvatarImage src={user?.photoURL} />
+                                    <AvatarFallback>{getInitials(user?.displayName)}</AvatarFallback>
+                                </Avatar>
+                                <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Camera className="text-white" />
+                                </div>
+                            </>
+                        )}
+                    </div>
+                    <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        onChange={handleFileChange}
+                        className="hidden" 
+                        accept="image/png, image/jpeg, image/gif"
+                    />
+                </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle>Profile</CardTitle>
@@ -224,15 +298,15 @@ export default function AppearancePage() {
               </CardContent>
             </Card>
 
-            <Button type="submit" disabled={loading || usernameStatus === 'taken'}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" disabled={loading || usernameStatus === 'taken' || uploading}>
+                {(loading || uploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Update Profile
             </Button>
           </form>
         </Form>
       </div>
       <div className="md:col-span-1">
-        <PublicProfilePreview user={watchedValues} photoURL={user?.photoURL} links={links} />
+        <PublicProfilePreview profile={watchedValues} links={links} />
       </div>
     </div>
   );

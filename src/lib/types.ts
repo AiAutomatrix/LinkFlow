@@ -8,7 +8,7 @@ export interface UserProfile {
   bio: string;
   photoURL: string;
   plan: 'free' | 'pro';
-  createdAt: Timestamp | ReturnType<typeof serverTimestamp>;
+  createdAt: Timestamp;
 }
 
 export interface Link {
