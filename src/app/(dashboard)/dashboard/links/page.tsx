@@ -22,6 +22,8 @@ import {
   addDoc,
   deleteDoc,
   updateDoc,
+  serverTimestamp,
+  Timestamp,
 } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -34,6 +36,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import LinkForm from "./_components/link-form";
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 
 export default function LinksPage() {
   const { user } = useAuth();
@@ -58,23 +62,40 @@ export default function LinksPage() {
     return () => unsubscribe();
   }, [user]);
   
-  const handleAddLink = async (title: string, url: string) => {
+  const handleAddLink = async (title: string, url: string, startDate?: Date, endDate?: Date) => {
     if (!user) return;
     const linksCollection = collection(firestore, 'users', user.uid, 'links');
-    await addDoc(linksCollection, {
+    
+    const newLinkData: any = {
         title,
         url,
         order: links.length,
         active: true,
         clicks: 0,
-    });
+        createdAt: serverTimestamp(),
+    };
+
+    if (startDate) {
+        newLinkData.startDate = Timestamp.fromDate(startDate);
+    }
+    if (endDate) {
+        newLinkData.endDate = Timestamp.fromDate(endDate);
+    }
+
+    await addDoc(linksCollection, newLinkData);
     setDialogOpen(false);
   };
   
-  const handleUpdateLink = async (linkId: string, title: string, url: string) => {
+  const handleUpdateLink = async (linkId: string, title: string, url: string, startDate?: Date, endDate?: Date) => {
     if (!user) return;
     const linkDocRef = doc(firestore, 'users', user.uid, 'links', linkId);
-    await updateDoc(linkDocRef, { title, url });
+    
+    const updateData: any = { title, url };
+    
+    updateData.startDate = startDate ? Timestamp.fromDate(startDate) : null;
+    updateData.endDate = endDate ? Timestamp.fromDate(endDate) : null;
+
+    await updateDoc(linkDocRef, updateData);
   };
   
   const handleDeleteLink = async (linkId: string) => {
@@ -98,19 +119,17 @@ export default function LinksPage() {
     const draggedIndex = currentLinks.findIndex(l => l.id === draggedId);
     const targetIndex = currentLinks.findIndex(l => l.id === targetId);
   
-    if (draggedIndex === -1 || targetIndex === -1) return;
+    if (draggedIndex === -1 || targetIndex === -1 || draggedIndex === targetIndex) return;
   
-    // Move the dragged item to the target position
     const [draggedItem] = currentLinks.splice(draggedIndex, 1);
     currentLinks.splice(targetIndex, 0, draggedItem);
   
-    // Update order in Firestore
+    setLinks(currentLinks);
+
     const batch = writeBatch(firestore);
     currentLinks.forEach((link, index) => {
       const docRef = doc(firestore, "users", user.uid, "links", link.id);
-      if (link.order !== index) {
-        batch.update(docRef, { order: index });
-      }
+      batch.update(docRef, { order: index });
     });
     await batch.commit();
   };
@@ -148,22 +167,24 @@ export default function LinksPage() {
         <CardContent>
           {loading ? (
             <div className="space-y-4">
-              <Skeleton className="h-16 w-full" />
-              <Skeleton className="h-16 w-full" />
-              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
             </div>
           ) : links.length > 0 ? (
-            <div className="space-y-4">
-              {links.map((link) => (
-                <LinkCard 
-                  key={link.id} 
-                  link={link} 
-                  onUpdate={handleUpdateLink}
-                  onDelete={handleDeleteLink}
-                  onReorder={handleReorder}
-                />
-              ))}
-            </div>
+            <DndProvider backend={HTML5Backend}>
+              <div className="space-y-4">
+                {links.map((link) => (
+                  <LinkCard 
+                    key={link.id} 
+                    link={link} 
+                    onUpdate={handleUpdateLink}
+                    onDelete={handleDeleteLink}
+                    onReorder={handleReorder}
+                  />
+                ))}
+              </div>
+            </DndProvider>
           ) : (
             <div className="text-center py-12">
               <h3 className="text-lg font-semibold">No links yet</h3>

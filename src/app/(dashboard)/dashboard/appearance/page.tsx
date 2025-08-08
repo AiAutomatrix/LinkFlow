@@ -122,8 +122,10 @@ export default function AppearancePage() {
             const newUsernameDocRef = doc(firestore, "usernames", values.username);
             batch.set(newUsernameDocRef, { uid: user.uid });
 
-            const oldUsernameDocRef = doc(firestore, "usernames", initialUsername);
-            batch.delete(oldUsernameDocRef);
+            if (initialUsername) {
+              const oldUsernameDocRef = doc(firestore, "usernames", initialUsername);
+              batch.delete(oldUsernameDocRef);
+            }
         }
 
         await batch.commit();
@@ -131,6 +133,7 @@ export default function AppearancePage() {
         // Update user context
         const updatedUser = { ...user, ...values };
         setUser(updatedUser);
+        setInitialUsername(values.username);
 
         toast({ title: "Profile updated successfully!" });
     } catch (error) {
@@ -163,7 +166,7 @@ export default function AppearancePage() {
                         <Input placeholder="your_unique_name" {...field} />
                         {usernameStatus === 'checking' && <Loader2 className="absolute right-2 top-2 h-5 w-5 animate-spin text-muted-foreground" />}
                       </div>
-                      {usernameStatus === 'available' && <p className="text-sm text-green-600">Username is available!</p>}
+                      {usernameStatus === 'available' && <p className="text-sm text-success">Username is available!</p>}
                       {usernameStatus === 'taken' && <p className="text-sm text-destructive">Username is taken.</p>}
                       <FormMessage />
                     </FormItem>

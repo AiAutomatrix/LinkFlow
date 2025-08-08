@@ -15,14 +15,17 @@ import {
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import type { Link } from "@/lib/types";
+import { DatePicker } from "@/components/ui/datepicker";
 
 const formSchema = z.object({
   title: z.string().min(1, { message: "Title is required." }),
   url: z.string().url({ message: "Please enter a valid URL." }),
+  startDate: z.date().optional(),
+  endDate: z.date().optional(),
 });
 
 type LinkFormProps = {
-  onSubmit: (title: string, url: string) => void;
+  onSubmit: (title: string, url: string, startDate?: Date, endDate?: Date) => void;
   onCancel: () => void;
   initialData?: Link;
 };
@@ -35,12 +38,14 @@ export default function LinkForm({ onSubmit, onCancel, initialData }: LinkFormPr
     defaultValues: {
       title: initialData?.title || "",
       url: initialData?.url || "",
+      startDate: initialData?.startDate ? initialData.startDate.toDate() : undefined,
+      endDate: initialData?.endDate ? initialData.endDate.toDate() : undefined,
     },
   });
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     setLoading(true);
-    await onSubmit(values.title, values.url);
+    await onSubmit(values.title, values.url, values.startDate, values.endDate);
     setLoading(false);
   };
 
@@ -73,7 +78,42 @@ export default function LinkForm({ onSubmit, onCancel, initialData }: LinkFormPr
             </FormItem>
           )}
         />
-        <div className="flex justify-end gap-2">
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FormField
+            control={form.control}
+            name="startDate"
+            render={({ field }) => (
+                <FormItem className="flex flex-col">
+                    <FormLabel>Start Date (Optional)</FormLabel>
+                    <DatePicker 
+                        date={field.value} 
+                        setDate={field.onChange}
+                        placeholder="Link is active immediately"
+                    />
+                    <FormMessage />
+                </FormItem>
+            )}
+            />
+            <FormField
+            control={form.control}
+            name="endDate"
+            render={({ field }) => (
+                <FormItem className="flex flex-col">
+                    <FormLabel>End Date (Optional)</FormLabel>
+                    <DatePicker 
+                        date={field.value}
+                        setDate={field.onChange}
+                        placeholder="Link never expires"
+                    />
+                    <FormMessage />
+                </FormItem>
+            )}
+            />
+        </div>
+
+
+        <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button>
             <Button type="submit" disabled={loading}>
             {loading ? "Saving..." : "Save"}
