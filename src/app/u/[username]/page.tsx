@@ -1,5 +1,5 @@
 import { firestore } from '@/lib/firebase';
-import { collection, getDocs, query, where, doc, getDoc, orderBy, Timestamp, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, getDoc, orderBy, Timestamp, updateDoc, increment } from 'firebase/firestore';
 import { notFound, redirect } from 'next/navigation';
 import type { Link as LinkType, UserProfile } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -51,6 +51,20 @@ async function getUserLinks(uid: string): Promise<LinkType[]> {
   });
 }
 
+async function handleLinkClick(link: LinkType, userId: string) {
+    'use server';
+    try {
+      const linkRef = doc(firestore, 'users', userId, 'links', link.id);
+      // Use Firestore's atomic increment operation for reliability
+      await updateDoc(linkRef, { clicks: increment(1) });
+    } catch (error) {
+      // Don't block redirect if firestore update fails
+      console.error("Failed to update click count", error);
+    }
+    // Redirect the user to the link's URL
+    redirect(link.url);
+}
+
 export default async function UserProfilePage({ params }: { params: { username: string } }) {
   const user = await getUserData(params.username);
 
@@ -79,22 +93,12 @@ export default async function UserProfilePage({ params }: { params: { username: 
 
         <div className="mt-8 space-y-4">
           {links.map((link) => (
-            <form key={link.id} action={async () => {
-                'use server';
-                try {
-                  const linkRef = doc(firestore, 'users', user.uid, 'links', link.id);
-                  const linkDoc = await getDoc(linkRef);
-                  if(linkDoc.exists()){
-                      const currentClicks = linkDoc.data().clicks || 0;
-                      await updateDoc(linkRef, { clicks: currentClicks + 1 });
-                  }
-                } catch (error) {
-                  // Don't block redirect if firestore update fails
-                  console.error("Failed to update click count", error);
-                }
-                redirect(link.url);
-            }}>
-                <Button type="submit" className="w-full h-14 text-md shadow-md" variant="secondary">
+            <form key={link.id} action={handleLinkClick.bind(null, link, user.uid)}>
+                <Button 
+                    type="submit" 
+                    className="w-full h-14 text-md shadow-md transition-transform transform active:scale-[0.98]" 
+                    variant="secondary"
+                >
                     {link.title}
                 </Button>
             </form>
