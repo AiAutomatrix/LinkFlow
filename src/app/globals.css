@@ -16,7 +16,7 @@ body {
     --popover: 0 0% 100%;
     --popover-foreground: 220 15% 20%;
     --primary: 220 90% 60%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 220 15% 20%;
     --secondary: 220 15% 90%;
     --secondary-foreground: 220 15% 20%;
     --muted: 220 15% 90%;
@@ -53,7 +53,7 @@ body {
     --popover: 220 20% 13%;
     --popover-foreground: 220 20% 95%;
     --primary: 210 90% 65%;
-    --primary-foreground: 220 20% 10%;
+    --primary-foreground: 220 20% 95%;
     --secondary: 220 20% 20%;
     --secondary-foreground: 220 20% 95%;
     --muted: 220 20% 20%;
@@ -84,7 +84,7 @@ body {
     --popover: 300 5% 12%;
     --popover-foreground: 120 100% 80%;
     --primary: 120 100% 50%;
-    --primary-foreground: 300 5% 8%;
+    --primary-foreground: 120 100% 80%;
     --secondary: 120 95% 15%;
     --secondary-foreground: 120 100% 80%;
     --muted: 120 95% 15%;
@@ -104,7 +104,7 @@ body {
     --popover: 300 10% 14%;
     --popover-foreground: 320 100% 85%;
     --primary: 320 100% 60%;
-    --primary-foreground: 300 10% 10%;
+    --primary-foreground: 320 100% 85%;
     --secondary: 320 100% 18%;
     --secondary-foreground: 320 100% 85%;
     --muted: 320 100% 18%;
@@ -122,7 +122,7 @@ body {
     --card: 0 0% 100%;
     --card-foreground: 20 80% 20%;
     --primary: 340 90% 60%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 20 80% 20%;
     --secondary: 20 90% 92%;
     --secondary-foreground: 20 80% 20%;
     --muted: 20 90% 92%;
@@ -138,10 +138,13 @@ body {
     --background: 210 100% 98%;
     --foreground: 215 80% 25%;
     --card: 210 100% 100%;
+    --card-foreground: 215 80% 25%;
     --primary: 210 90% 55%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 215 80% 25%;
     --secondary: 210 95% 90%;
+    --secondary-foreground: 215 80% 25%;
     --accent: 190 90% 50%;
+    --accent-foreground: 215 80% 25%;
     --border: 210 80% 85%;
   }
 
@@ -149,10 +152,13 @@ body {
     --background: 120 20% 98%;
     --foreground: 120 60% 20%;
     --card: 120 20% 100%;
+    --card-foreground: 120 60% 20%;
     --primary: 120 50% 40%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 120 60% 20%;
     --secondary: 120 40% 90%;
+    --secondary-foreground: 120 60% 20%;
     --accent: 100 50% 50%;
+    --accent-foreground: 120 60% 20%;
     --border: 120 30% 85%;
   }
 
@@ -160,10 +166,13 @@ body {
     --background: 270 50% 98%;
     --foreground: 270 50% 20%;
     --card: 270 50% 100%;
+    --card-foreground: 270 50% 20%;
     --primary: 270 60% 60%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 270 50% 20%;
     --secondary: 270 50% 92%;
+    --secondary-foreground: 270 50% 20%;
     --accent: 290 70% 70%;
+    --accent-foreground: 270 50% 20%;
     --border: 270 50% 88%;
   }
 
@@ -171,10 +180,13 @@ body {
     --background: 0 50% 98%;
     --foreground: 0 60% 25%;
     --card: 0 50% 100%;
+    --card-foreground: 0 60% 25%;
     --primary: 0 70% 55%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 0 60% 25%;
     --secondary: 0 60% 94%;
+    --secondary-foreground: 0 60% 25%;
     --accent: 20 80% 60%;
+    --accent-foreground: 0 60% 25%;
     --border: 0 60% 90%;
   }
 
@@ -182,10 +194,13 @@ body {
     --background: 45 100% 97%;
     --foreground: 40 80% 20%;
     --card: 45 100% 100%;
+    --card-foreground: 40 80% 20%;
     --primary: 45 100% 50%;
     --primary-foreground: 40 80% 10%;
     --secondary: 45 90% 90%;
+    --secondary-foreground: 40 80% 20%;
     --accent: 55 95% 60%;
+    --accent-foreground: 40 80% 20%;
     --border: 45 90% 85%;
   }
   
@@ -193,10 +208,13 @@ body {
     --background: 150 70% 97%;
     --foreground: 150 50% 25%;
     --card: 150 70% 100%;
+    --card-foreground: 150 50% 25%;
     --primary: 150 55% 50%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 150 50% 25%;
     --secondary: 150 60% 92%;
+    --secondary-foreground: 150 50% 25%;
     --accent: 170 60% 60%;
+    --accent-foreground: 150 50% 25%;
     --border: 150 60% 88%;
   }
 
@@ -204,10 +222,13 @@ body {
     --background: 220 10% 20%;
     --foreground: 220 10% 90%;
     --card: 220 10% 25%;
+    --card-foreground: 220 10% 90%;
     --primary: 220 15% 70%;
-    --primary-foreground: 220 10% 10%;
+    --primary-foreground: 220 10% 90%;
     --secondary: 220 10% 30%;
+    --secondary-foreground: 220 10% 90%;
     --accent: 210 20% 80%;
+    --accent-foreground: 220 10% 10%;
     --border: 220 10% 35%;
   }
 
@@ -215,10 +236,13 @@ body {
     --background: 250 80% 98%;
     --foreground: 250 40% 30%;
     --card: 250 80% 100%;
+    --card-foreground: 250 40% 30%;
     --primary: 250 60% 70%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 250 40% 30%;
     --secondary: 250 70% 95%;
+    --secondary-foreground: 250 40% 30%;
     --accent: 270 70% 75%;
+    --accent-foreground: 250 40% 30%;
     --border: 250 70% 90%;
   }
 
@@ -226,10 +250,13 @@ body {
     --background: 30 25% 95%;
     --foreground: 30 40% 20%;
     --card: 30 25% 100%;
+    --card-foreground: 30 40% 20%;
     --primary: 30 40% 50%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 30 40% 20%;
     --secondary: 30 30% 90%;
+    --secondary-foreground: 30 40% 20%;
     --accent: 40 30% 60%;
+    --accent-foreground: 30 40% 20%;
     --border: 30 30% 85%;
   }
 
@@ -237,10 +264,13 @@ body {
     --background: 180 50% 96%;
     --foreground: 180 70% 20%;
     --card: 180 50% 100%;
+    --card-foreground: 180 70% 20%;
     --primary: 180 60% 40%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 180 70% 20%;
     --secondary: 180 50% 90%;
+    --secondary-foreground: 180 70% 20%;
     --accent: 170 70% 50%;
+    --accent-foreground: 180 70% 20%;
     --border: 180 50% 85%;
   }
   
@@ -248,10 +278,13 @@ body {
     --background: 10 100% 97%;
     --foreground: 10 80% 30%;
     --card: 10 100% 100%;
+    --card-foreground: 10 80% 30%;
     --primary: 10 90% 65%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 10 80% 30%;
     --secondary: 10 90% 94%;
+    --secondary-foreground: 10 80% 30%;
     --accent: 350 90% 70%;
+    --accent-foreground: 10 80% 30%;
     --border: 10 90% 90%;
   }
 
@@ -259,10 +292,13 @@ body {
     --background: 240 60% 15%;
     --foreground: 240 50% 90%;
     --card: 240 60% 20%;
+    --card-foreground: 240 50% 90%;
     --primary: 240 70% 75%;
-    --primary-foreground: 240 60% 10%;
+    --primary-foreground: 240 50% 90%;
     --secondary: 240 50% 30%;
+    --secondary-foreground: 240 50% 90%;
     --accent: 220 80% 80%;
+    --accent-foreground: 240 60% 10%;
     --border: 240 50% 35%;
   }
 
@@ -270,10 +306,13 @@ body {
     --background: 80 20% 96%;
     --foreground: 80 40% 20%;
     --card: 80 20% 100%;
+    --card-foreground: 80 40% 20%;
     --primary: 80 30% 45%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 80 40% 20%;
     --secondary: 80 25% 90%;
+    --secondary-foreground: 80 40% 20%;
     --accent: 60 30% 55%;
+    --accent-foreground: 80 40% 20%;
     --border: 80 25% 85%;
   }
 
@@ -281,10 +320,13 @@ body {
     --background: 25 80% 96%;
     --foreground: 25 50% 30%;
     --card: 25 80% 100%;
+    --card-foreground: 25 50% 30%;
     --primary: 350 70% 75%;
     --primary-foreground: 25 50% 15%;
     --secondary: 25 70% 92%;
+    --secondary-foreground: 25 50% 30%;
     --accent: 30 80% 80%;
+    --accent-foreground: 25 50% 30%;
     --border: 25 70% 88%;
   }
 
@@ -292,10 +334,13 @@ body {
     --background: 220 30% 25%;
     --foreground: 220 20% 95%;
     --card: 220 30% 30%;
+    --card-foreground: 220 20% 95%;
     --primary: 210 40% 75%;
-    --primary-foreground: 220 30% 10%;
+    --primary-foreground: 220 20% 95%;
     --secondary: 220 30% 40%;
+    --secondary-foreground: 220 20% 95%;
     --accent: 200 50% 80%;
+    --accent-foreground: 220 30% 10%;
     --border: 220 30% 45%;
   }
 
