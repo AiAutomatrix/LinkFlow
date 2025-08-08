@@ -22,6 +22,9 @@ import { usePathname } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+
 
 function ShareButton() {
     const { user } = useAuth();
@@ -81,46 +84,48 @@ export default function DashboardLayout({
   ];
 
   return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader>
-          <Logo />
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarMenu>
-            {navItems.map((item) => (
-              <SidebarMenuItem key={item.href}>
-                <SidebarMenuButton 
-                  asChild 
-                  isActive={pathname === item.href}
-                  tooltip={{ children: item.label, side: "right", align: "center" }}
-                >
-                  <a href={item.href}>
-                    <item.icon />
-                    <span>{item.label}</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarContent>
-      </Sidebar>
-      <SidebarInset>
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
-          <SidebarTrigger />
-          <div className="flex items-center gap-2">
-            <ShareButton />
-            <Button variant="outline" asChild>
-                <Link href={`/u/${user.username}`} target="_blank">
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    View Profile
-                </Link>
-            </Button>
-            <UserNav />
-          </div>
-        </header>
-        <main className="flex-1 p-4 sm:p-6">{children}</main>
-      </SidebarInset>
-    </SidebarProvider>
+    <DndProvider backend={HTML5Backend}>
+      <SidebarProvider>
+        <Sidebar>
+          <SidebarHeader>
+            <Logo />
+          </SidebarHeader>
+          <SidebarContent>
+            <SidebarMenu>
+              {navItems.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={pathname === item.href}
+                    tooltip={{ children: item.label, side: "right", align: "center" }}
+                  >
+                    <a href={item.href}>
+                      <item.icon />
+                      <span>{item.label}</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarContent>
+        </Sidebar>
+        <SidebarInset>
+          <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
+            <SidebarTrigger />
+            <div className="flex items-center gap-2">
+              <ShareButton />
+              <Button variant="outline" asChild>
+                  <Link href={`/u/${user.username}`} target="_blank">
+                      <ExternalLink className="mr-2 h-4 w-4" />
+                      View Profile
+                  </Link>
+              </Button>
+              <UserNav />
+            </div>
+          </header>
+          <main className="flex-1 p-4 sm:p-6">{children}</main>
+        </SidebarInset>
+      </SidebarProvider>
+    </DndProvider>
   );
 }

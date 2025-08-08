@@ -37,8 +37,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import LinkForm from "./_components/link-form";
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
+
 
 export default function LinksPage() {
   const { user } = useAuth();
@@ -130,15 +129,19 @@ export default function LinksPage() {
     });
   }, []);
 
-  const handleDrop = async () => {
+  const handleDrop = useCallback(async () => {
     if (!user) return;
     const batch = writeBatch(firestore);
     links.forEach((link, index) => {
       const docRef = doc(firestore, "users", user.uid, "links", link.id);
       batch.update(docRef, { order: index });
     });
-    await batch.commit();
-  };
+    try {
+        await batch.commit();
+    } catch (error) {
+        console.error("Failed to reorder links:", error);
+    }
+  }, [user, links]);
   
 
   return (
@@ -178,7 +181,6 @@ export default function LinksPage() {
               <Skeleton className="h-20 w-full" />
             </div>
           ) : links.length > 0 ? (
-            <DndProvider backend={HTML5Backend}>
               <div className="space-y-4">
                 {links.map((link, index) => (
                   <LinkCard 
@@ -192,7 +194,6 @@ export default function LinksPage() {
                   />
                 ))}
               </div>
-            </DndProvider>
           ) : (
             <div className="text-center py-12">
               <h3 className="text-lg font-semibold">No links yet</h3>

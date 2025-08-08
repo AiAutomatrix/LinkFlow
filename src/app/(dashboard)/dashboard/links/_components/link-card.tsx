@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import type { Link } from "@/lib/types";
 import { GripVertical, MoreHorizontal, Pencil, Trash2, CalendarDays } from "lucide-react";
 import LinkForm from "./link-form";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useDrag, useDrop, XYCoord } from 'react-dnd';
 import { format } from 'date-fns';
 import { Timestamp } from "firebase/firestore";
@@ -66,18 +67,20 @@ export default function LinkCard({ link, index, onUpdate, onDelete, onMove, onDr
         
         onMove(dragIndex, hoverIndex);
         item.index = hoverIndex;
-      },
-      drop: () => {
-        onDrop();
-      },
+      }
     });
   
     const [{ isDragging }, drag, preview] = useDrag({
       type: ItemTypes.LINK,
-      item: { id: link.id, index },
+      item: () => ({ id: link.id, index }),
       collect: (monitor) => ({
         isDragging: monitor.isDragging(),
       }),
+      end: (item, monitor) => {
+        if (monitor.didDrop()) {
+            onDrop();
+        }
+      },
     });
   
     // Initialize DND references
