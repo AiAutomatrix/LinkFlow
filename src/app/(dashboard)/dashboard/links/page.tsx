@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -52,9 +53,16 @@ export default function LinksPage() {
     const q = query(linksCollection, orderBy("order", "asc"));
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const linksData = querySnapshot.docs.map(
-        (doc) => ({ id: doc.id, ...doc.data() } as Link)
-      );
+      const linksData = querySnapshot.docs.map((doc) => {
+        const data = doc.data();
+        // Convert Firestore Timestamps to JS Date objects for serialization
+        return {
+          id: doc.id,
+          ...data,
+          startDate: data.startDate instanceof Timestamp ? data.startDate.toDate() : undefined,
+          endDate: data.endDate instanceof Timestamp ? data.endDate.toDate() : undefined,
+        } as Link;
+      });
       setLinks(linksData);
       setLoading(false);
     });

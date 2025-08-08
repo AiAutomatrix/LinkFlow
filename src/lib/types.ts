@@ -18,6 +18,7 @@ export interface Link {
   order: number;
   active: boolean;
   clicks: number;
-  startDate?: Timestamp;
-  endDate?: Timestamp;
+  // Accept both Timestamp and Date for flexibility between server/client
+  startDate?: Timestamp | Date;
+  endDate?: Timestamp | Date;
 }

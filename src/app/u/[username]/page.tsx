@@ -30,31 +30,42 @@ async function getUserLinks(uid: string): Promise<LinkType[]> {
   const linksCollection = collection(firestore, 'users', uid, 'links');
   const now = Timestamp.now();
   
-  // Simplified query to avoid needing a composite index.
-  // We will filter for active and scheduled links in the code.
   const q = query(linksCollection, orderBy('order', 'asc'));
     
   const linksSnapshot = await getDocs(q);
-  const allLinks = linksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LinkType));
+  const allLinks = linksSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return { 
+        id: doc.id, 
+        ...data,
+        // Ensure Timestamps are converted for server component compatibility if needed later, though not strictly necessary here.
+        startDate: data.startDate ? (data.startDate as Timestamp) : undefined,
+        endDate: data.endDate ? (data.endDate as Timestamp) : undefined,
+    } as LinkType
+  });
 
-  // Filter for active and scheduled links
+  // Filter for active and scheduled links in the code
   return allLinks.filter(link => {
     if (!link.active) return false;
 
     const hasStartDate = !!link.startDate;
     const hasEndDate = !!link.endDate;
     
-    if (hasStartDate && link.startDate! > now) return false;
-    if (hasEndDate && link.endDate! < now) return false;
+    // Note: Timestamps are compared directly
+    const startDate = link.startDate as Timestamp | undefined;
+    const endDate = link.endDate as Timestamp | undefined;
+
+    if (hasStartDate && startDate! > now) return false;
+    if (hasEndDate && endDate! < now) return false;
 
     return true;
   });
 }
 
-async function handleLinkClick(link: LinkType, userId: string) {
+async function handleLinkClick(linkId: string, url: string, userId: string) {
     'use server';
     try {
-      const linkRef = doc(firestore, 'users', userId, 'links', link.id);
+      const linkRef = doc(firestore, 'users', userId, 'links', linkId);
       // Use Firestore's atomic increment operation for reliability
       await updateDoc(linkRef, { clicks: increment(1) });
     } catch (error) {
@@ -62,7 +73,7 @@ async function handleLinkClick(link: LinkType, userId: string) {
       console.error("Failed to update click count", error);
     }
     // Redirect the user to the link's URL
-    redirect(link.url);
+    redirect(url);
 }
 
 export default async function UserProfilePage({ params }: { params: { username: string } }) {
@@ -93,7 +104,7 @@ export default async function UserProfilePage({ params }: { params: { username: 
 
         <div className="mt-8 space-y-4">
           {links.map((link) => (
-            <form key={link.id} action={handleLinkClick.bind(null, link, user.uid)}>
+            <form key={link.id} action={handleLinkClick.bind(null, link.id, link.url, user.uid)}>
                 <Button 
                     type="submit" 
                     className="w-full h-14 text-md shadow-md transition-transform transform active:scale-[0.98]" 

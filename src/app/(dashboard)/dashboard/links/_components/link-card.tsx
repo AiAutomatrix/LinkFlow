@@ -10,6 +10,7 @@ import LinkForm from "./link-form";
 import { useState, useRef } from "react";
 import { useDrag, useDrop } from 'react-dnd';
 import { format } from 'date-fns';
+import { Timestamp } from "firebase/firestore";
 
 type LinkCardProps = {
   link: Link;
@@ -21,6 +22,15 @@ type LinkCardProps = {
 const ItemTypes = {
   LINK: 'link',
 };
+
+// Helper to convert Timestamp to Date if needed
+const toDate = (date: any): Date | undefined => {
+    if (!date) return undefined;
+    if (date instanceof Date) return date;
+    if (date instanceof Timestamp) return date.toDate();
+    return undefined;
+}
+
 
 export default function LinkCard({ link, onUpdate, onDelete, onReorder }: LinkCardProps) {
     const [isEditOpen, setEditOpen] = useState(false);
@@ -54,6 +64,8 @@ export default function LinkCard({ link, onUpdate, onDelete, onReorder }: LinkCa
     };
 
     const hasSchedule = link.startDate || link.endDate;
+    const startDate = toDate(link.startDate);
+    const endDate = toDate(link.endDate);
 
     return (
         <Card ref={ref} className="flex items-center p-3 gap-3" style={{ opacity: isDragging ? 0.5 : 1 }}>
@@ -67,9 +79,9 @@ export default function LinkCard({ link, onUpdate, onDelete, onReorder }: LinkCa
                     <div className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1.5">
                         <CalendarDays className="h-3.5 w-3.5" />
                         <span>
-                            {link.startDate ? format(link.startDate.toDate(), "LLL d") : 'Always'}
+                            {startDate ? format(startDate, "LLL d") : 'Always'}
                             {' → '}
-                            {link.endDate ? format(link.endDate.toDate(), "LLL d, y") : 'Never'}
+                            {endDate ? format(endDate, "LLL d, y") : 'Never'}
                         </span>
                     </div>
                 )}

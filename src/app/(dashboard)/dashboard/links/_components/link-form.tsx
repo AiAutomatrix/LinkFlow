@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import type { Link } from "@/lib/types";
 import { DatePicker } from "@/components/ui/datepicker";
+import { Timestamp } from "firebase/firestore";
 
 const formSchema = z.object({
   title: z.string().min(1, { message: "Title is required." }),
@@ -30,6 +31,15 @@ type LinkFormProps = {
   initialData?: Link;
 };
 
+// Helper to convert Timestamp to Date if needed
+const toDate = (date: any): Date | undefined => {
+    if (!date) return undefined;
+    if (date instanceof Date) return date;
+    if (date instanceof Timestamp) return date.toDate();
+    return undefined;
+}
+
+
 export default function LinkForm({ onSubmit, onCancel, initialData }: LinkFormProps) {
   const [loading, setLoading] = useState(false);
 
@@ -38,8 +48,8 @@ export default function LinkForm({ onSubmit, onCancel, initialData }: LinkFormPr
     defaultValues: {
       title: initialData?.title || "",
       url: initialData?.url || "",
-      startDate: initialData?.startDate ? initialData.startDate.toDate() : undefined,
-      endDate: initialData?.endDate ? initialData.endDate.toDate() : undefined,
+      startDate: toDate(initialData?.startDate),
+      endDate: toDate(initialData?.endDate),
     },
   });
 
