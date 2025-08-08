@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useContext } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { auth, firestore } from '@/lib/firebase';
 import type { UserProfile } from '@/lib/types';
 import { AuthContext } from '@/contexts/auth-context';
@@ -18,16 +18,46 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setFirebaseUser(firebaseUser);
-      if (firebaseUser) {
-        const userDocRef = doc(firestore, 'users', firebaseUser.uid);
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      setFirebaseUser(fbUser);
+      if (fbUser) {
+        const userDocRef = doc(firestore, 'users', fbUser.uid);
         const userDoc = await getDoc(userDocRef);
+        
         if (userDoc.exists()) {
-          setUser({ uid: firebaseUser.uid, ...userDoc.data() } as UserProfile);
+          setUser({ uid: fbUser.uid, ...userDoc.data() } as UserProfile);
         } else {
-          // Handle case where user is authenticated but no profile exists
-          setUser(null);
+          // This case handles the first-time sign-in via a social provider
+          // where the profile might not have been created yet.
+          const username = fbUser.uid; // Default to UID, user can change it later
+          const newUserProfile: Omit<UserProfile, 'createdAt'> & { createdAt: any } = {
+            uid: fbUser.uid,
+            email: fbUser.email!,
+            displayName: fbUser.displayName || 'New User',
+            bio: 'Welcome to my LinkFlow profile!',
+            photoURL: fbUser.photoURL || '',
+            username: username,
+            plan: 'free',
+            createdAt: serverTimestamp(),
+          };
+
+          const usernameDocRef = doc(firestore, 'usernames', username);
+
+          try {
+            const batch = writeBatch(firestore);
+            batch.set(userDocRef, newUserProfile);
+            batch.set(usernameDocRef, { uid: fbUser.uid });
+            await batch.commit();
+
+            // Fetch the newly created doc to get the server-resolved timestamp
+            const newUserDoc = await getDoc(userDocRef);
+            setUser({ uid: fbUser.uid, ...newUserDoc.data() } as UserProfile);
+
+          } catch (error) {
+            console.error("Error creating user profile:", error);
+            // Handle error case, maybe sign the user out
+            setUser(null);
+          }
         }
       } else {
         setUser(null);

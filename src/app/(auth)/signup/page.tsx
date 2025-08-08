@@ -25,7 +25,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { auth, firestore } from "@/lib/firebase";
 import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, User } from "firebase/auth";
-import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp, getDoc, Timestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 
@@ -64,12 +64,12 @@ export default function SignupPage() {
 
   const createProfile = async (firebaseUser: User, displayName?: string) => {
     const userDocRef = doc(firestore, 'users', firebaseUser.uid);
-    const usernameDocRef = doc(firestore, 'usernames', firebaseUser.uid); // temporary username
-    
-    // Check if user profile already exists (e.g., from Google sign-in)
+    const username = firebaseUser.uid; // Use UID as temporary username
+    const usernameDocRef = doc(firestore, 'usernames', username);
+
     const userDoc = await getDoc(userDocRef);
     if (userDoc.exists()) {
-      return; // Profile already created
+      return; 
     }
 
     await setDoc(userDocRef, {
@@ -78,7 +78,7 @@ export default function SignupPage() {
       displayName: displayName || firebaseUser.displayName || "New User",
       bio: "Welcome to my LinkFlow profile!",
       photoURL: firebaseUser.photoURL || "",
-      username: firebaseUser.uid, // Temporary unique username
+      username: username,
       plan: "free",
       createdAt: serverTimestamp(),
     });
