@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -25,6 +26,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Loader2, Star } from "lucide-react";
+import Link from "next/link";
 
 
 export default function SettingsPage() {
@@ -80,6 +82,29 @@ export default function SettingsPage() {
             </Button>
           </CardFooter>
         )}
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Shareable URL</CardTitle>
+          <CardDescription>
+            Your public URL is based on your username. You can change your username on the Appearance page.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {user && (
+            <div className="flex items-center space-x-2">
+              <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold">
+                {`.../u/${user.username}`}
+              </code>
+            </div>
+          )}
+        </CardContent>
+        <CardFooter>
+            <Button asChild variant="secondary">
+                <Link href="/dashboard/appearance">Customize your Profile and URL</Link>
+            </Button>
+        </CardFooter>
       </Card>
 
       <Card className="border-destructive">

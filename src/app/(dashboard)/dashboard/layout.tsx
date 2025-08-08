@@ -15,12 +15,39 @@ import {
   SidebarInset,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { BarChart2, Link as LinkIcon, Paintbrush, Settings, ExternalLink } from "lucide-react";
+import { BarChart2, Link as LinkIcon, Paintbrush, Settings, ExternalLink, Share2 } from "lucide-react";
 import Logo from "@/components/logo";
 import { UserNav } from "@/components/user-nav";
 import { usePathname } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useToast } from "@/hooks/use-toast";
+
+function ShareButton() {
+    const { user } = useAuth();
+    const { toast } = useToast();
+
+    const handleShare = () => {
+        if (!user || typeof window === 'undefined') return;
+        const shareUrl = `${window.location.origin}/u/${user.username}`;
+        navigator.clipboard.writeText(shareUrl).then(() => {
+            toast({ title: "Copied!", description: "Your profile URL has been copied to the clipboard." });
+        }, (err) => {
+            toast({ variant: 'destructive', title: "Failed to copy", description: "Could not copy URL to clipboard." });
+            console.error('Could not copy text: ', err);
+        });
+    };
+
+    if (!user) return null;
+
+    return (
+        <Button variant="outline" onClick={handleShare}>
+            <Share2 className="mr-2 h-4 w-4" />
+            Share
+        </Button>
+    )
+}
+
 
 export default function DashboardLayout({
   children,
@@ -81,7 +108,8 @@ export default function DashboardLayout({
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
           <SidebarTrigger />
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <ShareButton />
             <Button variant="outline" asChild>
                 <Link href={`/u/${user.username}`} target="_blank">
                     <ExternalLink className="mr-2 h-4 w-4" />
