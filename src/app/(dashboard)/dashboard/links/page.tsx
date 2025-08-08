@@ -26,7 +26,7 @@ import {
   serverTimestamp,
   Timestamp,
 } from "firebase/firestore";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import LinkCard from "./_components/link-card";
 import {
@@ -121,22 +121,19 @@ export default function LinksPage() {
     await batch.commit();
   };
 
-  const handleReorder = async (draggedId: string, targetId: string) => {
-    if (!user) return;
-  
-    const currentLinks = [...links];
-    const draggedIndex = currentLinks.findIndex(l => l.id === draggedId);
-    const targetIndex = currentLinks.findIndex(l => l.id === targetId);
-  
-    if (draggedIndex === -1 || targetIndex === -1 || draggedIndex === targetIndex) return;
-  
-    const [draggedItem] = currentLinks.splice(draggedIndex, 1);
-    currentLinks.splice(targetIndex, 0, draggedItem);
-  
-    setLinks(currentLinks);
+  const moveLink = useCallback((dragIndex: number, hoverIndex: number) => {
+    setLinks((prevLinks) => {
+        const newLinks = [...prevLinks];
+        const [draggedItem] = newLinks.splice(dragIndex, 1);
+        newLinks.splice(hoverIndex, 0, draggedItem);
+        return newLinks;
+    });
+  }, []);
 
+  const handleDrop = async () => {
+    if (!user) return;
     const batch = writeBatch(firestore);
-    currentLinks.forEach((link, index) => {
+    links.forEach((link, index) => {
       const docRef = doc(firestore, "users", user.uid, "links", link.id);
       batch.update(docRef, { order: index });
     });
@@ -183,13 +180,15 @@ export default function LinksPage() {
           ) : links.length > 0 ? (
             <DndProvider backend={HTML5Backend}>
               <div className="space-y-4">
-                {links.map((link) => (
+                {links.map((link, index) => (
                   <LinkCard 
                     key={link.id} 
+                    index={index}
                     link={link} 
                     onUpdate={handleUpdateLink}
                     onDelete={handleDeleteLink}
-                    onReorder={handleReorder}
+                    onMove={moveLink}
+                    onDrop={handleDrop}
                   />
                 ))}
               </div>

@@ -8,15 +8,17 @@ import type { Link } from "@/lib/types";
 import { GripVertical, MoreHorizontal, Pencil, Trash2, CalendarDays } from "lucide-react";
 import LinkForm from "./link-form";
 import { useState, useRef } from "react";
-import { useDrag, useDrop } from 'react-dnd';
+import { useDrag, useDrop, XYCoord } from 'react-dnd';
 import { format } from 'date-fns';
 import { Timestamp } from "firebase/firestore";
 
 type LinkCardProps = {
   link: Link;
+  index: number;
   onUpdate: (linkId: string, title: string, url: string, startDate?: Date, endDate?: Date) => void;
   onDelete: (linkId: string) => void;
-  onReorder: (draggedId: string, targetId: string) => void;
+  onMove: (dragIndex: number, hoverIndex: number) => void;
+  onDrop: () => void;
 };
 
 const ItemTypes = {
@@ -32,24 +34,47 @@ const toDate = (date: any): Date | undefined => {
 }
 
 
-export default function LinkCard({ link, onUpdate, onDelete, onReorder }: LinkCardProps) {
+export default function LinkCard({ link, index, onUpdate, onDelete, onMove, onDrop }: LinkCardProps) {
     const [isEditOpen, setEditOpen] = useState(false);
     
     const ref = useRef<HTMLDivElement>(null);
 
     const [, drop] = useDrop({
       accept: ItemTypes.LINK,
-      hover(item: { id: string }) {
-        if (!ref.current || item.id === link.id) {
+      hover(item: { id: string; index: number }, monitor) {
+        if (!ref.current) {
           return;
         }
-        onReorder(item.id, link.id);
+        const dragIndex = item.index;
+        const hoverIndex = index;
+
+        if (dragIndex === hoverIndex) {
+          return;
+        }
+
+        const hoverBoundingRect = ref.current?.getBoundingClientRect();
+        const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+        const clientOffset = monitor.getClientOffset();
+        const hoverClientY = (clientOffset as XYCoord).y - hoverBoundingRect.top;
+
+        if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
+          return;
+        }
+        if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+          return;
+        }
+        
+        onMove(dragIndex, hoverIndex);
+        item.index = hoverIndex;
+      },
+      drop: () => {
+        onDrop();
       },
     });
   
     const [{ isDragging }, drag, preview] = useDrag({
       type: ItemTypes.LINK,
-      item: { id: link.id },
+      item: { id: link.id, index },
       collect: (monitor) => ({
         isDragging: monitor.isDragging(),
       }),
