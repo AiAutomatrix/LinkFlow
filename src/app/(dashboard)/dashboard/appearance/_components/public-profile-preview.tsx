@@ -35,7 +35,7 @@ export default function PublicProfilePreview({ profile, links = [] }: PreviewPro
             <p className="text-center mt-2 text-sm">{bio}</p>
             <div className="mt-8 space-y-4 w-full">
                 {links.length > 0 ? (
-                  links.slice(0, 3).map((link) => (
+                  links.map((link) => (
                     <Button key={link.id} variant="secondary" className="w-full">
                       {link.title}
                     </Button>

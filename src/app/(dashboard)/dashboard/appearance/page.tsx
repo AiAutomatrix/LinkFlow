@@ -56,13 +56,14 @@ export default function AppearancePage() {
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
   const [initialUsername, setInitialUsername] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [photoURL, setPhotoURL] = useState(user?.photoURL);
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      displayName: user?.displayName || "",
-      username: user?.username || "",
-      bio: user?.bio || "",
+      displayName: "",
+      username: "",
+      bio: "",
     },
   });
   
@@ -76,6 +77,7 @@ export default function AppearancePage() {
         bio: user.bio || "",
       });
       setInitialUsername(user.username || "");
+      setPhotoURL(user.photoURL);
     }
   }, [user, form.reset]);
 
@@ -180,12 +182,13 @@ export default function AppearancePage() {
     try {
       const storageRef = ref(storage, `profile_pictures/${user.uid}`);
       await uploadBytes(storageRef, file);
-      const photoURL = await getDownloadURL(storageRef);
+      const newPhotoURL = await getDownloadURL(storageRef);
 
       const userDocRef = doc(firestore, "users", user.uid);
-      await updateDoc(userDocRef, { photoURL });
+      await updateDoc(userDocRef, { photoURL: newPhotoURL });
       
-      setUser(prevUser => prevUser ? { ...prevUser, photoURL } : null);
+      setPhotoURL(newPhotoURL);
+      setUser(prevUser => prevUser ? { ...prevUser, photoURL: newPhotoURL } : null);
 
       toast({ title: "Profile picture updated!" });
     } catch (error) {
@@ -222,7 +225,7 @@ export default function AppearancePage() {
                         ) : (
                             <>
                                 <Avatar className="w-24 h-24">
-                                    <AvatarImage src={user?.photoURL} />
+                                    <AvatarImage src={photoURL} />
                                     <AvatarFallback>{getInitials(user?.displayName)}</AvatarFallback>
                                 </Avatar>
                                 <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -307,7 +310,7 @@ export default function AppearancePage() {
         </Form>
       </div>
       <div className="md:col-span-1">
-        <PublicProfilePreview profile={watchedValues} links={links} />
+        <PublicProfilePreview profile={{...watchedValues, photoURL}} links={links} />
       </div>
     </div>
   );
