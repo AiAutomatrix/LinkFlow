@@ -17,7 +17,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { firestore } from "@/lib/firebase";
 import type { Link } from "@/lib/types";
 import { collection, query, onSnapshot, orderBy } from "firebase/firestore";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AnalyticsPage() {
@@ -47,21 +47,6 @@ export default function AnalyticsPage() {
 
     return () => unsubscribe();
   }, [user]);
-
-  const totalClicks = useMemo(() => {
-    return links.reduce((acc, link) => acc + (link.clicks || 0), 0);
-  }, [links]);
-  
-  const totalLinks = useMemo(() => links.length, [links]);
-  
-  const avgClicks = useMemo(() => {
-    return totalLinks > 0 ? (totalClicks / totalLinks).toFixed(2) : 0;
-  }, [totalClicks, totalLinks]);
-
-  const chartData = useMemo(() => {
-    return links.slice(0, 10).map(link => ({ name: link.title, clicks: link.clicks || 0 }));
-  }, [links]);
-
 
   if (loading) {
     return (
@@ -115,6 +100,10 @@ export default function AnalyticsPage() {
     );
   }
 
+  const totalClicks = links.reduce((acc, link) => acc + (link.clicks || 0), 0);
+  const totalLinks = links.length;
+  const avgClicks = totalLinks > 0 ? (totalClicks / totalLinks).toFixed(2) : 0;
+  const chartData = links.slice(0, 10).map(link => ({ name: link.title, clicks: link.clicks || 0 }));
 
   return (
     <div className="space-y-6">
@@ -185,4 +174,3 @@ export default function AnalyticsPage() {
     </div>
   );
 }
-
