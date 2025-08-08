@@ -20,7 +20,7 @@ body {
     --secondary-foreground: 202 83% 10%;
     --muted: 197 50% 85%;
     --muted-foreground: 202 50% 30%;
-    --accent: 120 73% 85%; /* Lighter soft green */
+    --accent: 120 73% 75%; /* #90EE90 */
     --accent-foreground: 120 40% 20%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
