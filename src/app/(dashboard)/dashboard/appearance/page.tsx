@@ -35,6 +35,7 @@ import type { Link, UserProfile } from "@/lib/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Camera, Loader2, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
 const profileSchema = z.object({
   displayName: z.string().min(2, "Name must be at least 2 characters.").max(50),
@@ -56,6 +57,21 @@ const themes = [
     { id: 'neon-green', name: 'Neon Green', colors: ['#0F172A', '#34D399'] },
     { id: 'neon-pink', name: 'Neon Pink', colors: ['#1E1B4B', '#F472B6'] },
     { id: 'gradient-sunset', name: 'Sunset', colors: ['#FECACA', '#F9A8D4'] },
+    { id: 'ocean-blue', name: 'Ocean Blue', colors: ['#E0F2FE', '#38BDF8'] },
+    { id: 'forest-green', name: 'Forest Green', colors: ['#F0FDF4', '#4ADE80'] },
+    { id: 'royal-purple', name: 'Royal Purple', colors: ['#F5F3FF', '#A78BFA'] },
+    { id: 'crimson-red', name: 'Crimson Red', colors: ['#FEF2F2', '#F87171'] },
+    { id: 'goldenrod', name: 'Goldenrod', colors: ['#FEFCE8', '#FACC15'] },
+    { id: 'minty-fresh', name: 'Minty Fresh', colors: ['#F0FDF4', '#6EE7B7'] },
+    { id: 'charcoal', name: 'Charcoal', colors: ['#334155', '#94A3B8'] },
+    { id: 'lavender', name: 'Lavender', colors: ['#F5F3FF', '#C4B5FD'] },
+    { id: 'mocha', name: 'Mocha', colors: ['#FDF4E6', '#D4A574'] },
+    { id: 'teal', name: 'Teal', colors: ['#F0FDFA', '#2DD4BF'] },
+    { id: 'coral', name: 'Coral', colors: ['#FFF1F2', '#FB7185'] },
+    { id: 'indigo', name: 'Indigo', colors: ['#283593', '#818CF8'] },
+    { id: 'olive', name: 'Olive', colors: ['#F4FCE8', '#A3CC4A'] },
+    { id: 'rose-gold', name: 'Rose Gold', colors: ['#FFF1F2', '#F4C4C4'] },
+    { id: 'slate', name: 'Slate', colors: ['#475569', '#E2E8F0'] },
   ];
 
 export default function AppearancePage() {
@@ -346,22 +362,34 @@ export default function AppearancePage() {
                   control={form.control}
                   name="theme"
                   render={({ field }) => (
-                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-4">
-                      {themes.map((theme) => (
-                        <div key={theme.id} className="flex flex-col items-center gap-2 cursor-pointer" onClick={() => field.onChange(theme.id)}>
-                          <div 
-                            className={cn(
-                              "w-full aspect-square rounded-lg flex items-center justify-center border-2",
-                              field.value === theme.id ? 'border-primary' : 'border-transparent'
-                            )}
-                          >
-                            <div className="w-10 h-10 rounded-full flex overflow-hidden" style={{ background: `linear-gradient(45deg, ${theme.colors[0]} 50%, ${theme.colors[1]} 50%)` }}>
+                    <Carousel
+                      opts={{
+                        align: "start",
+                        slidesToScroll: "auto",
+                      }}
+                      className="w-full"
+                    >
+                      <CarouselContent>
+                        {themes.map((theme) => (
+                          <CarouselItem key={theme.id} className="basis-1/4 sm:basis-1/5">
+                            <div className="p-1">
+                                <div 
+                                    className={cn(
+                                        "w-full aspect-square rounded-lg flex items-center justify-center border-2 cursor-pointer",
+                                        field.value === theme.id ? 'border-primary' : 'border-transparent'
+                                    )}
+                                    onClick={() => field.onChange(theme.id)}
+                                >
+                                    <div className="w-10 h-10 rounded-full flex overflow-hidden" style={{ background: `linear-gradient(45deg, ${theme.colors[0]} 50%, ${theme.colors[1]} 50%)` }}></div>
+                                </div>
+                                <p className="text-sm text-center mt-2">{theme.name}</p>
                             </div>
-                          </div>
-                          <p className="text-sm">{theme.name}</p>
-                        </div>
-                      ))}
-                    </div>
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                      <CarouselPrevious />
+                      <CarouselNext />
+                    </Carousel>
                   )}
                 />
               </CardContent>
@@ -381,3 +409,5 @@ export default function AppearancePage() {
     </div>
   );
 }
+
+    
