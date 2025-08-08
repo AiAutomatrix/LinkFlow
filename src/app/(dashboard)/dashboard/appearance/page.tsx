@@ -33,7 +33,8 @@ import { debounce } from "lodash";
 import PublicProfilePreview from "./_components/public-profile-preview";
 import type { Link, UserProfile } from "@/lib/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Camera, Loader2 } from "lucide-react";
+import { Camera, Loader2, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const profileSchema = z.object({
   displayName: z.string().min(2, "Name must be at least 2 characters.").max(50),
@@ -46,7 +47,16 @@ const profileSchema = z.object({
       "Username can only contain letters, numbers, and underscores."
     ),
   bio: z.string().max(160, "Bio cannot exceed 160 characters.").optional(),
+  theme: z.string().optional(),
 });
+
+const themes = [
+    { id: 'light', name: 'Light', colors: ['#FFFFFF', '#E2E8F0'] },
+    { id: 'dark', name: 'Dark', colors: ['#1A202C', '#4A5568'] },
+    { id: 'neon-green', name: 'Neon Green', colors: ['#0F172A', '#34D399'] },
+    { id: 'neon-pink', name: 'Neon Pink', colors: ['#1E1B4B', '#F472B6'] },
+    { id: 'gradient-sunset', name: 'Sunset', colors: ['#FECACA', '#F9A8D4'] },
+  ];
 
 export default function AppearancePage() {
   const { user, setUser } = useAuth();
@@ -65,6 +75,7 @@ export default function AppearancePage() {
       displayName: "",
       username: "",
       bio: "",
+      theme: "light",
     },
   });
   
@@ -76,6 +87,7 @@ export default function AppearancePage() {
         displayName: user.displayName || "",
         username: user.username || "",
         bio: user.bio || "",
+        theme: user.theme || "light",
       });
       setInitialUsername(user.username || "");
       setPhotoURL(user.photoURL || "");
@@ -121,6 +133,9 @@ export default function AppearancePage() {
       if (name === "username" && value.username) {
         checkUsername(value.username);
       }
+      if (name === 'theme' && value.theme) {
+        handleThemeUpdate(value.theme);
+      }
     });
     return () => subscription.unsubscribe();
   }, [form, checkUsername]);
@@ -142,6 +157,7 @@ export default function AppearancePage() {
             displayName: values.displayName,
             bio: values.bio,
             username: values.username,
+            theme: values.theme,
         }
         batch.update(userDocRef, profileData);
 
@@ -207,6 +223,18 @@ export default function AppearancePage() {
 
   const getInitials = (name: string = "") => {
     return name.split(" ").map((n) => n[0]).join("");
+  };
+
+  const handleThemeUpdate = async (themeId: string) => {
+    if (!user) return;
+    try {
+      const userDocRef = doc(firestore, 'users', user.uid);
+      await updateDoc(userDocRef, { theme: themeId });
+      setUser(prev => prev ? ({...prev, theme: themeId}) : null);
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Failed to update theme' });
+      console.error(error);
+    }
   };
 
 
@@ -307,6 +335,38 @@ export default function AppearancePage() {
                 />
               </CardContent>
             </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Themes</CardTitle>
+                <CardDescription>Select a theme for your public profile page.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <FormField
+                  control={form.control}
+                  name="theme"
+                  render={({ field }) => (
+                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-4">
+                      {themes.map((theme) => (
+                        <div key={theme.id} className="flex flex-col items-center gap-2 cursor-pointer" onClick={() => field.onChange(theme.id)}>
+                          <div 
+                            className={cn(
+                              "w-full aspect-square rounded-lg flex items-center justify-center border-2",
+                              field.value === theme.id ? 'border-primary' : 'border-transparent'
+                            )}
+                          >
+                            <div className="w-10 h-10 rounded-full flex overflow-hidden" style={{ background: `linear-gradient(45deg, ${theme.colors[0]} 50%, ${theme.colors[1]} 50%)` }}>
+                            </div>
+                          </div>
+                          <p className="text-sm">{theme.name}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
 
             <Button type="submit" disabled={loading || usernameStatus === 'taken' || uploading}>
                 {(loading || uploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

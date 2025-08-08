@@ -9,6 +9,7 @@ export interface UserProfile {
   bio: string;
   photoURL: string;
   plan: 'free' | 'pro';
+  theme?: string;
   // Allow string for serialized data from server components
   createdAt: Timestamp | string; 
 }

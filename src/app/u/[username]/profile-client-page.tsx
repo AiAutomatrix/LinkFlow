@@ -31,14 +31,14 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
     }
 
     return (
-        <div className="flex flex-col items-center min-h-screen pt-12 px-4 bg-background">
+        <div data-theme={user.theme || 'light'} className="flex flex-col items-center min-h-screen pt-12 px-4 bg-background text-foreground">
             <div className="w-full max-w-md mx-auto">
                 <div className="flex flex-col items-center text-center">
                     <Avatar className="h-24 w-24 border-2 border-white">
                         <AvatarImage src={user.photoURL} alt={user.displayName} />
                         <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
                     </Avatar>
-                    <h1 className="text-2xl font-bold mt-4 text-foreground">{user.displayName}</h1>
+                    <h1 className="text-2xl font-bold mt-4">{user.displayName}</h1>
                     <p className="text-md text-muted-foreground">@{user.username}</p>
                     <p className="mt-4 text-sm max-w-xs text-foreground/80">{user.bio}</p>
                 </div>
@@ -48,7 +48,7 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
                     <Button 
                         key={link.id}
                         onClick={() => handleLinkClick(link.id, link.url)}
-                        className="w-full h-14 text-md shadow-md transition-transform transform active:scale-[0.98]" 
+                        className="w-full h-14 text-md shadow-md transition-transform transform active:scale-[0.98] link-button" 
                         variant="secondary"
                     >
                         {link.title}
