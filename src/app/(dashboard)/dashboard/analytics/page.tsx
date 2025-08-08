@@ -30,7 +30,8 @@ export default function AnalyticsPage() {
         setLoading(false);
         return;
     };
-
+    
+    setLoading(true);
     const linksCollection = collection(firestore, "users", user.uid, "links");
     const q = query(linksCollection, orderBy("clicks", "desc"));
 
@@ -47,6 +48,12 @@ export default function AnalyticsPage() {
 
     return () => unsubscribe();
   }, [user]);
+
+  const totalClicks = links.reduce((acc, link) => acc + (link.clicks || 0), 0);
+  const totalLinks = links.length;
+  const avgClicks = totalLinks > 0 ? (totalClicks / totalLinks).toFixed(2) : "0";
+  const chartData = links.slice(0, 10).map(link => ({ name: link.title, clicks: link.clicks || 0 }));
+
 
   if (loading) {
     return (
@@ -99,11 +106,6 @@ export default function AnalyticsPage() {
       </div>
     );
   }
-
-  const totalClicks = links.reduce((acc, link) => acc + (link.clicks || 0), 0);
-  const totalLinks = links.length;
-  const avgClicks = totalLinks > 0 ? (totalClicks / totalLinks).toFixed(2) : 0;
-  const chartData = links.slice(0, 10).map(link => ({ name: link.title, clicks: link.clicks || 0 }));
 
   return (
     <div className="space-y-6">

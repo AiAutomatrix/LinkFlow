@@ -49,18 +49,18 @@ export default function LinksPage() {
   useEffect(() => {
     if (!user) return;
 
+    setLoading(true);
     const linksCollection = collection(firestore, "users", user.uid, "links");
     const q = query(linksCollection, orderBy("order", "asc"));
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const linksData = querySnapshot.docs.map((doc) => {
         const data = doc.data();
-        // Convert Firestore Timestamps to JS Date objects for serialization
         return {
           id: doc.id,
           ...data,
-          startDate: data.startDate instanceof Timestamp ? data.startDate.toDate() : undefined,
-          endDate: data.endDate instanceof Timestamp ? data.endDate.toDate() : undefined,
+          startDate: data.startDate,
+          endDate: data.endDate,
         } as Link;
       });
       setLinks(linksData);
