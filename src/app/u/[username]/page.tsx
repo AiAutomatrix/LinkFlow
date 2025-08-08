@@ -53,13 +53,13 @@ async function getUserLinks(uid: string): Promise<LinkType[]> {
     });
   
     const activeLinks = allLinks.filter(link => {
-      if (!link.active) return false;
+      if (link.active === false) return false;
   
       const hasStartDate = !!link.startDate;
       const hasEndDate = !!link.endDate;
       
-      const startDate = link.startDate as Timestamp | undefined;
-      const endDate = link.endDate as Timestamp | undefined;
+      const startDate = link.startDate ? (link.startDate as Timestamp) : undefined;
+      const endDate = link.endDate ? (link.endDate as Timestamp) : undefined;
   
       if (hasStartDate && startDate! > now) return false;
       if (hasEndDate && endDate! < now) return false;

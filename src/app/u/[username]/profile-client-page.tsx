@@ -20,7 +20,7 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
                 method: 'POST',
                 body: JSON.stringify({ userId: user.uid, linkId }),
                 headers: { 'Content-Type': 'application/json' },
-                keepalive: true, // Ensures request is sent even if page is closed
+                keepalive: true,
             });
         } catch (error) {
             console.error("Failed to record click", error);

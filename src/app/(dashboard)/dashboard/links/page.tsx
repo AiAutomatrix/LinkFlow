@@ -80,7 +80,7 @@ export default function LinksPage() {
         url,
         order: links.length,
         active: true,
-        clicks: 0, // Initialize clicks to 0
+        clicks: 0,
         createdAt: serverTimestamp(),
     };
 
