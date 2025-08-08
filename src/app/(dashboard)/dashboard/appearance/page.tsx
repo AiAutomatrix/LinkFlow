@@ -56,7 +56,7 @@ export default function AppearancePage() {
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
   const [initialUsername, setInitialUsername] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [photoURL, setPhotoURL] = useState(user?.photoURL);
+  const [photoURL, setPhotoURL] = useState(user?.photoURL || "");
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
@@ -77,9 +77,9 @@ export default function AppearancePage() {
         bio: user.bio || "",
       });
       setInitialUsername(user.username || "");
-      setPhotoURL(user.photoURL);
+      setPhotoURL(user.photoURL || "");
     }
-  }, [user, form.reset]);
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -310,7 +310,7 @@ export default function AppearancePage() {
         </Form>
       </div>
       <div className="md:col-span-1">
-        <PublicProfilePreview profile={{...watchedValues, photoURL}} links={links} />
+        <PublicProfilePreview profile={{...watchedValues, photoURL: photoURL, username: user?.username}} links={links} />
       </div>
     </div>
   );

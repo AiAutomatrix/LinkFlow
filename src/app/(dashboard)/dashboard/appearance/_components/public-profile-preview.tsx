@@ -4,7 +4,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { Link, UserProfile } from "@/lib/types";
-import { useAuth } from "@/contexts/auth-context";
 
 type PreviewProps = {
   profile: Partial<UserProfile>;
@@ -12,15 +11,14 @@ type PreviewProps = {
 };
 
 export default function PublicProfilePreview({ profile, links = [] }: PreviewProps) {
-    const { user } = useAuth();
     const getInitials = (name: string = "") => {
         return name.split(" ").map((n) => n[0]).join("");
     };
 
-  const displayName = profile.displayName || user?.displayName || "Your Name";
-  const username = profile.username || user?.username || "username";
-  const bio = profile.bio || user?.bio || "Your bio will appear here.";
-  const photoURL = profile.photoURL || user?.photoURL;
+  const displayName = profile.displayName || "Your Name";
+  const username = profile.username || "username";
+  const bio = profile.bio || "Your bio will appear here.";
+  const photoURL = profile.photoURL;
 
   return (
     <Card className="sticky top-20">
