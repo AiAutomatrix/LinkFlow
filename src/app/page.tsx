@@ -10,9 +10,8 @@ export default function Home() {
       <div
         style={{
           backgroundSize: '400% 400%',
-          animation: 'gradient-animation 15s ease infinite',
         }}
-        className="absolute inset-0 -z-10 h-full w-full bg-gradient-to-r from-rose-400 via-fuchsia-500 to-indigo-500"
+        className="absolute inset-0 -z-10 h-full w-full bg-gradient-to-r from-rose-400 via-fuchsia-500 to-indigo-500 animate-gradient-animation"
       ></div>
       <header className="container mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         <Logo className="text-white" />
