@@ -13,28 +13,34 @@ export default function RedirectPage() {
     const url = searchParams.get('url');
 
     useEffect(() => {
-        if (linkId && userId && url) {
-            try {
-                // Fire and forget the click tracking
-                fetch('/api/clicks', {
-                    method: 'POST',
-                    body: JSON.stringify({ userId, linkId }),
-                    headers: { 'Content-Type': 'application/json' },
-                    keepalive: true,
-                });
-            } catch (error) {
-                console.error("Failed to record click", error);
-            } finally {
-                // Redirect the user to the destination URL
-                // Using router.replace to avoid adding the redirect page to browser history
-                router.replace(url);
-            }
-        } else {
-            // If parameters are missing, redirect to home
+        if (!userId || !linkId || !url) {
+            // If params are missing, go home.
             router.replace('/');
-        }
-    }, [linkId, userId, url, router]);
+            return;
+        };
 
+        const sendClick = async () => {
+          try {
+            const res = await fetch('/api/clicks', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId, linkId }),
+              keepalive: true,
+            });
+            if (!res.ok) {
+                throw new Error(`API error: ${res.status} ${await res.text()}`);
+            }
+          } catch (error) {
+            console.error('Click tracking failed:', error);
+          } finally {
+            router.replace(url);
+          }
+        };
+    
+        sendClick();
+      }, [userId, linkId, url, router]);
+
+    // Return null or a minimal loader as this page is transitional
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-background text-foreground">
             <div className="text-center">

@@ -18,7 +18,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error: any) {
-    console.error('Error updating clicks:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Click API Error:', error);
+    return NextResponse.json({ error: 'Failed to update clicks', details: error.message }, { status: 500 });
   }
 }
