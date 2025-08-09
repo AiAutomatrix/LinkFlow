@@ -52,8 +52,8 @@ export default function LinkCard({ link, index, totalLinks, onUpdate, onDelete, 
                     <ArrowDown className="h-4 w-4" />
                 </Button>
             </div>
-            <div className="flex-grow">
-                <p className="font-semibold">{link.title}</p>
+            <div className="flex-grow overflow-hidden">
+                <p className="font-semibold truncate">{link.title}</p>
                 <p className="text-sm text-muted-foreground truncate">{link.url}</p>
                 {hasSchedule && (
                     <div className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1.5">
@@ -66,41 +66,44 @@ export default function LinkCard({ link, index, totalLinks, onUpdate, onDelete, 
                     </div>
                 )}
             </div>
-            <div className="text-right">
-                <p className="text-sm font-bold">{link.clicks || 0}</p>
-                <p className="text-xs text-muted-foreground">clicks</p>
-            </div>
-            <Dialog open={isEditOpen} onOpenChange={setEditOpen}>
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                    <DialogTrigger asChild>
-                        <DropdownMenuItem>
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Edit
+            
+            <div className="flex items-center gap-2">
+                <div className="text-right hidden sm:block">
+                    <p className="text-sm font-bold">{link.clicks || 0}</p>
+                    <p className="text-xs text-muted-foreground">clicks</p>
+                </div>
+                <Dialog open={isEditOpen} onOpenChange={setEditOpen}>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                        <DialogTrigger asChild>
+                            <DropdownMenuItem>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Edit
+                            </DropdownMenuItem>
+                        </DialogTrigger>
+                        <DropdownMenuItem onClick={() => onDelete(link.id)} className="text-destructive">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
                         </DropdownMenuItem>
-                    </DialogTrigger>
-                    <DropdownMenuItem onClick={() => onDelete(link.id)} className="text-destructive">
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
-                    </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Edit Link</DialogTitle>
-                    </DialogHeader>
-                    <LinkForm
-                        onSubmit={handleUpdate}
-                        onCancel={() => setEditOpen(false)}
-                        initialData={link}
-                    />
-                </DialogContent>
-            </Dialog>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Edit Link</DialogTitle>
+                        </DialogHeader>
+                        <LinkForm
+                            onSubmit={handleUpdate}
+                            onCancel={() => setEditOpen(false)}
+                            initialData={link}
+                        />
+                    </DialogContent>
+                </Dialog>
+            </div>
         </Card>
     );
 };

@@ -1,8 +1,10 @@
+
 "use client"
 
 import * as React from "react"
 import { format } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
+import type { Matcher } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -16,11 +18,13 @@ import {
 export function DatePicker({
     date,
     setDate,
-    placeholder
+    placeholder,
+    disabled
 }: {
     date?: Date;
     setDate: (date?: Date) => void;
     placeholder: string;
+    disabled?: Matcher | Matcher[] | undefined
 }) {
 
   return (
@@ -42,6 +46,7 @@ export function DatePicker({
           mode="single"
           selected={date}
           onSelect={setDate}
+          disabled={disabled}
           initialFocus
         />
       </PopoverContent>

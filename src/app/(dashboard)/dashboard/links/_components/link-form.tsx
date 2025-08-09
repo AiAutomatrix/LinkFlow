@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,6 +24,14 @@ const formSchema = z.object({
   url: z.string().url({ message: "Please enter a valid URL." }),
   startDate: z.date().optional(),
   endDate: z.date().optional(),
+}).refine(data => {
+    if (data.startDate && data.endDate) {
+        return data.endDate > data.startDate;
+    }
+    return true;
+}, {
+    message: "End date must be after start date.",
+    path: ["endDate"],
 });
 
 type LinkFormProps = {
@@ -36,6 +45,7 @@ const toDate = (date: any): Date | undefined => {
     if (!date) return undefined;
     if (date instanceof Date) return date;
     if (date instanceof Timestamp) return date.toDate();
+    if (typeof date === 'string') return new Date(date);
     return undefined;
 }
 
@@ -115,6 +125,10 @@ export default function LinkForm({ onSubmit, onCancel, initialData }: LinkFormPr
                         date={field.value}
                         setDate={field.onChange}
                         placeholder="Link never expires"
+                        disabled={(date) => {
+                            const startDate = form.getValues("startDate");
+                            return startDate ? date < startDate : false;
+                        }}
                     />
                     <FormMessage />
                 </FormItem>
