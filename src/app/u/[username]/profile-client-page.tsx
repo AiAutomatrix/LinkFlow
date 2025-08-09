@@ -36,9 +36,26 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
                             className="w-full h-14 text-md shadow-md transition-transform transform active:scale-[0.98] link-button" 
                             variant="secondary"
                         >
-                            <Link href={redirectUrl}>
+                            <a href={link.url} 
+                               target="_blank" 
+                               rel="noopener noreferrer" 
+                               onClick={(e) => {
+                                 // We prevent the default navigation so we can first send the click event
+                                 e.preventDefault();
+                                 
+                                 // Send the click event in the background
+                                 fetch(`/api/clicks`, {
+                                   method: 'POST',
+                                   headers: { 'Content-Type': 'application/json' },
+                                   body: JSON.stringify({ userId: user.uid, linkId: link.id }),
+                                   keepalive: true, // Important for requests that might outlive the page
+                                 });
+
+                                 // Open the link in a new tab
+                                 window.open(link.url, '_blank');
+                               }}>
                                 {link.title}
-                            </Link>
+                            </a>
                         </Button>
                     )
                 })}
