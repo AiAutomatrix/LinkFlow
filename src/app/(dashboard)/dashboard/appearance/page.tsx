@@ -242,8 +242,8 @@ export default function AppearancePage() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row gap-8">
-      <div className="w-full md:w-2/3 order-2 md:order-1 space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+      <div className="lg:col-span-2 order-2 lg:order-1 space-y-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Card>
@@ -297,7 +297,7 @@ export default function AppearancePage() {
                       <FormLabel>Username</FormLabel>
                       <div className="relative">
                         <Input placeholder="your_unique_name" {...field} />
-                        {usernameStatus === 'checking' && <Loader2 className="absolute right-2 top-2 h-5 w-5 animate-spin text-muted-foreground" />}
+                        {usernameStatus === 'checking' && <Loader2 className="absolute right-2 top-2.5 h-5 w-5 animate-spin text-muted-foreground" />}
                       </div>
                       {usernameStatus === 'available' && <p className="text-sm text-green-600">Username is available!</p>}
                       {usernameStatus === 'taken' && <p className="text-sm text-destructive">Username is taken.</p>}
@@ -358,7 +358,7 @@ export default function AppearancePage() {
                     >
                       <CarouselContent>
                         {themes.map((theme) => (
-                          <CarouselItem key={theme.id} className="basis-1/3 sm:basis-1/4 md:basis-1/5">
+                          <CarouselItem key={theme.id} className="basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/6">
                             <div className="p-1">
                                 <div 
                                     className={cn(
@@ -390,7 +390,7 @@ export default function AppearancePage() {
           </form>
         </Form>
       </div>
-      <div className="w-full md:w-1/3 order-1 md:order-2">
+      <div className="lg:col-span-1 order-1 lg:order-2">
         <PublicProfilePreview profile={{...watchedValues, photoURL}} links={links} />
       </div>
     </div>
