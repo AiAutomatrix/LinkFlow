@@ -358,7 +358,7 @@ export default function AppearancePage() {
                     >
                       <CarouselContent>
                         {themes.map((theme) => (
-                          <CarouselItem key={theme.id} className="basis-1/4 sm:basis-1/5">
+                          <CarouselItem key={theme.id} className="basis-1/3 sm:basis-1/4 md:basis-1/5">
                             <div className="p-1">
                                 <div 
                                     className={cn(

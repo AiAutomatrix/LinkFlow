@@ -17,7 +17,7 @@ export default function PublicProfilePreview({ profile, links = [] }: PreviewPro
     };
 
   return (
-    <Card className="sticky top-20">
+    <Card className="md:sticky top-20">
       <CardContent className="p-4">
         <div 
           data-theme={profile.theme || 'light'}
