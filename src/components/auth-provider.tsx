@@ -33,7 +33,7 @@ const createProfileForNewUser = async (firebaseUser: FirebaseUser) => {
     }
 
     // This is a new user, create their profile documents
-    const username = firebaseUser.uid; // Use UID as temporary username, user can change later
+    const username = (firebaseUser.email || firebaseUser.uid).split('@')[0];
     const usernameDocRef = doc(firestore, 'usernames', username);
     const createdAt = serverTimestamp();
 
