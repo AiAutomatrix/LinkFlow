@@ -3,28 +3,46 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Deny all reads and writes by default
+    
+    // Default deny all
     match /{document=**} {
       allow read, write: if false;
     }
 
-    // Allow public read of user profiles
+    // Rules for the 'users' collection
     match /users/{userId} {
+      // Allow public read of user profiles
+      allow read: if true;
+      
+      // Allow authenticated users to create and update their own profile
+      allow create, update: if request.auth != null && request.auth.uid == userId;
+
+      // Allow public read of a user's links
       allow read: if true;
     }
     
-    // Allow public read of usernames
-    match /usernames/{username} {
+    // Rules for a user's 'links' subcollection
+    match /users/{userId}/links/{linkId} {
+        // Anyone can read links
         allow read: if true;
+
+        // Allow authenticated users to manage their own links
+        allow create, update, delete: if request.auth != null && request.auth.uid == userId;
+
+        // Allow anyone to update ONLY the 'clicks' field
+        allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['clicks']);
     }
 
-    // Allow public read of links
-    match /users/{userId}/links/{linkId} {
-      allow read: if true;
-      // Allow anyone to update *only* the 'clicks' field.
-      // This is safe because they can only increment the count, not set it to an arbitrary value.
-      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['clicks']);
+    // Rules for the 'usernames' collection
+    match /usernames/{username} {
+        // Allow public read to check for username availability
+        allow read: if true;
+
+        // Allow authenticated user to create a username if it contains their uid
+        allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+
+        // Allow authenticated user to delete their own old username
+        allow delete: if request.auth != null && get(/databases/$(database)/documents/usernames/$(username)).data.uid == request.auth.uid;
     }
   }
 }
