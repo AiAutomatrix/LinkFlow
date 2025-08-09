@@ -36,7 +36,7 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
                             className="w-full h-14 text-md shadow-md transition-transform transform active:scale-[0.98] link-button" 
                             variant="secondary"
                         >
-                            <Link href={redirectUrl} target="_blank" rel="noopener noreferrer">
+                            <Link href={redirectUrl}>
                                 {link.title}
                             </Link>
                         </Button>
