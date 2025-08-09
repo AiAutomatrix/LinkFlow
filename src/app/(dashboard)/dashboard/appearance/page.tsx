@@ -242,8 +242,8 @@ export default function AppearancePage() {
   };
 
   return (
-    <div className="grid md:grid-cols-3 gap-8">
-      <div className="md:col-span-2 space-y-6">
+    <div className="flex flex-col md:flex-row gap-8">
+      <div className="md:w-2/3 order-2 md:order-1 space-y-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Card>
@@ -390,11 +390,10 @@ export default function AppearancePage() {
           </form>
         </Form>
       </div>
-      <div className="md:col-span-1">
+      <div className="md:w-1/3 order-1 md:order-2">
         <PublicProfilePreview profile={{...watchedValues, photoURL}} links={links} />
       </div>
     </div>
   );
 }
-
     
