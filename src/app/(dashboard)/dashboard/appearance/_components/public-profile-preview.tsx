@@ -25,7 +25,7 @@ export default function PublicProfilePreview({ profile, links = [] }: PreviewPro
         >
             <div className="flex-1 w-full flex flex-col items-center pt-8 text-center">
               <Avatar className="h-24 w-24">
-                <AvatarImage src={profile.photoURL} />
+                <AvatarImage src={profile.photoURL || undefined} />
                 <AvatarFallback>{getInitials(profile.displayName)}</AvatarFallback>
               </Avatar>
               <h1 className="text-xl font-bold mt-4 text-foreground">{profile.displayName || "Your Name"}</h1>

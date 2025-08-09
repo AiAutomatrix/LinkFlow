@@ -18,7 +18,7 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
             <div className="w-full max-w-md mx-auto">
                 <div className="flex flex-col items-center text-center">
                     <Avatar className="h-24 w-24 border-2 border-white">
-                        <AvatarImage src={user.photoURL} alt={user.displayName} />
+                        <AvatarImage src={user.photoURL || undefined} alt={user.displayName} />
                         <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
                     </Avatar>
                     <h1 className="text-2xl font-bold mt-4">{user.displayName}</h1>
