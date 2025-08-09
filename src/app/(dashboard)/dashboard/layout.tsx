@@ -3,7 +3,7 @@
 
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
-import React, { useEffect } from "react";
+import React from "react";
 import {
   SidebarProvider,
   Sidebar,
@@ -22,6 +22,7 @@ import { usePathname } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function ShareButton() {
     const { user } = useAuth();
@@ -58,19 +59,26 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
-    }
-  }, [user, loading, router]);
-
-  if (loading || !user) {
-    // You can return a loading spinner here
+  // Route protection is now handled by the AuthProvider
+  // We can show a loading state while the user session is being verified.
+  if (loading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center">
-        Loading...
+        <div className="flex flex-col items-center gap-4">
+          <Skeleton className="h-12 w-12 rounded-full" />
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-[250px]" />
+            <Skeleton className="h-4 w-[200px]" />
+          </div>
+        </div>
       </div>
     );
+  }
+
+  // If loading is false and there's no user, AuthProvider will redirect.
+  // This check is a fallback, but the main logic is in the provider.
+  if (!user) {
+    return null;
   }
 
   const navItems = [

@@ -22,13 +22,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/contexts/auth-context";
 
 const formSchema = z.object({
   email: z.string().email({
@@ -52,14 +51,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
-  const { user } = useAuth();
-
-
-  useEffect(() => {
-    if (user) {
-      router.push("/dashboard");
-    }
-  }, [user, router]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -73,11 +64,11 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, values.email, values.password);
+      router.push("/dashboard");
       toast({
         title: "Success!",
         description: "You've been logged in successfully.",
       });
-      router.push("/dashboard");
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -95,6 +86,7 @@ export default function LoginPage() {
     provider.setCustomParameters({
         auth_domain: 'linkflow-mgvcs.firebaseapp.com'
     });
+    // This will trigger the redirect flow and AuthProvider will handle the result
     await signInWithRedirect(auth, provider);
   };
 

@@ -22,14 +22,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { auth, firestore } from "@/lib/firebase";
 import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect, User } from "firebase/auth";
 import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/contexts/auth-context";
 
 const formSchema = z.object({
   displayName: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -54,14 +53,6 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
-  const { user } = useAuth();
-
-  useEffect(() => {
-    if (user) {
-      router.push("/dashboard");
-    }
-  }, [user, router]);
-
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -101,11 +92,11 @@ export default function SignupPage() {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
       await createProfile(userCredential.user, values.displayName);
+      router.push("/dashboard");
       toast({
         title: "Account Created!",
         description: "Welcome to LinkFlow.",
       });
-      router.push("/dashboard");
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -125,6 +116,7 @@ export default function SignupPage() {
     provider.setCustomParameters({
         auth_domain: 'linkflow-mgvcs.firebaseapp.com'
     });
+    // This will trigger the redirect flow and AuthProvider will handle the result
     await signInWithRedirect(auth, provider);
   };
 

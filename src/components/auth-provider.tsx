@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useContext } from 'react';
@@ -6,33 +7,44 @@ import { doc, getDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { auth, firestore } from '@/lib/firebase';
 import type { UserProfile } from '@/lib/types';
 import { AuthContext } from '@/contexts/auth-context';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { usePathname, useRouter } from 'next/navigation';
+import { Skeleton } from './ui/skeleton';
 
 type AuthProviderProps = {
   children: React.ReactNode;
 };
+
+// Define routes that are publicly accessible
+const PUBLIC_ROUTES = ['/login', '/signup'];
 
 const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    // This effect runs once on mount to handle the redirect result.
-    getRedirectResult(auth)
-      .then(async (result) => {
+    const processAuth = async () => {
+      setLoading(true);
+      try {
+        // 1. Check for a redirect result from Google Sign-In
+        const result = await getRedirectResult(auth);
         if (result) {
-          // User successfully signed in with Google.
+          toast({
+            title: "Success!",
+            description: "You've been signed in with Google.",
+          });
           const fbUser = result.user;
           const userDocRef = doc(firestore, 'users', fbUser.uid);
           const userDoc = await getDoc(userDocRef);
 
           if (!userDoc.exists()) {
-            // This is a new user, create their profile.
+            // New user, create their profile
             const username = fbUser.uid; // Default username
-            const newUserProfile: Omit<UserProfile, 'createdAt'> & { createdAt: any } = {
+            const newUserProfile = {
               uid: fbUser.uid,
               email: fbUser.email!,
               displayName: fbUser.displayName || 'New User',
@@ -49,47 +61,56 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
             batch.set(usernameDocRef, { uid: fbUser.uid });
             await batch.commit();
           }
-           toast({
-            title: "Success!",
-            description: "You've been signed in with Google.",
-          });
         }
-      })
-      .catch((error) => {
+      } catch (error: any) {
         console.error("Redirect Result Error:", error);
-         toast({
+        toast({
           variant: "destructive",
           title: "Google Sign-In Failed",
           description: "Could not sign in with Google. Please try again.",
         });
-      })
-      // We don't setLoading(false) here because onAuthStateChanged will handle it.
-  }, [toast]);
+      }
+
+      // 2. Set up the onAuthStateChanged listener
+      const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+        setFirebaseUser(fbUser);
+        if (fbUser) {
+          const userDocRef = doc(firestore, 'users', fbUser.uid);
+          const userDoc = await getDoc(userDocRef);
+          
+          if (userDoc.exists()) {
+            setUser({ uid: fbUser.uid, ...userDoc.data() } as UserProfile);
+          } else {
+            console.error("User exists in Auth but not in Firestore. Logging out.");
+            auth.signOut();
+            setUser(null);
+          }
+        } else {
+          setUser(null);
+        }
+        setLoading(false); // Auth state is now definitive
+      });
+
+      return () => unsubscribe();
+    };
+
+    processAuth();
+  }, [toast]); // This effect should only run once on mount
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
-      setFirebaseUser(fbUser);
-      if (fbUser) {
-        const userDocRef = doc(firestore, 'users', fbUser.uid);
-        const userDoc = await getDoc(userDocRef);
-        
-        if (userDoc.exists()) {
-          setUser({ uid: fbUser.uid, ...userDoc.data() } as UserProfile);
-        } else {
-            // This case can happen if profile creation failed after redirect
-            // or if a user exists in Auth but not Firestore. We log them out.
-             console.error("User exists in Auth but not in Firestore. Logging out.");
-             auth.signOut();
-             setUser(null);
-        }
-      } else {
-        setUser(null);
-      }
-      setLoading(false);
-    });
+    if (loading) return; // Don't perform routing actions until auth state is resolved
 
-    return () => unsubscribe();
-  }, []);
+    const isPublic = PUBLIC_ROUTES.some(route => pathname.startsWith(route)) || pathname === '/';
+    const isProfilePage = pathname.startsWith('/u/');
+
+    if (user && isPublic) {
+        // User is logged in but on a public page (like login), redirect to dashboard
+        router.push('/dashboard');
+    } else if (!user && !isPublic && !isProfilePage) {
+        // User is not logged in and trying to access a protected page
+        router.push('/login');
+    }
+  }, [user, loading, pathname, router]);
 
   if (loading) {
     return (
