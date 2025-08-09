@@ -33,7 +33,7 @@ const createProfileForNewUser = async (firebaseUser: FirebaseUser) => {
     }
 
     // This is a new user, create their profile documents
-    const username = (firebaseUser.email || firebaseUser.uid).split('@')[0];
+    const username = (firebaseUser.email || firebaseUser.uid).split('@')[0].replace(/[^a-zA-Z0-9]/g, '');
     const usernameDocRef = doc(firestore, 'usernames', username);
     const createdAt = serverTimestamp();
 
@@ -45,6 +45,7 @@ const createProfileForNewUser = async (firebaseUser: FirebaseUser) => {
       username: username,
       plan: "free",
       theme: "light",
+      animatedBackground: false,
     };
 
     const batch = writeBatch(firestore);

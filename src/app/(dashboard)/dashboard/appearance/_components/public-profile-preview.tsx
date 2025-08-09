@@ -1,6 +1,7 @@
 
 "use client";
 
+import AnimatedBackground from "@/components/animated-background";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,9 +22,10 @@ export default function PublicProfilePreview({ profile, links = [] }: PreviewPro
       <CardContent className="p-4">
         <div 
           data-theme={profile.theme || 'light'}
-          className="h-[500px] w-full rounded-md border bg-background p-4 flex flex-col items-center"
+          className="h-[500px] w-full rounded-md border bg-background p-4 flex flex-col items-center relative overflow-hidden"
         >
-            <div className="flex-1 w-full flex flex-col items-center pt-8 text-center">
+            {profile.animatedBackground && <AnimatedBackground />}
+            <div className="flex-1 w-full flex flex-col items-center pt-8 text-center z-10">
               <Avatar className="h-24 w-24">
                 <AvatarImage src={profile.photoURL || undefined} />
                 <AvatarFallback>{getInitials(profile.displayName)}</AvatarFallback>

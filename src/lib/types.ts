@@ -10,6 +10,7 @@ export interface UserProfile {
   photoURL: string;
   plan: 'free' | 'pro';
   theme?: string;
+  animatedBackground?: boolean;
   // Allow string for serialized data from server components
   createdAt: Timestamp | string; 
 }

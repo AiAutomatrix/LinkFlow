@@ -36,6 +36,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Camera, Loader2, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Switch } from "@/components/ui/switch";
 
 const profileSchema = z.object({
   displayName: z.string().min(2, "Name must be at least 2 characters.").max(50),
@@ -49,6 +50,7 @@ const profileSchema = z.object({
     ),
   bio: z.string().max(160, "Bio cannot exceed 160 characters.").optional(),
   theme: z.string().optional(),
+  animatedBackground: z.boolean().optional(),
 });
 
 const themes = [
@@ -92,6 +94,7 @@ export default function AppearancePage() {
       username: "",
       bio: "",
       theme: "light",
+      animatedBackground: false,
     },
   });
   
@@ -104,6 +107,7 @@ export default function AppearancePage() {
         username: user.username || "",
         bio: user.bio || "",
         theme: user.theme || "light",
+        animatedBackground: user.animatedBackground || false,
       };
       form.reset(initialValues);
       setInitialUsername(user.username || "");
@@ -172,6 +176,7 @@ export default function AppearancePage() {
             bio: values.bio,
             username: values.username,
             theme: values.theme,
+            animatedBackground: values.animatedBackground,
         }
         batch.update(userDocRef, profileData);
 
@@ -341,42 +346,68 @@ export default function AppearancePage() {
             
             <Card>
               <CardHeader>
-                <CardTitle>Themes</CardTitle>
-                <CardDescription>Select a theme for your public profile page.</CardDescription>
+                <CardTitle>Appearance</CardTitle>
+                <CardDescription>Select a theme and customize the look of your profile.</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-6">
                 <FormField
                   control={form.control}
                   name="theme"
                   render={({ field }) => (
-                    <Carousel
-                      opts={{
-                        align: "start",
-                        slidesToScroll: "auto",
-                      }}
-                      className="w-full"
-                    >
-                      <CarouselContent>
-                        {themes.map((theme) => (
-                          <CarouselItem key={theme.id} className="basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/6">
-                            <div className="p-1">
-                                <div 
-                                    className={cn(
-                                        "w-full aspect-square rounded-lg flex items-center justify-center border-2 cursor-pointer",
-                                        field.value === theme.id ? 'border-primary' : 'border-transparent'
-                                    )}
-                                    onClick={() => field.onChange(theme.id)}
-                                >
-                                    <div className="w-10 h-10 rounded-full flex overflow-hidden" style={{ background: `linear-gradient(45deg, ${theme.colors[0]} 50%, ${theme.colors[1]} 50%)` }}></div>
-                                </div>
-                                <p className="text-sm text-center mt-2">{theme.name}</p>
-                            </div>
-                          </CarouselItem>
-                        ))}
-                      </CarouselContent>
-                      <CarouselPrevious />
-                      <CarouselNext />
-                    </Carousel>
+                    <FormItem>
+                      <FormLabel>Theme</FormLabel>
+                       <Carousel
+                        opts={{
+                          align: "start",
+                          slidesToScroll: "auto",
+                        }}
+                        className="w-full"
+                      >
+                        <CarouselContent>
+                          {themes.map((theme) => (
+                            <CarouselItem key={theme.id} className="basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/6">
+                              <div className="p-1">
+                                  <div 
+                                      className={cn(
+                                          "w-full aspect-square rounded-lg flex items-center justify-center border-2 cursor-pointer",
+                                          field.value === theme.id ? 'border-primary' : 'border-transparent'
+                                      )}
+                                      onClick={() => field.onChange(theme.id)}
+                                  >
+                                      <div className="w-10 h-10 rounded-full flex overflow-hidden" style={{ background: `linear-gradient(45deg, ${theme.colors[0]} 50%, ${theme.colors[1]} 50%)` }}></div>
+                                  </div>
+                                  <p className="text-sm text-center mt-2">{theme.name}</p>
+                              </div>
+                            </CarouselItem>
+                          ))}
+                        </CarouselContent>
+                        <CarouselPrevious />
+                        <CarouselNext />
+                      </Carousel>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="animatedBackground"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">
+                          Animated Background
+                        </FormLabel>
+                        <FormDescription>
+                          Enable a subtle, animated background on your public profile.
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
                   )}
                 />
               </CardContent>
@@ -396,4 +427,3 @@ export default function AppearancePage() {
     </div>
   );
 }
-    

@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/logo';
 import Link from 'next/link';
+import AnimatedBackground from '@/components/animated-background';
 
 export default function ProfileClientPage({ user, links }: { user: UserProfile; links: LinkType[] }) {
     
@@ -14,8 +15,9 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
     }
 
     return (
-        <div data-theme={user.theme || 'light'} className="flex flex-col items-center min-h-screen pt-12 px-4 bg-background text-foreground">
-            <div className="w-full max-w-md mx-auto">
+        <div data-theme={user.theme || 'light'} className="relative flex flex-col items-center min-h-screen pt-12 px-4 bg-background text-foreground overflow-hidden">
+            {user.animatedBackground && <AnimatedBackground />}
+            <div className="w-full max-w-md mx-auto z-10">
                 <div className="flex flex-col items-center text-center">
                     <Avatar className="h-24 w-24 border-2 border-white">
                         <AvatarImage src={user.photoURL || undefined} alt={user.displayName} />
@@ -61,7 +63,7 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
                 })}
                 </div>
             </div>
-            <footer className="mt-auto py-8">
+            <footer className="mt-auto py-8 z-10">
                 <Logo />
             </footer>
         </div>
