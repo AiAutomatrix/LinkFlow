@@ -25,7 +25,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect } from "firebase/auth";
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 
@@ -83,11 +83,22 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({
-        auth_domain: 'linkflow-mgvcs.firebaseapp.com'
-    });
-    // This will trigger the redirect flow and AuthProvider will handle the result
-    await signInWithRedirect(auth, provider);
+    try {
+        await signInWithPopup(auth, provider);
+        router.push("/dashboard");
+        toast({
+            title: "Success!",
+            description: "You've been signed in with Google.",
+        });
+    } catch (error: any) {
+        toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: error.message,
+        });
+    } finally {
+        setLoading(false);
+    }
   };
 
   return (

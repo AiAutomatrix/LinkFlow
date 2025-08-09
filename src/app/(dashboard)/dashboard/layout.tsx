@@ -59,9 +59,14 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
 
-  // Route protection is now handled by the AuthProvider
-  // We can show a loading state while the user session is being verified.
-  if (loading) {
+  React.useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+
+  if (loading || !user) {
     return (
       <div className="flex h-screen w-screen items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -73,12 +78,6 @@ export default function DashboardLayout({
         </div>
       </div>
     );
-  }
-
-  // If loading is false and there's no user, AuthProvider will redirect.
-  // This check is a fallback, but the main logic is in the provider.
-  if (!user) {
-    return null;
   }
 
   const navItems = [

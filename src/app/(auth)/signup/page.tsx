@@ -25,7 +25,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { auth, firestore } from "@/lib/firebase";
-import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect, User } from "firebase/auth";
+import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, User } from "firebase/auth";
 import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
@@ -113,11 +113,23 @@ export default function SignupPage() {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({
-        auth_domain: 'linkflow-mgvcs.firebaseapp.com'
-    });
-    // This will trigger the redirect flow and AuthProvider will handle the result
-    await signInWithRedirect(auth, provider);
+    try {
+        const result = await signInWithPopup(auth, provider);
+        await createProfile(result.user);
+        router.push("/dashboard");
+        toast({
+            title: "Account Created!",
+            description: "Welcome to LinkFlow.",
+        });
+    } catch (error: any) {
+        toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: error.message,
+        });
+    } finally {
+        setLoading(false);
+    }
   };
 
   return (
