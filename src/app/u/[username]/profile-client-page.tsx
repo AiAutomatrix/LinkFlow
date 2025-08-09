@@ -5,30 +5,12 @@ import type { Link as LinkType, UserProfile } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/logo';
+import Link from 'next/link';
 
 export default function ProfileClientPage({ user, links }: { user: UserProfile; links: LinkType[] }) {
     
     const getInitials = (name: string = '') => {
         return name.split(' ').map(n => n[0]).join('')
-    }
-
-    const handleLinkClick = (linkId: string, url: string) => {
-        if (!user) return;
-        try {
-            // Fire and forget, no need to await. keepalive ensures the request is sent
-            // even if the page is being unloaded.
-            fetch('/api/clicks', {
-                method: 'POST',
-                body: JSON.stringify({ userId: user.uid, linkId }),
-                headers: { 'Content-Type': 'application/json' },
-                keepalive: true,
-            });
-        } catch (error) {
-            console.error("Failed to record click", error);
-        }
-
-        // Open link in a new tab for a better user experience
-        window.open(url, '_blank', 'noopener,noreferrer');
     }
 
     return (
@@ -45,16 +27,21 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
                 </div>
 
                 <div className="mt-8 space-y-4">
-                {links.map((link) => (
-                    <Button 
-                        key={link.id}
-                        onClick={() => handleLinkClick(link.id, link.url)}
-                        className="w-full h-14 text-md shadow-md transition-transform transform active:scale-[0.98] link-button" 
-                        variant="secondary"
-                    >
-                        {link.title}
-                    </Button>
-                ))}
+                {links.map((link) => {
+                    const redirectUrl = `/redirect?userId=${user.uid}&linkId=${link.id}&url=${encodeURIComponent(link.url)}`;
+                    return (
+                        <Button 
+                            key={link.id}
+                            asChild
+                            className="w-full h-14 text-md shadow-md transition-transform transform active:scale-[0.98] link-button" 
+                            variant="secondary"
+                        >
+                            <Link href={redirectUrl} target="_blank" rel="noopener noreferrer">
+                                {link.title}
+                            </Link>
+                        </Button>
+                    )
+                })}
                 </div>
             </div>
             <footer className="mt-auto py-8">
