@@ -20,6 +20,16 @@ import { collection, query, onSnapshot, orderBy, Timestamp } from "firebase/fire
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
+// Helper to safely convert different date formats to a Date object
+const toDate = (date: any): Date | undefined => {
+    if (!date) return undefined;
+    if (date instanceof Date) return date;
+    if (date instanceof Timestamp) return date.toDate();
+    if (typeof date === 'string') return new Date(date);
+    return undefined;
+}
+
+
 export default function AnalyticsPage() {
   const { user } = useAuth();
   const [links, setLinks] = useState<Link[]>([]);
@@ -41,10 +51,9 @@ export default function AnalyticsPage() {
         return {
           id: doc.id,
           ...data,
-          // Ensure Timestamps are converted to JS Date objects for consistency
-          createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : data.createdAt,
-          startDate: data.startDate instanceof Timestamp ? data.startDate.toDate() : data.startDate,
-          endDate: data.endDate instanceof Timestamp ? data.endDate.toDate() : data.endDate,
+          createdAt: toDate(data.createdAt),
+          startDate: toDate(data.startDate),
+          endDate: toDate(data.endDate),
         } as Link;
       });
       setLinks(linksData);
