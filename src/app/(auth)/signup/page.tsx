@@ -22,13 +22,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { auth, firestore } from "@/lib/firebase";
 import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, User } from "firebase/auth";
-import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp, getDoc, Timestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/contexts/auth-context";
 
 const formSchema = z.object({
   displayName: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -53,6 +54,13 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const { user: currentUser, loading: authLoading } = useAuth();
+
+  useEffect(() => {
+    if (!authLoading && currentUser) {
+      router.push('/dashboard');
+    }
+  }, [currentUser, authLoading, router]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -72,6 +80,9 @@ export default function SignupPage() {
     if (userDoc.exists()) {
       return; 
     }
+    
+    // Ensure createdAt is a consistent, serializable format
+    const createdAt = Timestamp.now();
 
     await setDoc(userDocRef, {
       uid: firebaseUser.uid,
@@ -81,7 +92,7 @@ export default function SignupPage() {
       photoURL: firebaseUser.photoURL || "",
       username: username,
       plan: "free",
-      createdAt: serverTimestamp(),
+      createdAt: createdAt,
     });
 
     await setDoc(usernameDocRef, { uid: firebaseUser.uid });
@@ -131,6 +142,14 @@ export default function SignupPage() {
         setLoading(false);
     }
   };
+
+  if (authLoading || currentUser) {
+    return (
+        <div className="flex min-h-screen flex-col items-center justify-center p-4">
+            <p>Loading...</p>
+        </div>
+    );
+  }
 
   return (
     <Card className="w-full max-w-sm">

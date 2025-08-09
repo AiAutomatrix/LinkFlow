@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useContext } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, Timestamp } from 'firebase/firestore';
 import { auth, firestore } from '@/lib/firebase';
 import type { UserProfile } from '@/lib/types';
 import { AuthContext } from '@/contexts/auth-context';
@@ -11,6 +11,20 @@ import { AuthContext } from '@/contexts/auth-context';
 type AuthProviderProps = {
   children: React.ReactNode;
 };
+
+// Helper function to safely process user data
+const processUserData = (uid: string, data: any): UserProfile => {
+    // Ensure timestamps are converted to serializable strings to prevent hydration errors
+    const createdAt = data.createdAt instanceof Timestamp 
+        ? data.createdAt.toDate().toISOString()
+        : data.createdAt;
+
+    return { 
+      uid, 
+      ...data,
+      createdAt,
+    } as UserProfile;
+}
 
 const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -21,16 +35,22 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       setFirebaseUser(fbUser);
       if (fbUser) {
-        const userDocRef = doc(firestore, 'users', fbUser.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-          setUser({ uid: fbUser.uid, ...userDoc.data() } as UserProfile);
-        } else {
-          // This can happen if a user is created in Auth but the Firestore doc creation fails
-          // For now, we'll just log them out to avoid a broken state
-          console.error("User exists in Auth but not in Firestore. Logging out.");
-          auth.signOut();
-          setUser(null);
+        try {
+            const userDocRef = doc(firestore, 'users', fbUser.uid);
+            const userDoc = await getDoc(userDocRef);
+            if (userDoc.exists()) {
+              const userData = userDoc.data();
+              const processedUser = processUserData(fbUser.uid, userData);
+              setUser(processedUser);
+            } else {
+              console.error("User exists in Auth but not in Firestore. Logging out.");
+              auth.signOut();
+              setUser(null);
+            }
+        } catch (error) {
+            console.error("Error fetching user document:", error);
+            auth.signOut();
+            setUser(null);
         }
       } else {
         setUser(null);
