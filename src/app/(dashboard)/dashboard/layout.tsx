@@ -55,18 +55,18 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading } = useAuth();
+  const { user, authReady } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
   React.useEffect(() => {
-    if (!loading && !user) {
+    if (authReady && !user) {
       router.push('/login');
     }
-  }, [user, loading, router]);
+  }, [user, authReady, router]);
 
 
-  if (loading || !user) {
+  if (!authReady || !user) {
     return (
       <div className="flex h-screen w-screen items-center justify-center">
         <div className="flex flex-col items-center gap-4">

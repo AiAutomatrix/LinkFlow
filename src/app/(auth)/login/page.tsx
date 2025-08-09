@@ -22,12 +22,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/contexts/auth-context";
 
 const formSchema = z.object({
   email: z.string().email({
@@ -51,6 +52,13 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const { user, authReady } = useAuth();
+
+  useEffect(() => {
+    if (authReady && user) {
+      router.push('/dashboard');
+    }
+  }, [user, authReady, router]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -64,11 +72,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, values.email, values.password);
-      router.push("/dashboard");
-      toast({
-        title: "Success!",
-        description: "You've been logged in successfully.",
-      });
+      // The AuthProvider will handle the redirect to the dashboard
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -85,11 +89,7 @@ export default function LoginPage() {
     const provider = new GoogleAuthProvider();
     try {
         await signInWithPopup(auth, provider);
-        router.push("/dashboard");
-        toast({
-            title: "Success!",
-            description: "You've been signed in with Google.",
-        });
+        // The AuthProvider will handle profile creation and redirect
     } catch (error: any) {
         toast({
             variant: "destructive",
@@ -100,6 +100,11 @@ export default function LoginPage() {
         setLoading(false);
     }
   };
+  
+  // Don't render the form until we know if the user is logged in or not
+  if (!authReady || user) {
+    return <div className="flex min-h-screen flex-col items-center justify-center p-4"><p>Loading...</p></div>;
+  }
 
   return (
     <Card className="w-full max-w-sm">

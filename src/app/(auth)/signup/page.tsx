@@ -24,9 +24,8 @@ import {
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { auth, firestore } from "@/lib/firebase";
-import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, User } from "firebase/auth";
-import { doc, setDoc, serverTimestamp, getDoc, Timestamp } from "firebase/firestore";
+import { auth } from "@/lib/firebase";
+import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, updateProfile } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/auth-context";
@@ -54,13 +53,13 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
-  const { user: currentUser, loading: authLoading } = useAuth();
+  const { user, authReady } = useAuth();
 
   useEffect(() => {
-    if (!authLoading && currentUser) {
+    if (authReady && user) {
       router.push('/dashboard');
     }
-  }, [currentUser, authLoading, router]);
+  }, [user, authReady, router]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -71,43 +70,14 @@ export default function SignupPage() {
     },
   });
 
-  const createProfile = async (firebaseUser: User, displayName?: string) => {
-    const userDocRef = doc(firestore, 'users', firebaseUser.uid);
-    const username = firebaseUser.uid; // Use UID as temporary username
-    const usernameDocRef = doc(firestore, 'usernames', username);
-
-    const userDoc = await getDoc(userDocRef);
-    if (userDoc.exists()) {
-      return; 
-    }
-    
-    // Ensure createdAt is a consistent, serializable format
-    const createdAt = Timestamp.now();
-
-    await setDoc(userDocRef, {
-      uid: firebaseUser.uid,
-      email: firebaseUser.email,
-      displayName: displayName || firebaseUser.displayName || "New User",
-      bio: "Welcome to my LinkFlow profile!",
-      photoURL: firebaseUser.photoURL || "",
-      username: username,
-      plan: "free",
-      createdAt: createdAt,
-    });
-
-    await setDoc(usernameDocRef, { uid: firebaseUser.uid });
-  };
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
-      await createProfile(userCredential.user, values.displayName);
-      router.push("/dashboard");
-      toast({
-        title: "Account Created!",
-        description: "Welcome to LinkFlow.",
-      });
+      // The AuthProvider will handle creating the Firestore profile
+      if (userCredential.user) {
+        await updateProfile(userCredential.user, { displayName: values.displayName });
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -125,13 +95,8 @@ export default function SignupPage() {
     setLoading(true);
     const provider = new GoogleAuthProvider();
     try {
-        const result = await signInWithPopup(auth, provider);
-        await createProfile(result.user);
-        router.push("/dashboard");
-        toast({
-            title: "Account Created!",
-            description: "Welcome to LinkFlow.",
-        });
+        await signInWithPopup(auth, provider);
+        // The AuthProvider will handle profile creation and redirect
     } catch (error: any) {
         toast({
             variant: "destructive",
@@ -143,12 +108,8 @@ export default function SignupPage() {
     }
   };
 
-  if (authLoading || currentUser) {
-    return (
-        <div className="flex min-h-screen flex-col items-center justify-center p-4">
-            <p>Loading...</p>
-        </div>
-    );
+  if (!authReady || user) {
+    return <div className="flex min-h-screen flex-col items-center justify-center p-4"><p>Loading...</p></div>;
   }
 
   return (
