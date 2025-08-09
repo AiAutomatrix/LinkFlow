@@ -15,6 +15,7 @@ import {
   SidebarInset,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { SheetTitle } from "@/components/ui/sheet";
 import { BarChart2, Link as LinkIcon, Paintbrush, Settings, ExternalLink, Share2 } from "lucide-react";
 import Logo from "@/components/logo";
 import { UserNav } from "@/components/user-nav";
@@ -83,6 +84,7 @@ export default function DashboardLayout({
   return (
       <SidebarProvider>
         <Sidebar>
+           <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
           <SidebarHeader>
             <Logo />
           </SidebarHeader>
