@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -121,6 +122,9 @@ export default function SignupPage() {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({
+        auth_domain: 'linkflow-mgvcs.firebaseapp.com'
+    });
     await signInWithRedirect(auth, provider);
   };
 
