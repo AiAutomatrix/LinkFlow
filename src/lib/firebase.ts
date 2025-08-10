@@ -1,6 +1,5 @@
-
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, Auth } from 'firebase/auth';
+import { initializeApp, getApp, getApps, FirebaseApp } from 'firebase/app';
+import { getAuth, Auth, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 
@@ -13,20 +12,15 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// This ensures we have a single instance of all Firebase services.
-let app: FirebaseApp;
-let auth: Auth;
-let firestore: Firestore;
-let storage: FirebaseStorage;
+// Initialize Firebase
+const app: FirebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-if (!getApps().length) {
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApp();
-}
+export const auth: Auth = getAuth(app);
+export const firestore: Firestore = getFirestore(app);
+export const storage: FirebaseStorage = getStorage(app);
 
-auth = getAuth(app);
-firestore = getFirestore(app);
-storage = getStorage(app);
-
-export { app, auth, firestore, storage };
+// Persist auth across reloads
+setPersistence(auth, browserLocalPersistence).catch((err) => {
+  // Log in console for debugging, but do not crash
+  console.error("Failed to set persistence:", err);
+});

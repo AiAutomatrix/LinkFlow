@@ -12,11 +12,11 @@ import {
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { auth } from "@/lib/firebase";
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
 import { Loader2 } from "lucide-react";
+import { signInWithGoogleRedirect } from "@/lib/authHandlers";
+
 
 export default function SignupPage() {
   const [loading, setLoading] = useState(false);
@@ -33,18 +33,17 @@ export default function SignupPage() {
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
-    const provider = new GoogleAuthProvider();
     try {
-        await signInWithPopup(auth, provider);
-         // The AuthProvider will handle creating the Firestore profile and redirecting
+        await signInWithGoogleRedirect();
+        // The browser will navigate to Google and then back.
+        // The AuthProvider will handle the result.
     } catch(error: any) {
         toast({
             variant: "destructive",
             title: "Google Sign-Up Failed",
             description: error.message,
         });
-    } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
 
