@@ -41,32 +41,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!mounted) return;
 
+    // This function handles the entire auth flow
     const handleAuth = async () => {
-      try {
-        const result = await getRedirectResult(auth);
-        if (result) {
-          // This means a redirect login just completed.
-          // Let the onAuthStateChanged listener handle it to avoid race conditions.
-          // Setting loading to true shows a spinner while the profile is fetched.
-          setLoading(true);
+        try {
+            const result = await getRedirectResult(auth);
+            if (result) {
+                // Google redirect has just completed.
+                // The onAuthStateChanged listener below will handle the user creation.
+                // We show loading screen until profile is fetched.
+                setLoading(true);
+            }
+        } catch (error) {
+            console.error("Error processing redirect result:", error);
         }
-      } catch (error) {
-        console.error("Error processing redirect result:", error);
-      }
-      
-      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-        if (firebaseUser) {
-          const profile = await getOrCreateUserProfile(firebaseUser);
-          setUser(firebaseUser);
-          setUserProfile(profile);
-        } else {
-          setUser(null);
-          setUserProfile(null);
-        }
-        setLoading(false);
-      });
 
-      return () => unsubscribe();
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            if (firebaseUser) {
+                const profile = await getOrCreateUserProfile(firebaseUser);
+                setUser(firebaseUser);
+                setUserProfile(profile);
+            } else {
+                setUser(null);
+                setUserProfile(null);
+            }
+            setLoading(false);
+        });
+
+        // If no redirect is in progress, the initial state might already be available.
+        if (!auth.currentUser) {
+            setLoading(false);
+        }
+
+        return () => unsubscribe();
     };
 
     handleAuth();
@@ -87,7 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user, userProfile, loading, pathname, router, mounted]);
 
-
+  // While the initial `mounted` state is false, or while `loading` is true, show a spinner.
   if (!mounted || loading) {
      return <LoadingScreen />;
   }

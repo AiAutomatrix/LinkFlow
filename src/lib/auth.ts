@@ -42,21 +42,22 @@ export async function getOrCreateUserProfile(user: User): Promise<UserProfile> {
     const userSnap = await getDoc(userRef);
 
     if (userSnap.exists()) {
+        // User profile already exists, return it.
         return userSnap.data() as UserProfile;
     } else {
-        // Create a unique username proposal
+        // This is a new user, create their profile.
         let username = user.displayName?.replace(/\s+/g, '').toLowerCase() || 'user';
         username = username.slice(0, 15); // Truncate to a reasonable length
         
         let finalUsername = username;
         let attempts = 0;
         
-        // Keep trying to generate a unique username
+        // Keep trying to generate a unique username if the proposed one is taken
         while (await isUsernameTaken(finalUsername)) {
             attempts++;
             const randomSuffix = Math.floor(1000 + Math.random() * 9000); // 4-digit random number
             finalUsername = `${username.slice(0, 10)}_${randomSuffix}`;
-            if (attempts > 5) { // Failsafe
+            if (attempts > 5) { // Failsafe to prevent infinite loops
                 finalUsername = `user_${user.uid.slice(0, 8)}`;
                 break;
             }
