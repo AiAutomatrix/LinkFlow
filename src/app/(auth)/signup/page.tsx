@@ -25,9 +25,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
-import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithRedirect } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
-import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/auth-context";
 import { Loader2 } from "lucide-react";
 
@@ -40,15 +39,6 @@ const formSchema = z.object({
     message: "Password must be at least 6 characters.",
   }),
 });
-
-const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg role="img" viewBox="0 0 24 24" {...props}>
-      <path
-        fill="currentColor"
-        d="M12.48 10.92v3.28h7.84c-.24 1.84-.85 3.18-1.73 4.1-1.02 1.02-2.6 1.84-4.58 1.84-3.57 0-6.46-2.9-6.46-6.46s2.89-6.46 6.46-6.46c2.05 0 3.44.82 4.24 1.6l2.48-2.48C18.67 1.96 15.98 1 12.48 1 7.23 1 3.06 4.96 3.06 10.12s4.17 9.12 9.42 9.12c2.8 0 4.96-1 6.5-2.64 1.6-1.6 2.24-4.04 2.24-6.3v-.35h-8.5z"
-      />
-    </svg>
-  );
 
 export default function SignupPage() {
   const [loading, setLoading] = useState(false);
@@ -91,21 +81,6 @@ export default function SignupPage() {
       setLoading(false);
     }
   }
-
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    const provider = new GoogleAuthProvider();
-    try {
-        await signInWithRedirect(auth, provider);
-    } catch (error: any) {
-        toast({
-            variant: "destructive",
-            title: "Uh oh! Something went wrong.",
-            description: error.message,
-        });
-        setLoading(false);
-    }
-  };
 
   if (!authReady || user) {
     return <div className="flex min-h-screen flex-col items-center justify-center p-4"><Loader2 className="h-8 w-8 animate-spin" /></div>;
@@ -166,11 +141,6 @@ export default function SignupPage() {
             </Button>
           </form>
         </Form>
-        <Separator className="my-4" />
-        <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={loading}>
-          {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="mr-2 h-4 w-4" />}
-          Sign up with Google
-        </Button>
         <div className="mt-4 text-center text-sm">
           Already have an account?{" "}
           <Link href="/login" className="underline">
