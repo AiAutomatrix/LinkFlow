@@ -25,7 +25,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/auth-context";
@@ -88,7 +88,7 @@ export default function LoginPage() {
     setLoading(true);
     const provider = new GoogleAuthProvider();
     try {
-        await signInWithPopup(auth, provider);
+        await signInWithRedirect(auth, provider);
         // The AuthProvider will handle profile creation and redirect
     } catch (error: any) {
         toast({
@@ -96,7 +96,6 @@ export default function LoginPage() {
             title: "Uh oh! Something went wrong.",
             description: error.message,
         });
-    } finally {
         setLoading(false);
     }
   };
