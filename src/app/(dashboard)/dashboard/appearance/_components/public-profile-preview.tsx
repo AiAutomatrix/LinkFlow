@@ -12,14 +12,15 @@ import { Mail, Instagram, Facebook, Github } from 'lucide-react';
 type PreviewProps = {
   profile: Partial<UserProfile> & { photoURL?: string };
   links?: Link[];
+  socialLinks?: UserProfile['socialLinks']
 };
 
-export default function PublicProfilePreview({ profile, links = [] }: PreviewProps) {
+export default function PublicProfilePreview({ profile, links = [], socialLinks }: PreviewProps) {
     const getInitials = (name: string = "") => {
         return name.split(" ").map((n) => n[0]).join("");
     };
 
-    const socialLinks = profile.socialLinks || {};
+    const currentSocialLinks = socialLinks || profile.socialLinks || {};
 
   return (
     <Card className="md:sticky top-20">
@@ -39,10 +40,10 @@ export default function PublicProfilePreview({ profile, links = [] }: PreviewPro
               <p className="text-center mt-2 text-sm text-foreground/80">{profile.bio || "Your bio will appear here."}</p>
               
               <div className="flex gap-4 justify-center mt-4 text-foreground/80">
-                {socialLinks.email && <Mail className="h-6 w-6" />}
-                {socialLinks.instagram && <Instagram className="h-6 w-6" />}
-                {socialLinks.facebook && <Facebook className="h-6 w-6" />}
-                {socialLinks.github && <Github className="h-6 w-6" />}
+                {currentSocialLinks.email && <Mail className="h-6 w-6" />}
+                {currentSocialLinks.instagram && <Instagram className="h-6 w-6" />}
+                {currentSocialLinks.facebook && <Facebook className="h-6 w-6" />}
+                {currentSocialLinks.github && <Github className="h-6 w-6" />}
               </div>
               
               <div className="mt-8 space-y-4 w-full max-w-xs mx-auto">

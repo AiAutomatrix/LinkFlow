@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/form";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { firestore, storage } from "@/lib/firebase";
-import { doc, getDoc, writeBatch, collection, query, orderBy, onSnapshot, updateDoc, serverTimestamp, setDoc } from "firebase/firestore";
+import { doc, getDoc, writeBatch, collection, query, orderBy, onSnapshot, updateDoc } from "firebase/firestore";
 import { getAuth, updateProfile } from "firebase/auth";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useToast } from "@/hooks/use-toast";
@@ -34,7 +34,7 @@ import debounce from "lodash/debounce";
 import PublicProfilePreview from "./_components/public-profile-preview";
 import type { Link, UserProfile } from "@/lib/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Camera, Loader2, Check, Mail, Instagram, Facebook, Github } from "lucide-react";
+import { Camera, Loader2, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Switch } from "@/components/ui/switch";
@@ -52,12 +52,6 @@ const profileSchema = z.object({
   bio: z.string().max(160, "Bio cannot exceed 160 characters.").optional(),
   theme: z.string().optional(),
   animatedBackground: z.boolean().optional(),
-  socialLinks: z.object({
-    email: z.string().email({ message: "Please enter a valid email." }).optional().or(z.literal('')),
-    instagram: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
-    facebook: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
-    github: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
-  }).optional(),
 });
 
 const themes = [
@@ -102,12 +96,6 @@ export default function AppearancePage() {
       bio: "",
       theme: "light",
       animatedBackground: false,
-      socialLinks: {
-          email: "",
-          instagram: "",
-          facebook: "",
-          github: ""
-      }
     },
   });
   
@@ -121,7 +109,6 @@ export default function AppearancePage() {
         bio: user.bio || "",
         theme: user.theme || "light",
         animatedBackground: user.animatedBackground || false,
-        socialLinks: user.socialLinks || { email: "", instagram: "", facebook: "", github: "" }
       };
       form.reset(initialValues);
       setInitialUsername(user.username || "");
@@ -191,7 +178,6 @@ export default function AppearancePage() {
             username: values.username,
             theme: values.theme,
             animatedBackground: values.animatedBackground,
-            socialLinks: values.socialLinks
         }
         batch.update(userDocRef, profileData);
 
@@ -204,43 +190,9 @@ export default function AppearancePage() {
               batch.delete(oldUsernameDocRef);
             }
         }
-
-        // Manage social links as trackable link documents
-        const socialLinkPlatforms = ['email', 'instagram', 'facebook', 'github'];
-        const currentSocialLinks = values.socialLinks || {};
-
-        for (const platform of socialLinkPlatforms) {
-            const linkId = `social_${platform}`;
-            const url = currentSocialLinks[platform as keyof typeof currentSocialLinks];
-            const socialLinkRef = doc(firestore, `users/${user.uid}/links`, linkId);
-
-            if (url) {
-                const linkDoc = await getDoc(socialLinkRef);
-                if (linkDoc.exists()) {
-                    // Update existing social link
-                    batch.update(socialLinkRef, { url });
-                } else {
-                    // Create new social link
-                    batch.set(socialLinkRef, {
-                        title: platform.charAt(0).toUpperCase() + platform.slice(1),
-                        url: platform === 'email' ? `mailto:${url}` : url,
-                        clicks: 0,
-                        active: true,
-                        order: -1, // Keep social links separate from user-ordered links
-                        isSocial: true, // Custom flag
-                        createdAt: serverTimestamp(),
-                    });
-                }
-            } else {
-                // If URL is removed, delete the social link document
-                batch.delete(socialLinkRef);
-            }
-        }
-
-
+        
         await batch.commit();
         
-        // This is the correct place to update the user context
         const updatedUser = { ...user, ...profileData };
         setUser(updatedUser);
         setInitialUsername(values.username);
@@ -390,79 +342,6 @@ export default function AppearancePage() {
                   )}
                 />
               </CardContent>
-            </Card>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>Social Links</CardTitle>
-                    <CardDescription>Add links to your social media profiles. These will be tracked in your analytics.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <FormField
-                    control={form.control}
-                    name="socialLinks.email"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Email</FormLabel>
-                         <div className="relative flex items-center">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                            <FormControl>
-                                <Input placeholder="your@email.com" className="pl-10" {...field} />
-                            </FormControl>
-                        </div>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                     <FormField
-                    control={form.control}
-                    name="socialLinks.instagram"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Instagram</FormLabel>
-                         <div className="relative flex items-center">
-                            <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                            <FormControl>
-                                <Input placeholder="https://instagram.com/..." className="pl-10" {...field} />
-                            </FormControl>
-                        </div>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                     <FormField
-                    control={form.control}
-                    name="socialLinks.facebook"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Facebook</FormLabel>
-                         <div className="relative flex items-center">
-                            <Facebook className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                            <FormControl>
-                                <Input placeholder="https://facebook.com/..." className="pl-10" {...field} />
-                            </FormControl>
-                        </div>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                     <FormField
-                    control={form.control}
-                    name="socialLinks.github"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>GitHub</FormLabel>
-                         <div className="relative flex items-center">
-                            <Github className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                            <FormControl>
-                                <Input placeholder="https://github.com/..." className="pl-10" {...field} />
-                            </FormControl>
-                        </div>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                </CardContent>
             </Card>
             
             <Card>
