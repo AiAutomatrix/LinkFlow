@@ -37,6 +37,8 @@ import LinkForm from "./_components/link-form";
 import { useToast } from "@/hooks/use-toast";
 import PublicProfilePreview from "../appearance/_components/public-profile-preview";
 import { useAuth } from "@/contexts/auth-context";
+import { collection, onSnapshot, query, orderBy, addDoc, updateDoc, doc, writeBatch, deleteDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 
 const socialLinksSchema = z.object({
@@ -49,7 +51,7 @@ const socialLinksSchema = z.object({
 
 export default function LinksPage() {
   const { toast } = useToast();
-  const { userProfile, loading: authLoading } = useAuth();
+  const { user, userProfile, loading: authLoading } = useAuth();
   const [links, setLinks] = useState<Link[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingSocial, setLoadingSocial] = useState(false);
@@ -68,17 +70,26 @@ export default function LinksPage() {
   const watchedSocials = socialForm.watch();
 
   useEffect(() => {
-    // Mock loading
-    const timer = setTimeout(() => {
-        setLinks([
-            { id: '1', title: 'My Portfolio', url: 'https://example.com', order: 0, active: true, clicks: 101 },
-            { id: '2', title: 'My Blog', url: 'https://example.com', order: 1, active: true, clicks: 256 },
-            { id: '3', title: 'Project Website', url: 'https://example.com', order: 2, active: false, clicks: 42 },
-        ]);
+    if (!user) return;
+
+    const linksCollection = collection(db, `users/${user.uid}/links`);
+    const q = query(linksCollection, orderBy("order"));
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const linksData: Link[] = [];
+        querySnapshot.forEach((doc) => {
+            linksData.push({ id: doc.id, ...doc.data() } as Link);
+        });
+        setLinks(linksData);
         setLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
+    }, (error) => {
+        console.error("Error fetching links: ", error);
+        toast({ variant: 'destructive', title: "Error", description: "Could not fetch links." });
+        setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user, toast]);
 
   useEffect(() => {
     if (userProfile?.socialLinks) {
@@ -88,39 +99,64 @@ export default function LinksPage() {
 
 
   const handleSocialSubmit = async (values: z.infer<typeof socialLinksSchema>) => {
+    if (!user) return;
     setLoadingSocial(true);
-    console.log("Updating social links:", values);
-    setTimeout(() => {
+    try {
+        const userRef = doc(db, "users", user.uid);
+        await updateDoc(userRef, { socialLinks: values });
         toast({ title: "Social links updated!" });
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: "Error", description: error.message });
+    } finally {
         setLoadingSocial(false);
-    }, 1000);
+    }
   }
   
-  const handleAddLink = (title: string, url: string, startDate?: Date, endDate?: Date) => {
-    const newLink: Link = {
-        id: (links.length + 1).toString(),
+  const handleAddLink = async (title: string, url: string, startDate?: Date, endDate?: Date) => {
+    if (!user) return;
+    const newLink = {
         title,
         url,
         order: links.length,
         active: true,
         clicks: 0,
         createdAt: new Date(),
-        startDate,
-        endDate
+        startDate: startDate || null,
+        endDate: endDate || null,
     };
-    setLinks([...links, newLink]);
-    setDialogOpen(false);
+    try {
+        await addDoc(collection(db, `users/${user.uid}/links`), newLink);
+        toast({ title: "Link added successfully!" });
+        setDialogOpen(false);
+    } catch (error: any) {
+         toast({ variant: 'destructive', title: "Error", description: "Failed to add link." });
+    }
   };
   
-  const handleUpdateLink = (linkId: string, data: Partial<Link>) => {
-    setLinks(links.map(l => l.id === linkId ? { ...l, ...data } : l));
+  const handleUpdateLink = async (linkId: string, data: Partial<Omit<Link, 'id'>>) => {
+    if (!user) return;
+    const linkRef = doc(db, `users/${user.uid}/links`, linkId);
+    try {
+        await updateDoc(linkRef, data);
+        toast({ title: "Link updated successfully!" });
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: "Error", description: "Failed to update link." });
+    }
   };
   
-  const handleDeleteLink = (linkId: string) => {
-    setLinks(links.filter(l => l.id !== linkId));
+  const handleDeleteLink = async (linkId: string) => {
+    if (!user) return;
+    const linkRef = doc(db, `users/${user.uid}/links`, linkId);
+    try {
+        await deleteDoc(linkRef);
+        toast({ title: "Link deleted." });
+    } catch (error) {
+        toast({ variant: 'destructive', title: "Error", description: "Failed to delete link." });
+    }
   };
 
-  const handleMoveLink = (linkId: string, direction: 'up' | 'down') => {
+  const handleMoveLink = async (linkId: string, direction: 'up' | 'down') => {
+    if (!user) return;
     const currentIndex = links.findIndex(link => link.id === linkId);
     if (currentIndex === -1) return;
 
@@ -131,7 +167,18 @@ export default function LinksPage() {
     const [movedLink] = newLinks.splice(currentIndex, 1);
     newLinks.splice(newIndex, 0, movedLink);
 
-    setLinks(newLinks.map((l, i) => ({ ...l, order: i })));
+    const batch = writeBatch(db);
+    newLinks.forEach((link, index) => {
+        const linkRef = doc(db, `users/${user.uid}/links`, link.id);
+        batch.update(linkRef, { order: index });
+    });
+    
+    try {
+        await batch.commit();
+        toast({ title: "Links reordered!" });
+    } catch (error) {
+         toast({ variant: 'destructive', title: "Error", description: "Failed to reorder links." });
+    }
   };
   
   if (authLoading) {

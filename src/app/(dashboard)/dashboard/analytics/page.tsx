@@ -16,27 +16,43 @@ import {
 import type { Link } from "@/lib/types";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/contexts/auth-context";
+import { collection, onSnapshot, query } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AnalyticsPage() {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [links, setLinks] = useState<Link[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!user) {
+        setLoading(false);
+        return;
+    };
+    
     setLoading(true);
-    // Mock data fetching
-    const timer = setTimeout(() => {
-      const mockLinks: Link[] = [
-        { id: '1', title: 'My Portfolio', url: 'https://a.com', order: 0, active: true, clicks: 101, isSocial: false },
-        { id: '2', title: 'My Blog', url: 'https://b.com', order: 1, active: true, clicks: 256, isSocial: false },
-        { id: 'social_instagram', title: 'Instagram', url: 'https://insta.com', order: -1, active: true, clicks: 50, isSocial: true },
-        { id: 'social_github', title: 'Github', url: 'https://github.com', order: -1, active: true, clicks: 75, isSocial: true },
-      ];
-      setLinks(mockLinks);
-      setLoading(false);
-    }, 1000);
+    const linksCollection = collection(db, `users/${user.uid}/links`);
+    const q = query(linksCollection);
 
-    return () => clearTimeout(timer);
-  }, []);
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const linksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Link));
+        setLinks(linksData);
+        setLoading(false);
+    }, (error) => {
+        console.error("Error fetching analytics data: ", error);
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to load link analytics."
+        });
+        setLoading(false);
+    });
+    
+    return () => unsubscribe();
+  }, [user, toast]);
 
   const regularLinks = links.filter(l => !l.isSocial);
   const socialLinks = links.filter(l => l.isSocial);
@@ -45,7 +61,7 @@ export default function AnalyticsPage() {
   const totalRegularLinks = regularLinks.length;
   const avgClicks = totalRegularLinks > 0 ? (totalClicks / totalRegularLinks).toFixed(2) : "0";
   
-  const chartData = links.filter(l => (l.clicks || 0) > 0).slice(0, 10).map(link => ({ name: link.title, clicks: link.clicks || 0 }));
+  const chartData = links.filter(l => (l.clicks || 0) > 0).sort((a,b) => b.clicks - a.clicks).slice(0, 10).map(link => ({ name: link.title, clicks: link.clicks || 0 }));
 
 
   if (loading) {
@@ -145,7 +161,7 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
             <ResponsiveContainer width="100%" height={350}>
-                {links.length > 0 ? (
+                {chartData.length > 0 ? (
                     <RechartsBarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />

@@ -35,22 +35,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    // This effect runs once on mount to signal that the client is ready.
-    // This is crucial for preventing hydration errors.
     setMounted(true);
   }, []);
 
   useEffect(() => {
-    // This effect should only run once the component is mounted on the client.
     if (!mounted) return;
 
-    // This handles the redirect result from Google Sign-In.
     getRedirectResult(auth)
       .then(async (result) => {
         if (result && result.user) {
-          // User signed in via redirect.
-          // The onAuthStateChanged listener below will handle profile creation/fetching.
-          // We set loading to true to show the loading screen while that happens.
           setLoading(true);
         }
       })
@@ -58,7 +51,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("Error processing redirect result:", error);
       })
       .finally(() => {
-        // Now, set up the onAuthStateChanged listener.
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
           if (firebaseUser) {
             const profile = await getOrCreateUserProfile(firebaseUser);
@@ -77,24 +69,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [mounted]);
 
   useEffect(() => {
-    // This effect handles navigation based on auth state.
-    // It only runs when auth state is not loading and the component is mounted.
     if (loading || !mounted) return;
 
     const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
     const isPublicProfile = pathname.startsWith('/u/');
     const isHomePage = pathname === '/';
     
-    if (user && userProfile) { // User is logged in
+    if (user && userProfile) { 
         if (isAuthPage) {
             router.replace('/dashboard/links');
         }
-    } else if (!isAuthPage && !isPublicProfile && !isHomePage) { // User is not logged in and not on a public page
+    } else if (!isAuthPage && !isPublicProfile && !isHomePage) {
         router.replace('/login');
     }
   }, [user, userProfile, loading, pathname, router, mounted]);
 
-  // While the initial mount or auth state check is happening, show a loading screen.
   if (loading || !mounted) {
      return <LoadingScreen />;
   }

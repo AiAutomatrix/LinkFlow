@@ -33,7 +33,7 @@ import { cn } from "@/lib/utils";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/auth-context";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { uploadProfilePicture, updateUserProfilePhoto } from "@/lib/auth";
 
@@ -111,12 +111,14 @@ export default function AppearancePage() {
   const watchedValues = form.watch();
 
   useEffect(() => {
-    // Mock data for links
-    setLinks([
-      { id: '1', title: 'My Portfolio', url: 'https://example.com', order: 0, active: true, clicks: 101 },
-      { id: '2', title: 'My Blog', url: 'https://example.com', order: 1, active: true, clicks: 256 },
-    ]);
-  }, []);
+    if (!user) return;
+    const linksCollection = collection(db, `users/${user.uid}/links`);
+    const q = query(linksCollection, orderBy("order"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        setLinks(snapshot.docs.map(doc => ({id: doc.id, ...doc.data()} as Link)))
+    });
+    return () => unsubscribe();
+  }, [user]);
 
   async function onSubmit(values: z.infer<typeof profileSchema>) {
     if (!user) return;

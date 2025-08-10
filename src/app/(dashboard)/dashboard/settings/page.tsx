@@ -26,13 +26,15 @@ import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Loader2, Star } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/contexts/auth-context";
 
 
 export default function SettingsPage() {
+  const { userProfile } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const plan = "free";
-  const username = "username";
+  const plan = userProfile?.plan || 'free';
+  const username = userProfile?.username || "username";
 
   const handleUpgrade = () => {
     setLoading(true);
@@ -61,7 +63,7 @@ export default function SettingsPage() {
           <CardDescription>
             You are currently on the{" "}
             <Badge variant={plan === "pro" ? "default" : "secondary"}>
-              {plan || "Free"} Plan
+              {plan.charAt(0).toUpperCase() + plan.slice(1)} Plan
             </Badge>
             .
           </CardDescription>

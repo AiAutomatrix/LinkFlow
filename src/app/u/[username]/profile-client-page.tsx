@@ -9,12 +9,14 @@ import AnimatedBackground from '@/components/animated-background';
 import { Mail, Instagram, Facebook, Github } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { Timestamp } from 'firebase/firestore';
 
 type SocialLink = {
     id: string;
     url: string;
     platform: 'email' | 'instagram' | 'facebook' | 'github';
     title: string;
+    isSocial: boolean;
 };
 
 const SocialIcon = ({ platform }: { platform: SocialLink['platform'] }) => {
@@ -37,9 +39,8 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
 
     const now = new Date();
     
-    const handleLinkClick = async (link: LinkType) => {
+    const handleLinkClick = async (link: LinkType | SocialLink) => {
         try {
-            // In a real app, this API call would be secured and robust.
             await fetch('/api/clicks', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -49,32 +50,41 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
                 title: "Redirecting...",
                 description: `You clicked on "${link.title}".`
             });
-            // Open link in a new tab
             window.open(link.url, '_blank');
         } catch (error) {
             console.error('Failed to track click:', error);
-            // Still redirect user even if tracking fails
-             window.open(link.url, '_blank');
+            window.open(link.url, '_blank');
         }
     };
     
     const socialPlatforms: SocialLink['platform'][] = ['email', 'instagram', 'facebook', 'github'];
     const socialLinks: SocialLink[] = socialPlatforms
       .filter(platform => user.socialLinks && user.socialLinks[platform])
-      .map(platform => ({
-        id: `social_${platform}`,
-        url: user.socialLinks![platform]!,
-        platform: platform,
-        title: platform.charAt(0).toUpperCase() + platform.slice(1) // Capitalize title
-      }));
+      .map(platform => {
+        const url = platform === 'email' ? `mailto:${user.socialLinks![platform]}` : user.socialLinks![platform]!;
+        return {
+            id: `social_${platform}`,
+            url,
+            platform: platform,
+            title: platform.charAt(0).toUpperCase() + platform.slice(1),
+            isSocial: true,
+        }
+      });
 
+    const toDate = (date: any): Date | null => {
+        if (!date) return null;
+        if (date instanceof Date) return date;
+        if (date instanceof Timestamp) return date.toDate();
+        if (typeof date === 'string') return new Date(date);
+        return null;
+    }
 
     const activeLinks = links.filter(link => {
         if (!link.active || link.isSocial) return false;
 
-        const startDate = link.startDate ? new Date(link.startDate as string) : null;
-        const endDate = link.endDate ? new Date(link.endDate as string) : null;
-
+        const startDate = toDate(link.startDate);
+        const endDate = toDate(link.endDate);
+        
         if (startDate && now < startDate) return false;
         if (endDate && now > endDate) return false;
 
@@ -97,20 +107,14 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
 
                     <div className="flex gap-4 justify-center mt-4 text-foreground/80">
                         {socialLinks.map(link => (
-                            <a
+                            <button
                                 key={link.id}
                                 aria-label={`My ${link.platform}`}
-                                href={link.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
                                 className="hover:text-primary transition-colors"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    handleLinkClick(link as LinkType); // Cast to LinkType
-                                }}
+                                onClick={() => handleLinkClick(link)}
                             >
                                 <SocialIcon platform={link.platform} />
-                            </a>
+                            </button>
                         ))}
                     </div>
                 </div>
