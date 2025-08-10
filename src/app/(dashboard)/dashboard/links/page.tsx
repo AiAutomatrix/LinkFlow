@@ -25,7 +25,6 @@ import {
   updateDoc,
   serverTimestamp,
   Timestamp,
-  where,
 } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -51,7 +50,6 @@ export default function LinksPage() {
 
     setLoading(true);
     const linksCollection = collection(firestore, "users", user.uid, "links");
-    // We fetch all links and filter on the client to avoid needing a composite index.
     const q = query(linksCollection, orderBy("order", "asc"));
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -60,12 +58,11 @@ export default function LinksPage() {
         return {
           id: doc.id,
           ...data,
-          // Ensure Timestamps are converted to JS Date objects for consistency
           createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : data.createdAt,
           startDate: data.startDate instanceof Timestamp ? data.startDate.toDate() : data.startDate,
           endDate: data.endDate instanceof Timestamp ? data.endDate.toDate() : data.endDate,
         } as Link;
-      }).filter(link => !link.isSocial); // Filter out social links on the client
+      }).filter(link => !link.isSocial);
       setLinks(linksData);
       setLoading(false);
     });
@@ -77,16 +74,21 @@ export default function LinksPage() {
     if (!user) return;
     const linksCollection = collection(firestore, 'users', user.uid, 'links');
     
-    const newLinkData: Omit<Link, 'id'> = {
+    const newLinkData: Omit<Link, 'id' | 'startDate' | 'endDate'> & { startDate?: Timestamp, endDate?: Timestamp } = {
         title,
         url,
         order: links.length,
-        active: true, // Default to active
+        active: true,
         clicks: 0,
         createdAt: serverTimestamp(),
-        startDate: startDate ? Timestamp.fromDate(startDate) : undefined,
-        endDate: endDate ? Timestamp.fromDate(endDate) : undefined
     };
+
+    if (startDate) {
+        newLinkData.startDate = Timestamp.fromDate(startDate);
+    }
+    if (endDate) {
+        newLinkData.endDate = Timestamp.fromDate(endDate);
+    }
 
     await addDoc(linksCollection, newLinkData);
     setDialogOpen(false);
@@ -98,12 +100,16 @@ export default function LinksPage() {
     
     const updateData: any = { ...data };
     
-    // Convert dates back to Timestamps for Firestore
     if (data.startDate) {
         updateData.startDate = Timestamp.fromDate(data.startDate as Date);
+    } else {
+        updateData.startDate = null;
     }
+
     if (data.endDate) {
         updateData.endDate = Timestamp.fromDate(data.endDate as Date);
+    } else {
+        updateData.endDate = null;
     }
 
     await updateDoc(linkDocRef, updateData);
