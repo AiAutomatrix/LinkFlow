@@ -35,22 +35,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    // This effect runs once on component mount to signal that
-    // the client has loaded and we can now safely perform checks.
     setMounted(true);
   }, []);
 
   useEffect(() => {
     if (!mounted) return;
 
-    // This function will handle all authentication logic
     const handleAuth = async () => {
       try {
         const result = await getRedirectResult(auth);
-        if (result && result.user) {
-          // User has just signed in via redirect.
-          // The onAuthStateChanged listener below will handle them.
-          // We can set loading to true to show loading screen while profile is fetched.
+        if (result) {
+          // This means a redirect login just completed.
+          // Let the onAuthStateChanged listener handle it to avoid race conditions.
+          // Setting loading to true shows a spinner while the profile is fetched.
           setLoading(true);
         }
       } catch (error) {
@@ -90,7 +87,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user, userProfile, loading, pathname, router, mounted]);
 
-  if (loading || !mounted) {
+
+  if (!mounted || loading) {
      return <LoadingScreen />;
   }
   

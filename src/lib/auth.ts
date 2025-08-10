@@ -54,10 +54,10 @@ export async function getOrCreateUserProfile(user: User): Promise<UserProfile> {
         // Keep trying to generate a unique username
         while (await isUsernameTaken(finalUsername)) {
             attempts++;
-            const randomSuffix = Math.random().toString(36).substring(2, 6);
-            finalUsername = `${username.slice(0, 14 - randomSuffix.length)}${randomSuffix}`;
+            const randomSuffix = Math.floor(1000 + Math.random() * 9000); // 4-digit random number
+            finalUsername = `${username.slice(0, 10)}_${randomSuffix}`;
             if (attempts > 5) { // Failsafe
-                finalUsername = `user_${user.uid.slice(0, 6)}`;
+                finalUsername = `user_${user.uid.slice(0, 8)}`;
                 break;
             }
         }
@@ -94,7 +94,8 @@ export async function signUpWithEmail(email: string, password: string, displayNa
     const user = userCredential.user;
     // Update Firebase auth profile display name
     await updateFirebaseAuthProfile(user, { displayName });
-    await getOrCreateUserProfile(user); // This will create the profile in Firestore
+    // This will create the profile in Firestore
+    await getOrCreateUserProfile(user); 
     return user;
 }
 
