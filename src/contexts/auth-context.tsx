@@ -17,6 +17,15 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function LoadingScreen() {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        Loading…
+      </div>
+    );
+}
+
+
 async function createProfileForNewUser(user: User): Promise<UserProfile> {
     const userRef = doc(db, "users", user.uid);
     const userSnap = await getDoc(userRef);
@@ -54,18 +63,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
-
     const processAuth = async () => {
+      // First, check for redirect result
       try {
         const result = await getRedirectResult(auth);
         if (result && result.user) {
@@ -73,12 +76,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(result.user);
           setUserProfile(profile);
           setLoading(false);
-          return; 
+          return; // Exit early if redirect is processed
         }
       } catch (error) {
         console.error("Error processing redirect result:", error);
       }
-      
+
+      // If no redirect, set up the normal auth state listener
       const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
         if (firebaseUser) {
           setUser(firebaseUser);
@@ -93,12 +97,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       return () => unsubscribe();
     };
-    
+
     processAuth();
-  }, [mounted]);
+  }, []); // Empty dependency array ensures this runs once on mount
 
   useEffect(() => {
-    if (loading || !mounted) return; 
+    if (loading) return; 
 
     const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
     const isPublicProfile = pathname.startsWith('/u/');
@@ -110,10 +114,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else if (!user && !isAuthPage && !isPublicProfile && pathname !== '/') {
         router.replace('/login');
     }
-  }, [user, userProfile, loading, mounted, pathname, router]);
+  }, [user, userProfile, loading, pathname, router]);
 
-  if (!mounted || loading) {
-     return <div style={{ minHeight: "100vh", display:"flex", alignItems:"center", justifyContent:"center" }}>Loading…</div>;
+  if (loading) {
+     return <LoadingScreen />;
   }
   
   const value = {
