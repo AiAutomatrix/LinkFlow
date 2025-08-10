@@ -25,7 +25,6 @@ function LoadingScreen() {
     );
 }
 
-
 async function createProfileForNewUser(user: User): Promise<UserProfile> {
     const userRef = doc(db, "users", user.uid);
     const userSnap = await getDoc(userRef);
@@ -63,12 +62,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   useEffect(() => {
+    if (!mounted) return;
+
     const processAuth = async () => {
-      // First, check for redirect result
       try {
         const result = await getRedirectResult(auth);
         if (result && result.user) {
@@ -76,13 +81,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(result.user);
           setUserProfile(profile);
           setLoading(false);
-          return; // Exit early if redirect is processed
+          return;
         }
       } catch (error) {
         console.error("Error processing redirect result:", error);
       }
 
-      // If no redirect, set up the normal auth state listener
       const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
         if (firebaseUser) {
           setUser(firebaseUser);
@@ -99,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     processAuth();
-  }, []); // Empty dependency array ensures this runs once on mount
+  }, [mounted]);
 
   useEffect(() => {
     if (loading) return; 
@@ -109,14 +113,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (user && userProfile) {
         if (isAuthPage) {
-            router.replace('/dashboard');
+            router.replace('/dashboard/links');
         }
     } else if (!user && !isAuthPage && !isPublicProfile && pathname !== '/') {
         router.replace('/login');
     }
   }, [user, userProfile, loading, pathname, router]);
 
-  if (loading) {
+  if (!mounted || loading) {
      return <LoadingScreen />;
   }
   
