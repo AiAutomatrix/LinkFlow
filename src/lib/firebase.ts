@@ -1,5 +1,5 @@
 import { initializeApp, getApp, getApps, FirebaseApp } from 'firebase/app';
-import { getAuth, Auth, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 
@@ -16,11 +16,5 @@ const firebaseConfig = {
 const app: FirebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 export const auth: Auth = getAuth(app);
-export const firestore: Firestore = getFirestore(app);
+export const db: Firestore = getFirestore(app);
 export const storage: FirebaseStorage = getStorage(app);
-
-// Persist auth across reloads
-setPersistence(auth, browserLocalPersistence).catch((err) => {
-  // Log in console for debugging, but do not crash
-  console.error("Failed to set persistence:", err);
-});

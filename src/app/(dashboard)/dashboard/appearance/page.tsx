@@ -32,6 +32,10 @@ import { Camera, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Switch } from "@/components/ui/switch";
+import { useAuth } from "@/contexts/auth-context";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { uploadProfilePicture, updateUserProfilePhoto } from "@/lib/auth";
 
 const profileSchema = z.object({
   displayName: z.string().min(2, "Name must be at least 2 characters.").max(50),
@@ -73,6 +77,7 @@ const themes = [
 
 export default function AppearancePage() {
   const { toast } = useToast();
+  const { user, userProfile, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [links, setLinks] = useState<Link[]>([]);
@@ -82,14 +87,27 @@ export default function AppearancePage() {
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      displayName: "Demo User",
-      username: "username",
-      bio: "This is a bio for the demo user.",
+      displayName: "",
+      username: "",
+      bio: "",
       theme: "light",
       animatedBackground: false,
     },
   });
   
+  useEffect(() => {
+      if (userProfile) {
+          form.reset({
+              displayName: userProfile.displayName,
+              username: userProfile.username,
+              bio: userProfile.bio,
+              theme: userProfile.theme || 'light',
+              animatedBackground: userProfile.animatedBackground || false,
+          });
+          setPhotoURL(userProfile.photoURL || "");
+      }
+  }, [userProfile, form]);
+
   const watchedValues = form.watch();
 
   useEffect(() => {
@@ -101,38 +119,50 @@ export default function AppearancePage() {
   }, []);
 
   async function onSubmit(values: z.infer<typeof profileSchema>) {
+    if (!user) return;
     setLoading(true);
-    console.log("Updating profile", values);
-    setTimeout(() => {
+    try {
+        const userRef = doc(db, "users", user.uid);
+        await updateDoc(userRef, values);
         toast({ title: "Profile updated successfully!" });
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: "Error", description: error.message });
+    } finally {
         setLoading(false);
-    }, 1000);
+    }
   }
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files || event.target.files.length === 0) {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files || event.target.files.length === 0 || !user) {
       return;
     }
     const file = event.target.files[0];
     setUploading(true);
-
-    // Mock upload
-    setTimeout(() => {
-      const newPhotoURL = URL.createObjectURL(file);
-      setPhotoURL(newPhotoURL);
-      setUploading(false);
-      toast({ title: "Profile picture updated!" });
-    }, 1500);
+    
+    try {
+        const newPhotoURL = await uploadProfilePicture(user.uid, file);
+        await updateUserProfilePhoto(user.uid, newPhotoURL);
+        setPhotoURL(newPhotoURL);
+        toast({ title: "Profile picture updated!" });
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: "Upload failed", description: error.message });
+    } finally {
+        setUploading(false);
+    }
   };
 
   const getInitials = (name: string = "") => {
     return name.split(" ").map((n) => n[0]).join("");
   };
 
+  if (authLoading) {
+      return <div>Loading user profile...</div>;
+  }
+  
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
       <div className="lg:col-span-2 order-2 lg:order-1 space-y-6">

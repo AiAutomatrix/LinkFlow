@@ -1,0 +1,101 @@
+
+import { 
+    createUserWithEmailAndPassword, 
+    GoogleAuthProvider, 
+    signInWithPopup,
+    updateProfile as updateFirebaseAuthProfile,
+    signInWithEmailAndPassword
+} from "firebase/auth";
+import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { auth, db, storage } from "./firebase";
+import type { UserProfile } from "./types";
+
+/**
+ * Creates a new user with email and password, and sets up their profile in Firestore.
+ */
+export async function signUpWithEmail(email: string, password: string, displayName: string) {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+    
+    // Create the user profile in Firestore
+    await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        displayName,
+        username: user.uid.slice(0, 8), // default username
+        email: user.email,
+        photoURL: null,
+        bio: "",
+        theme: "light",
+        animatedBackground: false,
+        socialLinks: {},
+        createdAt: new Date(),
+    } as Omit<UserProfile, 'plan'>); // plan will be set by default in Firestore rules or a backend function if needed
+    
+    return user;
+}
+
+
+/**
+ * Signs in a user with Google, creating a profile if it's their first time.
+ */
+export async function signInWithGoogle() {
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+        // This is a new user, create their profile
+        await setDoc(userRef, {
+            uid: user.uid,
+            displayName: user.displayName,
+            username: user.uid.slice(0, 8), // default username
+            email: user.email,
+            photoURL: user.photoURL || null,
+            bio: "",
+            theme: "light",
+            animatedBackground: false,
+            socialLinks: {},
+            createdAt: new Date(),
+        } as Omit<UserProfile, 'plan'>);
+    }
+    
+    return user;
+}
+
+/**
+ * Signs in a user with their email and password.
+ */
+export async function signInWithEmail(email: string, password: string) {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    return userCredential.user;
+}
+
+
+/**
+ * Uploads a profile picture to Firebase Storage.
+ * @returns The public download URL of the uploaded image.
+ */
+export async function uploadProfilePicture(userUid: string, file: File): Promise<string> {
+    // Use a consistent file name, like 'profile.jpg', to overwrite the existing one.
+    const storageRef = ref(storage, `profile_pictures/${userUid}/profile.jpg`);
+    await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(storageRef);
+    return downloadURL;
+}
+
+/**
+ * Updates the user's profile photo URL in their Firestore document.
+ */
+export async function updateUserProfilePhoto(userUid: string, photoURL: string) {
+    const userRef = doc(db, "users", userUid);
+    await updateDoc(userRef, { photoURL });
+
+    // Also update the photoURL in the Firebase Auth user profile
+    if (auth.currentUser) {
+        await updateFirebaseAuthProfile(auth.currentUser, { photoURL });
+    }
+}

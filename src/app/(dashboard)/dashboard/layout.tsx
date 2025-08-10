@@ -19,15 +19,16 @@ import { usePathname } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
-import { Skeleton } from "@/components/ui/skeleton";
 import { UserNav } from "@/components/user-nav";
+import { useAuth } from "@/contexts/auth-context";
 
 function ShareButton() {
     const { toast } = useToast();
+    const { userProfile } = useAuth();
 
     const handleShare = () => {
-        if (typeof window === 'undefined') return;
-        const shareUrl = `${window.location.origin}/u/username`;
+        if (typeof window === 'undefined' || !userProfile?.username) return;
+        const shareUrl = `${window.location.origin}/u/${userProfile.username}`;
         navigator.clipboard.writeText(shareUrl).then(() => {
             toast({ title: "Copied!", description: "Your profile URL has been copied to the clipboard." });
         }, (err) => {
@@ -35,6 +36,8 @@ function ShareButton() {
             console.error('Could not copy text: ', err);
         });
     };
+    
+    if (!userProfile) return null;
 
     return (
         <Button variant="outline" onClick={handleShare}>
@@ -51,6 +54,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const { userProfile } = useAuth();
 
   const navItems = [
     { href: "/dashboard/links", icon: LinkIcon, label: "Links" },
@@ -74,10 +78,10 @@ export default function DashboardLayout({
                     isActive={pathname === item.href}
                     tooltip={{ children: item.label, side: "right", align: "center" }}
                   >
-                    <a href={item.href}>
+                    <Link href={item.href}>
                       <item.icon />
                       <span>{item.label}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -89,12 +93,14 @@ export default function DashboardLayout({
             <SidebarTrigger />
             <div className="flex items-center gap-2">
               <ShareButton />
-              <Button variant="outline" asChild>
-                  <Link href={`/u/username`} target="_blank">
-                      <ExternalLink className="mr-2 h-4 w-4" />
-                      View Profile
-                  </Link>
-              </Button>
+              {userProfile?.username && (
+                <Button variant="outline" asChild>
+                    <Link href={`/u/${userProfile.username}`} target="_blank">
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                        View Profile
+                    </Link>
+                </Button>
+              )}
               <UserNav />
             </div>
           </header>
