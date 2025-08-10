@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import Logo from '@/components/logo';
 import Link from 'next/link';
 import AnimatedBackground from '@/components/animated-background';
+import { Mail, Instagram, Facebook, Github } from 'lucide-react';
 
 export default function ProfileClientPage({ user, links }: { user: UserProfile; links: LinkType[] }) {
     
@@ -26,6 +27,39 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
                     <h1 className="text-2xl font-bold mt-4">{user.displayName}</h1>
                     <p className="text-md text-muted-foreground">@{user.username}</p>
                     <p className="mt-4 text-sm max-w-xs text-foreground/80">{user.bio}</p>
+
+                    <div className="flex gap-4 justify-center mt-4 text-foreground/80">
+                        <a aria-label="Send email" href="mailto:your@email.com" className="hover:text-primary transition-colors">
+                            <Mail className="h-6 w-6" />
+                        </a>
+                        <a
+                            aria-label="My Instagram"
+                            href="https://www.instagram.com/bigtimetreat"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:text-primary transition-colors"
+                        >
+                            <Instagram className="h-6 w-6" />
+                        </a>
+                        <a
+                            aria-label="My Facebook"
+                            href="https://facebook.com/yourusername"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:text-primary transition-colors"
+                        >
+                           <Facebook className="h-6 w-6" />
+                        </a>
+                        <a
+                            aria-label="My Github"
+                            href="https://github.com/yourusername"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:text-primary transition-colors"
+                        >
+                            <Github className="h-6 w-6" />
+                        </a>
+                    </div>
                 </div>
 
                 <div className="mt-8 space-y-4">
