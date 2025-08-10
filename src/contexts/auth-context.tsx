@@ -106,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [mounted]);
 
   useEffect(() => {
-    if (loading) return; 
+    if (loading || !mounted) return; 
 
     const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
     const isPublicProfile = pathname.startsWith('/u/');
@@ -118,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else if (!user && !isAuthPage && !isPublicProfile && pathname !== '/') {
         router.replace('/login');
     }
-  }, [user, userProfile, loading, pathname, router]);
+  }, [user, userProfile, loading, pathname, router, mounted]);
 
   if (!mounted || loading) {
      return <LoadingScreen />;
