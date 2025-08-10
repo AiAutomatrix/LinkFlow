@@ -111,7 +111,7 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
                         <Button 
                             key={link.id}
                             asChild
-                            className="w-full h-14 text-md shadow-md transition-transform transform active:scale-[0.98] link-button" 
+                            className="w-full h-14 text-md shadow-md transition-transform transform active:scale-[0.98] link-button truncate" 
                             variant="secondary"
                         >
                             <a href={link.url} 
