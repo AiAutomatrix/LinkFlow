@@ -105,7 +105,9 @@ export default function DashboardLayout({
             </div>
           </header>
           <main className="p-4 sm:p-6">
-            {children}
+            <div className="space-y-6">
+              {children}
+            </div>
           </main>
         </SidebarInset>
       </SidebarProvider>
