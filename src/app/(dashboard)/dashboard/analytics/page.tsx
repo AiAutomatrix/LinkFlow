@@ -73,7 +73,7 @@ export default function AnalyticsPage() {
               Understand how your audience engages with your links.
             </p>
           </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Total Clicks (All Links)</CardTitle>
@@ -124,7 +124,7 @@ export default function AnalyticsPage() {
             Understand how your audience engages with your links.
           </p>
         </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Clicks (All Links)</CardTitle>
@@ -154,7 +154,7 @@ export default function AnalyticsPage() {
         </Card>
       </div>
       
-      <div className="grid gap-4 grid-cols-1 lg:grid-cols-5">
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-5">
         <Card className="lg:col-span-3">
             <CardHeader>
                 <CardTitle>Top Links by Clicks</CardTitle>

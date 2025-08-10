@@ -321,7 +321,7 @@ export default function LinksPage() {
                             />
                         </CardContent>
                     </Card>
-                    <Button type="submit" disabled={loadingSocial} className="mt-4">
+                    <Button type="submit" disabled={loadingSocial} className="mt-6">
                         {loadingSocial && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Update Social Links
                     </Button>
