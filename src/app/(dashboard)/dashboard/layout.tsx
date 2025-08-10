@@ -105,9 +105,7 @@ export default function DashboardLayout({
             </div>
           </header>
           <main className="p-4 sm:p-6">
-            <div className="max-w-7xl mx-auto w-full">
-              {children}
-            </div>
+            {children}
           </main>
         </SidebarInset>
       </SidebarProvider>
