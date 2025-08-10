@@ -1,4 +1,4 @@
-import type { Timestamp } from 'firebase/firestore';
+import type { FieldValue, Timestamp } from 'firebase/firestore';
 
 export interface UserProfile {
   uid: string;
@@ -16,8 +16,7 @@ export interface UserProfile {
     facebook?: string;
     github?: string;
   };
-  // Allow string for serialized data from server components
-  createdAt: Timestamp | string; 
+  createdAt: Timestamp | FieldValue; 
 }
 
 export interface Link {
@@ -28,7 +27,6 @@ export interface Link {
   active: boolean;
   clicks: number;
   isSocial?: boolean;
-  // Allow string for serialized data from server components
   createdAt?: Timestamp | Date | string;
   startDate?: Timestamp | Date | string;
   endDate?: Timestamp | Date | string;

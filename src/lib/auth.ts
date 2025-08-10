@@ -76,7 +76,7 @@ export async function updateUserProfilePhoto(userUid: string, photoURL: string) 
     await updateDoc(userRef, { photoURL });
 
     // Also update the photoURL in the Firebase Auth user profile
-    if (auth.currentUser) {
+    if (auth.currentUser && auth.currentUser.uid === userUid) {
         await updateFirebaseAuthProfile(auth.currentUser, { photoURL });
     }
 }
