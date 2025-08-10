@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useContext } from 'react';
-import { onAuthStateChanged, User as FirebaseUser, getRedirectResult } from 'firebase/auth';
+import { onAuthStateChanged, User as FirebaseUser, getRedirectResult, Unsubscribe } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp, writeBatch, Timestamp } from 'firebase/firestore';
 import { auth, firestore } from '@/lib/firebase';
 import type { UserProfile } from '@/lib/types';
@@ -14,7 +14,14 @@ const createProfileForNewUser = async (firebaseUser: FirebaseUser) => {
 
     if (userDocSnap.exists()) {
         // Return existing profile data
-        return userDocSnap.data();
+        const data = userDocSnap.data();
+        return {
+            uid: firebaseUser.uid,
+            ...data,
+            createdAt: data.createdAt instanceof Timestamp
+                ? data.createdAt.toDate().toISOString()
+                : new Date().toISOString(),
+        } as UserProfile;
     }
 
     // New user, create profile
@@ -49,7 +56,11 @@ const createProfileForNewUser = async (firebaseUser: FirebaseUser) => {
     
     await batch.commit();
 
-    return { ...newUserProfileData, createdAt: new Date() }; // return with placeholder date
+    return { 
+        uid: firebaseUser.uid,
+        ...newUserProfileData, 
+        createdAt: new Date().toISOString() // return with placeholder date
+    } as UserProfile;
 };
 
 const AuthProvider = ({ children }: { children: React.ReactNode; }) => {
@@ -58,74 +69,66 @@ const AuthProvider = ({ children }: { children: React.ReactNode; }) => {
     const [authReady, setAuthReady] = useState(false);
 
     useEffect(() => {
-        // This flag prevents the onAuthStateChanged listener from running
-        // before we've had a chance to process the redirect result.
-        let isProcessingRedirect = true;
-
-        // First, check for the result of a redirect login
-        getRedirectResult(auth)
-            .then(async (credential) => {
+        let unsubscribe: Unsubscribe | null = null;
+        
+        const initializeAuth = async () => {
+            try {
+                // First, check for the result of a redirect login. This handles the case
+                // where the user was redirected to Google and is now returning to the app.
+                const credential = await getRedirectResult(auth);
                 if (credential) {
-                    // This means the user has just signed in via redirect
                     const fbUser = credential.user;
-                    // The createProfileForNewUser function will either create or get the profile
-                    await createProfileForNewUser(fbUser);
-                    // The onAuthStateChanged listener will handle setting the user state
-                }
-            })
-            .catch((error) => {
-                console.error("Error getting redirect result:", error);
-            })
-            .finally(() => {
-                // Now that we've processed the redirect, we can safely listen for auth changes.
-                isProcessingRedirect = false;
-                
-                // Set up the primary auth state listener
-                const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
-                    // Don't do anything if we are still processing the redirect
-                    if (isProcessingRedirect) return;
-
-                    if (fbUser) {
-                        setFirebaseUser(fbUser);
-                        const userDocRef = doc(firestore, 'users', fbUser.uid);
-                        const userDoc = await getDoc(userDocRef);
-                        if (userDoc.exists()) {
-                            const finalProfileData = userDoc.data();
-                            const processedUser = {
-                                uid: fbUser.uid,
-                                ...finalProfileData,
-                                createdAt: finalProfileData.createdAt instanceof Timestamp
-                                    ? finalProfileData.createdAt.toDate().toISOString()
-                                    : new Date().toISOString(),
-                            } as UserProfile;
-                            setUser(processedUser);
-                        } else {
-                          // This can happen if the profile creation failed or is slow.
-                          // We attempt to create it again just in case.
-                          await createProfileForNewUser(fbUser);
-                          const newUserDoc = await getDoc(userDocRef);
-                          if(newUserDoc.exists()) {
-                            const finalProfileData = newUserDoc.data();
-                             const processedUser = {
-                                uid: fbUser.uid,
-                                ...finalProfileData,
-                                createdAt: finalProfileData.createdAt instanceof Timestamp
-                                    ? finalProfileData.createdAt.toDate().toISOString()
-                                    : new Date().toISOString(),
-                            } as UserProfile;
-                            setUser(processedUser);
-                          }
-                        }
-                    } else {
-                        setUser(null);
-                        setFirebaseUser(null);
-                    }
+                    setFirebaseUser(fbUser);
+                    const profile = await createProfileForNewUser(fbUser);
+                    setUser(profile);
                     setAuthReady(true);
-                });
+                    // We found a user via redirect, no need to set up the listener yet.
+                    // The main navigation logic in pages will handle the redirect to dashboard.
+                    return; 
+                }
+            } catch (error) {
+                console.error("Error processing redirect result:", error);
+            }
 
-                return () => unsubscribe();
+            // If no redirect result, set up the normal auth state listener.
+            // This handles popup logins, direct email/password logins, and existing sessions.
+            unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+                if (fbUser) {
+                    setFirebaseUser(fbUser);
+                    const userDocRef = doc(firestore, 'users', fbUser.uid);
+                    const userDoc = await getDoc(userDocRef);
+
+                    if (userDoc.exists()) {
+                        const finalProfileData = userDoc.data();
+                        const processedUser = {
+                            uid: fbUser.uid,
+                            ...finalProfileData,
+                            createdAt: finalProfileData.createdAt instanceof Timestamp
+                                ? finalProfileData.createdAt.toDate().toISOString()
+                                : new Date().toISOString(),
+                        } as UserProfile;
+                        setUser(processedUser);
+                    } else {
+                        // This can happen on first sign-up (email or popup)
+                        const profile = await createProfileForNewUser(fbUser);
+                        setUser(profile);
+                    }
+                } else {
+                    setUser(null);
+                    setFirebaseUser(null);
+                }
+                setAuthReady(true);
             });
+        };
 
+        initializeAuth();
+
+        // Cleanup subscription on unmount
+        return () => {
+            if (unsubscribe) {
+                unsubscribe();
+            }
+        };
     }, []);
 
     const value = { user, firebaseUser, authReady, setUser };

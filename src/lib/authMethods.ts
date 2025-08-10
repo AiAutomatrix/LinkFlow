@@ -1,3 +1,4 @@
+
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, UserCredential } from "firebase/auth";
 import { canUsePopup } from "./canUsePopup";
 
@@ -12,10 +13,15 @@ export async function loginWithGoogle(): Promise<UserCredential | void> {
       return result;
     } catch (err: any) {
       console.warn("Popup failed, falling back to redirect:", err.code);
-      // Fallback to redirect if popup fails for any reason (e.g. closed by user)
-      await signInWithRedirect(auth, provider);
-      // signInWithRedirect does not resolve, it navigates away.
-      // So no return value here.
+      // Fallback to redirect if popup fails for any reason (e.g. blocked/closed)
+      if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+          await signInWithRedirect(auth, provider);
+          // signInWithRedirect does not resolve, it navigates away.
+          // So no return value here.
+      } else {
+        // Re-throw other errors so they can be handled in the UI
+        throw err;
+      }
     }
   } else {
     // Use redirect for environments that don't support popups well

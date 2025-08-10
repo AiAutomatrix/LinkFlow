@@ -1,3 +1,6 @@
+
+"use client";
+
 export function canUsePopup(): boolean {
   if (typeof window === 'undefined') {
     // Default to false in SSR environments
@@ -14,7 +17,7 @@ export function canUsePopup(): boolean {
   const isTikTokInApp = ua.includes("Tiktok");
   
   // A more reliable way to detect Safari on iOS
-  const isIOS = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
+  const isIOS = /iPad|iPhone|iPod/.test(ua) && !((window as any).MSStream);
   const isSafari = ua.includes('Safari') && !ua.includes('Chrome') && !ua.includes('CriOS');
 
 
