@@ -26,8 +26,7 @@ export async function signInWithGoogle() {
  * @returns True if the username exists, false otherwise.
  */
 async function isUsernameTaken(username: string): Promise<boolean> {
-    const usersRef = collection(db, "users");
-    const q = query(usersRef, where("username", "==", username), limit(1));
+    const q = query(collection(db, "users"), where("username", "==", username), limit(1));
     const querySnapshot = await getDocs(q);
     return !querySnapshot.empty;
 }
@@ -91,7 +90,9 @@ export async function getOrCreateUserProfile(user: User): Promise<UserProfile> {
         
         await batch.commit();
 
-        return newUserProfile;
+        // After creation, fetch the document to get the server-generated timestamp
+        const newUserSnap = await getDoc(userRef);
+        return newUserSnap.data() as UserProfile;
     }
 }
 

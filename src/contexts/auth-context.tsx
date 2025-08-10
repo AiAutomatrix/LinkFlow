@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { onAuthStateChanged, User, getRedirectResult } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase';
+import { auth } from '@/lib/firebase';
 import { getOrCreateUserProfile } from '@/lib/auth';
 import type { UserProfile } from '@/lib/types';
 import { usePathname, useRouter } from 'next/navigation';
@@ -35,63 +35,67 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
+    // This effect runs once on mount to signal that the client is ready.
+    // This is crucial for preventing hydration errors.
     setMounted(true);
   }, []);
 
   useEffect(() => {
+    // This effect should only run once the component is mounted on the client.
     if (!mounted) return;
 
-    const handleAuth = async () => {
-        setLoading(true);
-        try {
-            const result = await getRedirectResult(auth);
-            if (result) {
-                // This means a sign-in with Google redirect just completed.
-                // The onAuthStateChanged listener below will handle the profile creation/fetching.
-            }
-        } catch (error) {
-            console.error("Error processing redirect result:", error);
+    // This handles the redirect result from Google Sign-In.
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result && result.user) {
+          // User signed in via redirect.
+          // The onAuthStateChanged listener below will handle profile creation/fetching.
+          // We set loading to true to show the loading screen while that happens.
+          setLoading(true);
         }
-
+      })
+      .catch((error) => {
+        console.error("Error processing redirect result:", error);
+      })
+      .finally(() => {
+        // Now, set up the onAuthStateChanged listener.
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            if (firebaseUser) {
-                const profile = await getOrCreateUserProfile(firebaseUser);
-                setUser(firebaseUser);
-                setUserProfile(profile);
-            } else {
-                setUser(null);
-                setUserProfile(null);
-            }
-            setLoading(false);
+          if (firebaseUser) {
+            const profile = await getOrCreateUserProfile(firebaseUser);
+            setUser(firebaseUser);
+            setUserProfile(profile);
+          } else {
+            setUser(null);
+            setUserProfile(null);
+          }
+          setLoading(false);
         });
         
-        // If not coming from a redirect, initial state might be available sooner
-        if (auth.currentUser === null && !loading) {
-            setLoading(false);
-        }
-
         return () => unsubscribe();
-    };
+      });
 
-    handleAuth();
   }, [mounted]);
 
   useEffect(() => {
+    // This effect handles navigation based on auth state.
+    // It only runs when auth state is not loading and the component is mounted.
     if (loading || !mounted) return;
 
     const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
     const isPublicProfile = pathname.startsWith('/u/');
+    const isHomePage = pathname === '/';
     
     if (user && userProfile) { // User is logged in
         if (isAuthPage) {
-            router.replace('/dashboard');
+            router.replace('/dashboard/links');
         }
-    } else if (!isAuthPage && !isPublicProfile && pathname !== '/') { // User is not logged in and not on a public page
+    } else if (!isAuthPage && !isPublicProfile && !isHomePage) { // User is not logged in and not on a public page
         router.replace('/login');
     }
   }, [user, userProfile, loading, pathname, router, mounted]);
 
-  if (!mounted || loading) {
+  // While the initial mount or auth state check is happening, show a loading screen.
+  if (loading || !mounted) {
      return <LoadingScreen />;
   }
   
