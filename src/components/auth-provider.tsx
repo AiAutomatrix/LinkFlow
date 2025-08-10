@@ -49,10 +49,8 @@ const createProfileForNewUser = async (firebaseUser: FirebaseUser): Promise<User
     const batch = writeBatch(firestore);
     batch.set(userDocRef, newUserProfileData);
     
-    // Only set username if it's unique
-    if (!existingUsernameSnap.exists()) {
-        batch.set(doc(firestore, "usernames", finalUsername), { uid: firebaseUser.uid });
-    }
+    const newUsernameDoc = doc(firestore, "usernames", finalUsername);
+    batch.set(newUsernameDoc, { uid: firebaseUser.uid });
     
     await batch.commit();
 
@@ -72,24 +70,8 @@ const AuthProvider = ({ children }: { children: React.ReactNode; }) => {
         const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
             if (fbUser) {
                 setFirebaseUser(fbUser);
-                const userDocRef = doc(firestore, 'users', fbUser.uid);
-                const userDoc = await getDoc(userDocRef);
-
-                if (userDoc.exists()) {
-                    const finalProfileData = userDoc.data();
-                    const processedUser = {
-                        uid: fbUser.uid,
-                        ...finalProfileData,
-                        createdAt: finalProfileData.createdAt instanceof Timestamp
-                            ? finalProfileData.createdAt.toDate().toISOString()
-                            : new Date().toISOString(),
-                    } as UserProfile;
-                    setUser(processedUser);
-                } else {
-                    // This handles new user creation after Google Sign-In
-                    const profile = await createProfileForNewUser(fbUser);
-                    setUser(profile);
-                }
+                const profile = await createProfileForNewUser(fbUser);
+                setUser(profile);
             } else {
                 setUser(null);
                 setFirebaseUser(null);

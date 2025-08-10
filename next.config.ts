@@ -19,6 +19,9 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  experimental: {
+    ppr: false,
+  },
 };
 
 export default nextConfig;
