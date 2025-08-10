@@ -46,6 +46,8 @@ export default function LinkCard({ link, index, totalLinks, onUpdate, onDelete, 
     const startDate = toDate(link.startDate);
     const endDate = toDate(link.endDate);
 
+    const truncatedUrl = link.url.length > 35 ? `${link.url.substring(0, 35)}...` : link.url;
+
     return (
         <Card className="flex items-center p-3 gap-3 sm:p-4 sm:gap-4">
             <div className="flex flex-col gap-2 items-center justify-center">
@@ -59,7 +61,7 @@ export default function LinkCard({ link, index, totalLinks, onUpdate, onDelete, 
             </div>
             <div className="flex-grow overflow-hidden min-w-0">
                 <p className="font-semibold truncate">{link.title}</p>
-                <p className="text-sm text-muted-foreground truncate">{link.url}</p>
+                <p className="text-sm text-muted-foreground truncate" title={link.url}>{truncatedUrl}</p>
                 {hasSchedule && (
                     <div className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1.5">
                         <CalendarDays className="h-3.5 w-3.5" />
