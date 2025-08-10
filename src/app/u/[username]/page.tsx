@@ -43,6 +43,8 @@ async function getUserData(username: string): Promise<UserProfile | null> {
 async function getUserLinks(uid: string): Promise<LinkType[]> {
     const linksCollection = collection(firestore, 'users', uid, 'links');
     
+    // Order user-created links by their `order` field. Social links don't have this field
+    // and will be handled separately, but we fetch them all here.
     const q = query(linksCollection, orderBy('order', 'asc'));
       
     const linksSnapshot = await getDocs(q);

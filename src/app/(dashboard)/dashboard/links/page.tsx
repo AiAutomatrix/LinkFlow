@@ -25,6 +25,7 @@ import {
   updateDoc,
   serverTimestamp,
   Timestamp,
+  where,
 } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -50,7 +51,8 @@ export default function LinksPage() {
 
     setLoading(true);
     const linksCollection = collection(firestore, "users", user.uid, "links");
-    const q = query(linksCollection, orderBy("order", "asc"));
+    // Filter out social links which are managed on the Appearance page
+    const q = query(linksCollection, where("isSocial", "!=", true), orderBy("order", "asc"));
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const linksData = querySnapshot.docs.map((doc) => {

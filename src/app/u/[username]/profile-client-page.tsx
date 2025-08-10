@@ -8,6 +8,22 @@ import Logo from '@/components/logo';
 import AnimatedBackground from '@/components/animated-background';
 import { Mail, Instagram, Facebook, Github } from 'lucide-react';
 
+type SocialLink = {
+    id: string;
+    url: string;
+    platform: 'email' | 'instagram' | 'facebook' | 'github';
+};
+
+const SocialIcon = ({ platform }: { platform: SocialLink['platform'] }) => {
+    switch (platform) {
+        case 'email': return <Mail className="h-6 w-6" />;
+        case 'instagram': return <Instagram className="h-6 w-6" />;
+        case 'facebook': return <Facebook className="h-6 w-6" />;
+        case 'github': return <Github className="h-6 w-6" />;
+        default: return null;
+    }
+};
+
 export default function ProfileClientPage({ user, links }: { user: UserProfile; links: LinkType[] }) {
     
     const getInitials = (name: string = '') => {
@@ -15,7 +31,19 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
     }
 
     const now = new Date();
-    const activeLinks = links.filter(link => {
+    
+    // Separate regular links from social links
+    const regularLinks = links.filter(link => !link.isSocial);
+    const socialLinks: SocialLink[] = links
+      .filter(link => link.isSocial && link.id.startsWith('social_'))
+      .map(link => ({
+        id: link.id,
+        url: link.url,
+        platform: link.id.replace('social_', '') as SocialLink['platform']
+      }));
+
+
+    const activeLinks = regularLinks.filter(link => {
         if (!link.active) return false;
 
         const startDate = link.startDate ? new Date(link.startDate as string) : null;
@@ -27,7 +55,21 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
         return true;
     });
 
-    const socialLinks = user.socialLinks || {};
+    const handleLinkClick = (userId: string, linkId: string, url: string) => {
+        // We prevent the default navigation so we can first send the click event
+        // This is primarily for regular links which navigate away from the page
+        
+        // Send the click event in the background
+        fetch(`/api/clicks`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, linkId }),
+          keepalive: true, // Important for requests that might outlive the page
+        });
+
+        // Open the link in a new tab
+        window.open(url, '_blank');
+    };
 
 
     return (
@@ -44,44 +86,22 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
                     <p className="mt-4 text-sm max-w-xs text-foreground/80">{user.bio}</p>
 
                     <div className="flex gap-4 justify-center mt-4 text-foreground/80">
-                        {socialLinks.email && (
-                            <a aria-label="Send email" href={`mailto:${socialLinks.email}`} className="hover:text-primary transition-colors">
-                                <Mail className="h-6 w-6" />
-                            </a>
-                        )}
-                        {socialLinks.instagram && (
-                             <a
-                                aria-label="My Instagram"
-                                href={socialLinks.instagram}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="hover:text-primary transition-colors"
-                            >
-                                <Instagram className="h-6 w-6" />
-                            </a>
-                        )}
-                        {socialLinks.facebook && (
+                        {socialLinks.map(link => (
                             <a
-                                aria-label="My Facebook"
-                                href={socialLinks.facebook}
+                                key={link.id}
+                                aria-label={`My ${link.platform}`}
+                                href={link.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="hover:text-primary transition-colors"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    handleLinkClick(user.uid, link.id, link.url);
+                                }}
                             >
-                            <Facebook className="h-6 w-6" />
+                                <SocialIcon platform={link.platform} />
                             </a>
-                        )}
-                        {socialLinks.github && (
-                             <a
-                                aria-label="My Github"
-                                href={socialLinks.github}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="hover:text-primary transition-colors"
-                            >
-                                <Github className="h-6 w-6" />
-                            </a>
-                        )}
+                        ))}
                     </div>
                 </div>
 
@@ -98,19 +118,8 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
                                target="_blank" 
                                rel="noopener noreferrer" 
                                onClick={(e) => {
-                                 // We prevent the default navigation so we can first send the click event
                                  e.preventDefault();
-                                 
-                                 // Send the click event in the background
-                                 fetch(`/api/clicks`, {
-                                   method: 'POST',
-                                   headers: { 'Content-Type': 'application/json' },
-                                   body: JSON.stringify({ userId: user.uid, linkId: link.id }),
-                                   keepalive: true, // Important for requests that might outlive the page
-                                 });
-
-                                 // Open the link in a new tab
-                                 window.open(link.url, '_blank');
+                                 handleLinkClick(user.uid, link.id, link.url);
                                }}>
                                 {link.title}
                             </a>

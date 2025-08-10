@@ -27,6 +27,7 @@ export interface Link {
   order: number;
   active: boolean;
   clicks: number;
+  isSocial?: boolean;
   // Allow string for serialized data from server components
   createdAt?: Timestamp | Date | string;
   startDate?: Timestamp | Date | string;

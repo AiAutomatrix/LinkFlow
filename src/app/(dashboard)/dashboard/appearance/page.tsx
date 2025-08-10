@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/form";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { firestore, storage } from "@/lib/firebase";
-import { doc, getDoc, writeBatch, collection, query, orderBy, onSnapshot, updateDoc } from "firebase/firestore";
+import { doc, getDoc, writeBatch, collection, query, orderBy, onSnapshot, updateDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { getAuth, updateProfile } from "firebase/auth";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useToast } from "@/hooks/use-toast";
@@ -205,6 +205,39 @@ export default function AppearancePage() {
             }
         }
 
+        // Manage social links as trackable link documents
+        const socialLinkPlatforms = ['email', 'instagram', 'facebook', 'github'];
+        const currentSocialLinks = values.socialLinks || {};
+
+        for (const platform of socialLinkPlatforms) {
+            const linkId = `social_${platform}`;
+            const url = currentSocialLinks[platform as keyof typeof currentSocialLinks];
+            const socialLinkRef = doc(firestore, `users/${user.uid}/links`, linkId);
+
+            if (url) {
+                const linkDoc = await getDoc(socialLinkRef);
+                if (linkDoc.exists()) {
+                    // Update existing social link
+                    batch.update(socialLinkRef, { url });
+                } else {
+                    // Create new social link
+                    batch.set(socialLinkRef, {
+                        title: platform.charAt(0).toUpperCase() + platform.slice(1),
+                        url: platform === 'email' ? `mailto:${url}` : url,
+                        clicks: 0,
+                        active: true,
+                        order: -1, // Keep social links separate from user-ordered links
+                        isSocial: true, // Custom flag
+                        createdAt: serverTimestamp(),
+                    });
+                }
+            } else {
+                // If URL is removed, delete the social link document
+                batch.delete(socialLinkRef);
+            }
+        }
+
+
         await batch.commit();
         
         // This is the correct place to update the user context
@@ -362,7 +395,7 @@ export default function AppearancePage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Social Links</CardTitle>
-                    <CardDescription>Add links to your social media profiles.</CardDescription>
+                    <CardDescription>Add links to your social media profiles. These will be tracked in your analytics.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <FormField
