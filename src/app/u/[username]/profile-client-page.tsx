@@ -8,11 +8,13 @@ import Logo from '@/components/logo';
 import AnimatedBackground from '@/components/animated-background';
 import { Mail, Instagram, Facebook, Github } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
 type SocialLink = {
     id: string;
     url: string;
     platform: 'email' | 'instagram' | 'facebook' | 'github';
+    title: string;
 };
 
 const SocialIcon = ({ platform }: { platform: SocialLink['platform'] }) => {
@@ -27,25 +29,48 @@ const SocialIcon = ({ platform }: { platform: SocialLink['platform'] }) => {
 
 export default function ProfileClientPage({ user, links }: { user: UserProfile; links: LinkType[] }) {
     const { toast } = useToast();
-    
+    const router = useRouter();
+
     const getInitials = (name: string = '') => {
         return name.split(' ').map(n => n[0]).join('')
     }
 
     const now = new Date();
     
-    const regularLinks = links.filter(link => !link.isSocial);
-    const socialLinks: SocialLink[] = links
-      .filter(link => link.isSocial && link.id.startsWith('social_'))
-      .map(link => ({
-        id: link.id,
-        url: link.url,
-        platform: link.id.replace('social_', '') as SocialLink['platform']
+    const handleLinkClick = async (link: LinkType) => {
+        try {
+            // In a real app, this API call would be secured and robust.
+            await fetch('/api/clicks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: user.uid, linkId: link.id }),
+            });
+            toast({
+                title: "Redirecting...",
+                description: `You clicked on "${link.title}".`
+            });
+            // Open link in a new tab
+            window.open(link.url, '_blank');
+        } catch (error) {
+            console.error('Failed to track click:', error);
+            // Still redirect user even if tracking fails
+             window.open(link.url, '_blank');
+        }
+    };
+    
+    const socialPlatforms: SocialLink['platform'][] = ['email', 'instagram', 'facebook', 'github'];
+    const socialLinks: SocialLink[] = socialPlatforms
+      .filter(platform => user.socialLinks && user.socialLinks[platform])
+      .map(platform => ({
+        id: `social_${platform}`,
+        url: user.socialLinks![platform]!,
+        platform: platform,
+        title: platform.charAt(0).toUpperCase() + platform.slice(1) // Capitalize title
       }));
 
 
-    const activeLinks = regularLinks.filter(link => {
-        if (!link.active) return false;
+    const activeLinks = links.filter(link => {
+        if (!link.active || link.isSocial) return false;
 
         const startDate = link.startDate ? new Date(link.startDate as string) : null;
         const endDate = link.endDate ? new Date(link.endDate as string) : null;
@@ -55,13 +80,6 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
 
         return true;
     });
-
-    const handleLinkClick = (linkTitle: string) => {
-        toast({
-            title: "Link Clicked!",
-            description: `You clicked on "${linkTitle}". In a real app, this would be tracked.`
-        })
-    };
 
 
     return (
@@ -88,7 +106,7 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
                                 className="hover:text-primary transition-colors"
                                 onClick={(e) => {
                                     e.preventDefault();
-                                    handleLinkClick(link.title);
+                                    handleLinkClick(link as LinkType); // Cast to LinkType
                                 }}
                             >
                                 <SocialIcon platform={link.platform} />
@@ -102,19 +120,11 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
                     return (
                         <Button 
                             key={link.id}
-                            asChild
                             className="w-full h-14 text-md shadow-md transition-transform transform active:scale-[0.98] link-button truncate" 
                             variant="secondary"
+                             onClick={() => handleLinkClick(link)}
                         >
-                            <a href={link.url} 
-                               target="_blank" 
-                               rel="noopener noreferrer" 
-                               onClick={(e) => {
-                                 e.preventDefault();
-                                 handleLinkClick(link.title);
-                               }}>
-                                {link.title}
-                            </a>
+                           {link.title}
                         </Button>
                     )
                 })}

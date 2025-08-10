@@ -36,6 +36,7 @@ import {
 import LinkForm from "./_components/link-form";
 import { useToast } from "@/hooks/use-toast";
 import PublicProfilePreview from "../appearance/_components/public-profile-preview";
+import { useAuth } from "@/contexts/auth-context";
 
 
 const socialLinksSchema = z.object({
@@ -48,8 +49,8 @@ const socialLinksSchema = z.object({
 
 export default function LinksPage() {
   const { toast } = useToast();
+  const { userProfile, loading: authLoading } = useAuth();
   const [links, setLinks] = useState<Link[]>([]);
-  const [socialLinks, setSocialLinks] = useState<UserProfile['socialLinks']>({});
   const [loading, setLoading] = useState(true);
   const [loadingSocial, setLoadingSocial] = useState(false);
   const [isDialogOpen, setDialogOpen] = useState(false);
@@ -79,11 +80,17 @@ export default function LinksPage() {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    if (userProfile?.socialLinks) {
+        socialForm.reset(userProfile.socialLinks);
+    }
+  }, [userProfile, socialForm]);
+
+
   const handleSocialSubmit = async (values: z.infer<typeof socialLinksSchema>) => {
     setLoadingSocial(true);
     console.log("Updating social links:", values);
     setTimeout(() => {
-        setSocialLinks(values);
         toast({ title: "Social links updated!" });
         setLoadingSocial(false);
     }, 1000);
@@ -127,9 +134,8 @@ export default function LinksPage() {
     setLinks(newLinks.map((l, i) => ({ ...l, order: i })));
   };
   
-  const mockProfile = {
-      displayName: "Demo User",
-      username: "username",
+  if (authLoading) {
+      return <div>Loading...</div>
   }
 
   return (
@@ -277,7 +283,7 @@ export default function LinksPage() {
         </div>
         <div className="lg:col-span-1 order-1 lg:order-2">
             <PublicProfilePreview 
-                profile={mockProfile} 
+                profile={userProfile || {}}
                 links={links} 
                 socialLinks={watchedSocials}
             />

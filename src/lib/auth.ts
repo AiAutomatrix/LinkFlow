@@ -2,12 +2,11 @@
 import { 
     createUserWithEmailAndPassword, 
     GoogleAuthProvider, 
-    signInWithPopup,
     signInWithRedirect,
     updateProfile as updateFirebaseAuthProfile,
     signInWithEmailAndPassword
 } from "firebase/auth";
-import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { auth, db, storage } from "./firebase";
 import type { UserProfile } from "./types";
@@ -20,10 +19,12 @@ export async function signUpWithEmail(email: string, password: string, displayNa
     const user = userCredential.user;
     
     // Create the user profile in Firestore
+    const username = (displayName.split(' ')[0] + Math.random().toString(36).substring(2, 6)).toLowerCase();
+    
     await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         displayName,
-        username: user.uid.slice(0, 8), // default username
+        username: username,
         email: user.email,
         photoURL: null,
         bio: "",
@@ -31,8 +32,8 @@ export async function signUpWithEmail(email: string, password: string, displayNa
         animatedBackground: false,
         socialLinks: {},
         plan: "free",
-        createdAt: new Date(),
-    } as Omit<UserProfile, 'createdAt'> & { createdAt: Date });
+        createdAt: serverTimestamp(),
+    });
     
     return user;
 }

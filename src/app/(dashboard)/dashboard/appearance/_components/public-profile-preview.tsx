@@ -5,13 +5,13 @@ import AnimatedBackground from "@/components/animated-background";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import type { Link, UserProfile } from "@/lib/types";
+import type { Link as LinkType, UserProfile } from "@/lib/types";
 import { Mail, Instagram, Facebook, Github } from 'lucide-react';
 
 
 type PreviewProps = {
   profile: Partial<UserProfile> & { photoURL?: string };
-  links?: Link[];
+  links?: LinkType[];
   socialLinks?: UserProfile['socialLinks']
 };
 
