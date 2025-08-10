@@ -7,7 +7,7 @@ import {
   signInWithEmailAndPassword,
   User,
 } from "firebase/auth";
-import { doc, setDoc, getDoc, serverTimestamp, updateDoc, collection, query, where, limit, getDocs } from "firebase/firestore";
+import { doc, setDoc, getDoc, serverTimestamp, updateDoc, collection, query, where, limit, getDocs, writeBatch } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { auth, db, storage } from "./firebase";
 import type { UserProfile } from "./types";
@@ -26,7 +26,8 @@ export async function signInWithGoogle() {
  * @returns True if the username exists, false otherwise.
  */
 async function isUsernameTaken(username: string): Promise<boolean> {
-    const q = query(collection(db, "users"), where("username", "==", username), limit(1));
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("username", "==", username), limit(1));
     const querySnapshot = await getDocs(q);
     return !querySnapshot.empty;
 }
@@ -47,7 +48,7 @@ export async function getOrCreateUserProfile(user: User): Promise<UserProfile> {
     } else {
         // This is a new user, create their profile.
         let username = user.displayName?.replace(/\s+/g, '').toLowerCase() || 'user';
-        username = username.slice(0, 15); // Truncate to a reasonable length
+        username = username.replace(/[^a-z0-9_]/g, '').slice(0, 15);
         
         let finalUsername = username;
         let attempts = 0;
@@ -82,7 +83,14 @@ export async function getOrCreateUserProfile(user: User): Promise<UserProfile> {
             createdAt: serverTimestamp(),
         };
         
-        await setDoc(userRef, newUserProfile);
+        const usernameRef = doc(db, "usernames", finalUsername);
+        const batch = writeBatch(db);
+        
+        batch.set(userRef, newUserProfile);
+        batch.set(usernameRef, { uid: user.uid });
+        
+        await batch.commit();
+
         return newUserProfile;
     }
 }
