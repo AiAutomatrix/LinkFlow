@@ -25,10 +25,11 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/auth-context";
+import { loginWithGoogle } from "@/lib/authMethods";
 
 const formSchema = z.object({
   email: z.string().email({
@@ -86,17 +87,20 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
-    const provider = new GoogleAuthProvider();
     try {
-        await signInWithRedirect(auth, provider);
-        // The AuthProvider will handle profile creation and redirect
+        await loginWithGoogle();
+        // The AuthProvider handles profile creation and redirect, both for
+        // popup and redirect flows.
     } catch (error: any) {
         toast({
             variant: "destructive",
             title: "Uh oh! Something went wrong.",
             description: error.message,
         });
-        setLoading(false);
+    } finally {
+      // In a redirect flow, this component unmounts, so loading is reset.
+      // In a popup flow, we need to reset loading state on error.
+      setLoading(false);
     }
   };
   
