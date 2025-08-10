@@ -26,7 +26,6 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { signInWithGoogle, signInWithEmail } from "@/lib/auth";
 
@@ -51,7 +50,6 @@ function GoogleIcon() {
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const router = useRouter();
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({

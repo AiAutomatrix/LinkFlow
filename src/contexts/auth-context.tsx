@@ -35,6 +35,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
+    // This effect runs once on component mount to signal that
+    // the client has loaded and we can now safely perform checks.
     setMounted(true);
   }, []);
 
@@ -43,33 +45,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // This function will handle all authentication logic
     const handleAuth = async () => {
-      setLoading(true);
-      
       try {
-        // First, check for a redirect result from Google
         const result = await getRedirectResult(auth);
         if (result && result.user) {
-          const profile = await getOrCreateUserProfile(result.user);
-          setUser(result.user);
-          setUserProfile(profile);
-          setLoading(false);
-          // The user has just logged in, so we can stop here.
-          // The navigation logic below will handle redirecting them.
-          return;
+          // User has just signed in via redirect.
+          // The onAuthStateChanged listener below will handle them.
+          // We can set loading to true to show loading screen while profile is fetched.
+          setLoading(true);
         }
       } catch (error) {
         console.error("Error processing redirect result:", error);
       }
       
-      // If no redirect, set up the normal auth state listener
       const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
         if (firebaseUser) {
-          // If a user is found, ensure we have their profile
           const profile = await getOrCreateUserProfile(firebaseUser);
           setUser(firebaseUser);
           setUserProfile(profile);
         } else {
-          // No user is logged in
           setUser(null);
           setUserProfile(null);
         }
@@ -89,17 +82,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const isPublicProfile = pathname.startsWith('/u/');
     
     if (user && userProfile) {
-        // If user is logged in, redirect away from auth pages
         if (isAuthPage) {
             router.replace('/dashboard');
         }
-    } else if (!user && !isAuthPage && !isPublicProfile && pathname !== '/') {
-        // If user is not logged in and not on a public page, redirect to login
+    } else if (!isAuthPage && !isPublicProfile && pathname !== '/') {
         router.replace('/login');
     }
   }, [user, userProfile, loading, pathname, router, mounted]);
 
-  // While the initial mount or auth state is resolving, show a loading screen.
   if (loading || !mounted) {
      return <LoadingScreen />;
   }

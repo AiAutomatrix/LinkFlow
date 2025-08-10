@@ -13,6 +13,14 @@ import { auth, db, storage } from "./firebase";
 import type { UserProfile } from "./types";
 
 /**
+ * Signs in a user with Google using the redirect method.
+ */
+export async function signInWithGoogle() {
+    const provider = new GoogleAuthProvider();
+    await signInWithRedirect(auth, provider);
+}
+
+/**
  * Checks if a username is already taken.
  * @param username The username to check.
  * @returns True if the username exists, false otherwise.
@@ -84,17 +92,12 @@ export async function getOrCreateUserProfile(user: User): Promise<UserProfile> {
 export async function signUpWithEmail(email: string, password: string, displayName: string) {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
-    await getOrCreateUserProfile(user); // This will create the profile
+    // Update Firebase auth profile display name
+    await updateFirebaseAuthProfile(user, { displayName });
+    await getOrCreateUserProfile(user); // This will create the profile in Firestore
     return user;
 }
 
-/**
- * Signs in a user with Google using the redirect method.
- */
-export async function signInWithGoogle() {
-    const provider = new GoogleAuthProvider();
-    await signInWithRedirect(auth, provider);
-}
 
 /**
  * Signs in a user with their email and password.
@@ -117,7 +120,7 @@ export async function uploadProfilePicture(userUid: string, file: File): Promise
 }
 
 /**
- * Updates the user's profile photo URL in their Firestore document.
+ * Updates the user's profile photo URL in their Firestore document and Auth profile.
  */
 export async function updateUserProfilePhoto(userUid: string, photoURL: string) {
     const userRef = doc(db, "users", userUid);
