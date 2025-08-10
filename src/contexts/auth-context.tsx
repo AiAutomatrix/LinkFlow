@@ -54,10 +54,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
+    if (!mounted) return;
+
     const processAuth = async () => {
       try {
         const result = await getRedirectResult(auth);
@@ -66,14 +73,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(result.user);
           setUserProfile(profile);
           setLoading(false);
-          // Navigation will be handled by the next useEffect
           return; 
         }
       } catch (error) {
         console.error("Error processing redirect result:", error);
       }
       
-      // If no redirect result, set up the state change listener
       const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
         if (firebaseUser) {
           setUser(firebaseUser);
@@ -90,10 +95,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
     
     processAuth();
-  }, []);
+  }, [mounted]);
 
   useEffect(() => {
-    if (loading) return; 
+    if (loading || !mounted) return; 
 
     const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
     const isPublicProfile = pathname.startsWith('/u/');
@@ -105,9 +110,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else if (!user && !isAuthPage && !isPublicProfile && pathname !== '/') {
         router.replace('/login');
     }
-  }, [user, userProfile, loading, pathname, router]);
+  }, [user, userProfile, loading, mounted, pathname, router]);
 
-  if (loading) {
+  if (!mounted || loading) {
      return <div style={{ minHeight: "100vh", display:"flex", alignItems:"center", justifyContent:"center" }}>Loading…</div>;
   }
   
