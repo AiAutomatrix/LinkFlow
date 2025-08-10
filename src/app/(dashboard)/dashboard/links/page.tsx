@@ -51,8 +51,8 @@ export default function LinksPage() {
 
     setLoading(true);
     const linksCollection = collection(firestore, "users", user.uid, "links");
-    // Filter out social links which are managed on the Appearance page
-    const q = query(linksCollection, where("isSocial", "!=", true), orderBy("order", "asc"));
+    // We fetch all links and filter on the client to avoid needing a composite index.
+    const q = query(linksCollection, orderBy("order", "asc"));
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const linksData = querySnapshot.docs.map((doc) => {
@@ -65,7 +65,7 @@ export default function LinksPage() {
           startDate: data.startDate instanceof Timestamp ? data.startDate.toDate() : data.startDate,
           endDate: data.endDate instanceof Timestamp ? data.endDate.toDate() : data.endDate,
         } as Link;
-      });
+      }).filter(link => !link.isSocial); // Filter out social links on the client
       setLinks(linksData);
       setLoading(false);
     });
