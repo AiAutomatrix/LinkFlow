@@ -77,13 +77,14 @@ const AuthProvider = ({ children }: { children: React.ReactNode; }) => {
                 // where the user was redirected to Google and is now returning to the app.
                 const credential = await getRedirectResult(auth);
                 if (credential) {
-                    const fbUser = credential.user;
-                    setFirebaseUser(fbUser);
-                    const profile = await createProfileForNewUser(fbUser);
+                    // A user was found from the redirect.
+                    // We can now create their profile if it doesn't exist.
+                    const profile = await createProfileForNewUser(credential.user);
                     setUser(profile);
+                    setFirebaseUser(credential.user);
                     setAuthReady(true);
-                    // We found a user via redirect, no need to set up the listener yet.
-                    // The main navigation logic in pages will handle the redirect to dashboard.
+                    // The main navigation logic in pages will handle redirecting to the dashboard.
+                    // Since we have a user, we can skip setting up the listener for now.
                     return; 
                 }
             } catch (error) {
@@ -91,7 +92,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode; }) => {
             }
 
             // If no redirect result, set up the normal auth state listener.
-            // This handles popup logins, direct email/password logins, and existing sessions.
+            // This handles direct email/password logins and existing sessions.
             unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
                 if (fbUser) {
                     setFirebaseUser(fbUser);
@@ -109,7 +110,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode; }) => {
                         } as UserProfile;
                         setUser(processedUser);
                     } else {
-                        // This can happen on first sign-up (email or popup)
+                        // This can happen on first sign-up with email/password
                         const profile = await createProfileForNewUser(fbUser);
                         setUser(profile);
                     }

@@ -25,11 +25,10 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithRedirect } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/auth-context";
-import { loginWithGoogle } from "@/lib/authMethods";
 
 const formSchema = z.object({
   displayName: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -94,20 +93,20 @@ export default function SignupPage() {
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
+    const provider = new GoogleAuthProvider();
     try {
-        await loginWithGoogle();
-        // The AuthProvider handles profile creation and redirect, both for
-        // popup and redirect flows.
+        // Use signInWithRedirect for the most reliable cross-browser experience.
+        await signInWithRedirect(auth, provider);
+        // The user will be redirected to Google's sign-in page.
+        // After they sign in, they will be redirected back to this app.
+        // The AuthProvider will handle detecting the authentication state.
     } catch (error: any) {
         toast({
             variant: "destructive",
             title: "Uh oh! Something went wrong.",
             description: error.message,
         });
-    } finally {
-      // In a redirect flow, this component unmounts, so loading is reset.
-      // In a popup flow, we need to reset loading state on error.
-      setLoading(false);
+        setLoading(false);
     }
   };
 
