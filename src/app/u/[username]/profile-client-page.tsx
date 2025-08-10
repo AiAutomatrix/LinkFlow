@@ -32,7 +32,7 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
 
     const now = new Date();
     
-    // Separate regular links from social links
+    // Separate regular links from social links by filtering the main links array
     const regularLinks = links.filter(link => !link.isSocial);
     const socialLinks: SocialLink[] = links
       .filter(link => link.isSocial && link.id.startsWith('social_'))
