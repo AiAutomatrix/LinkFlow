@@ -6,7 +6,7 @@ import { onAuthStateChanged, User, getRedirectResult } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import type { UserProfile } from '@/lib/types';
-import { Skeleton } from '@/components/ui/skeleton';
+import { usePathname, useRouter } from 'next/navigation';
 
 interface AuthContextType {
   user: User | null;
@@ -21,21 +21,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleAuthFlow = async () => {
-      // Check for redirect result first
+      setLoading(true);
       try {
         const result = await getRedirectResult(auth);
         if (result) {
-          // This means a user has just signed in via redirect.
           const firebaseUser = result.user;
           const userRef = doc(db, 'users', firebaseUser.uid);
           const userSnap = await getDoc(userRef);
 
           if (!userSnap.exists()) {
-            // Create profile for new user
-            const newProfile: Omit<UserProfile, 'createdAt'> & { createdAt: object } = {
+            const newProfileData: Omit<UserProfile, 'createdAt'> = {
               uid: firebaseUser.uid,
               displayName: firebaseUser.displayName || 'New User',
               username: firebaseUser.uid.slice(0, 8),
@@ -46,18 +46,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               animatedBackground: false,
               socialLinks: {},
               plan: 'free',
-              createdAt: serverTimestamp(),
             };
-            await setDoc(userRef, newProfile);
-            setUserProfile({ ...newProfile, createdAt: new Date().toISOString() } as UserProfile);
+            await setDoc(userRef, { ...newProfileData, createdAt: serverTimestamp() });
+            setUserProfile({ ...newProfileData, createdAt: new Date().toISOString() } as UserProfile);
           }
-          // The onAuthStateChanged listener below will handle setting the user state.
+          setUser(firebaseUser);
+          router.replace('/dashboard');
+          setLoading(false);
+          return; 
         }
       } catch (error) {
         console.error("Error processing redirect result:", error);
       }
 
-      // Now, set up the regular auth state listener
       const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
         if (firebaseUser) {
           setUser(firebaseUser);
@@ -66,23 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (userSnap.exists()) {
             setUserProfile(userSnap.data() as UserProfile);
           } else {
-             // This case might happen if DB entry fails after auth success.
-             // We can attempt to create it again.
-            const newProfile: Omit<UserProfile, 'createdAt'> & { createdAt: object } = {
-              uid: firebaseUser.uid,
-              displayName: firebaseUser.displayName || 'New User',
-              username: firebaseUser.uid.slice(0, 8),
-              email: firebaseUser.email || '',
-              photoURL: firebaseUser.photoURL || '',
-              bio: '',
-              theme: 'light',
-              animatedBackground: false,
-              socialLinks: {},
-              plan: 'free',
-              createdAt: serverTimestamp(),
-            };
-            await setDoc(userRef, newProfile);
-            setUserProfile({ ...newProfile, createdAt: new Date().toISOString() } as UserProfile);
+            console.log("User document doesn't exist, likely just signed up.");
           }
         } else {
           setUser(null);
@@ -96,11 +81,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const unsubscribePromise = handleAuthFlow();
 
-    // Cleanup subscription on unmount
     return () => {
       unsubscribePromise.then(unsubscribe => unsubscribe && unsubscribe());
     };
-  }, []);
+  }, [router]);
 
   const value = {
     user,
@@ -110,16 +94,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
   
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="space-y-4 text-center">
-            <p className="text-lg font-semibold">Authenticating...</p>
-            <Skeleton className="h-10 w-64 mx-auto" />
-            <Skeleton className="h-10 w-64 mx-auto" />
-            <Skeleton className="h-10 w-64 mx-auto" />
-        </div>
-      </div>
-    );
+     return <div style={{ textAlign: "center", marginTop: "2rem", minHeight: "100vh", display:"flex", alignItems:"center",justifyContent:"center" }}>Loading…</div>;
+  }
+
+  // Route protection
+  const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
+  if (!loading && !user && !isAuthPage) {
+    router.replace('/login');
+    return <div style={{ textAlign: "center", marginTop: "2rem", minHeight: "100vh", display:"flex", alignItems:"center",justifyContent:"center" }}>Redirecting to login...</div>;
+  }
+
+  if (!loading && user && isAuthPage) {
+    router.replace('/dashboard');
+    return <div style={{ textAlign: "center", marginTop: "2rem", minHeight: "100vh", display:"flex", alignItems:"center",justifyContent:"center" }}>Redirecting to dashboard...</div>;
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

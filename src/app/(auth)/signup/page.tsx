@@ -53,6 +53,7 @@ function GoogleIcon() {
 
 export default function SignupPage() {
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -82,18 +83,17 @@ export default function SignupPage() {
   }
 
   async function handleGoogleSignIn() {
-    setLoading(true);
+    setGoogleLoading(true);
     try {
       await signInWithGoogle();
-      router.push('/dashboard');
+      // The redirect flow will handle navigation
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Google Sign-In Failed",
         description: error.message,
       });
-    } finally {
-      setLoading(false);
+      setGoogleLoading(false);
     }
   }
 
@@ -150,15 +150,15 @@ export default function SignupPage() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full" disabled={loading || googleLoading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create an account
             </Button>
           </form>
         </Form>
         <Separator className="my-2" />
-        <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={loading}>
-            <GoogleIcon />
+        <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={loading || googleLoading}>
+            {googleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
             <span className="ml-2">Sign up with Google</span>
         </Button>
       </CardContent>
