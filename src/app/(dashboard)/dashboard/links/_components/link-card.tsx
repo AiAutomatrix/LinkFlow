@@ -47,7 +47,7 @@ export default function LinkCard({ link, index, totalLinks, onUpdate, onDelete, 
     const endDate = toDate(link.endDate);
 
     return (
-        <Card className="flex items-center p-3 gap-3">
+        <Card className="flex items-center p-3 gap-3 sm:p-4 sm:gap-4">
             <div className="flex flex-col gap-2 items-center justify-center">
                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove(link.id, 'up')} disabled={index === 0}>
                     <ArrowUp className="h-4 w-4" />
@@ -57,7 +57,7 @@ export default function LinkCard({ link, index, totalLinks, onUpdate, onDelete, 
                     <ArrowDown className="h-4 w-4" />
                 </Button>
             </div>
-            <div className="flex-grow overflow-hidden">
+            <div className="flex-grow overflow-hidden min-w-0">
                 <p className="font-semibold truncate">{link.title}</p>
                 <p className="text-sm text-muted-foreground truncate">{link.url}</p>
                 {hasSchedule && (
@@ -72,15 +72,15 @@ export default function LinkCard({ link, index, totalLinks, onUpdate, onDelete, 
                 )}
             </div>
             
-            <div className="flex items-center gap-4">
-                <div className="text-right hidden sm:block">
+            <div className="flex items-center gap-2 sm:gap-4">
+                 <div className="flex-col items-center text-center hidden sm:flex">
                     <p className="text-sm font-bold">{link.clicks || 0}</p>
                     <p className="text-xs text-muted-foreground">clicks</p>
                 </div>
 
                 <div className="flex items-center space-x-2">
                     <Switch id={`active-switch-${link.id}`} checked={link.active} onCheckedChange={handleToggleActive} />
-                    <Label htmlFor={`active-switch-${link.id}`} className="text-sm">
+                    <Label htmlFor={`active-switch-${link.id}`} className="text-sm sr-only sm:not-sr-only">
                         {link.active ? 'On' : 'Off'}
                     </Label>
                 </div>
