@@ -47,8 +47,8 @@ export default function PublicProfilePreview({ profile, links = [], socialLinks 
               </div>
               
               <div className="mt-8 space-y-4 w-full max-w-xs mx-auto">
-                  {links.filter(l => l.active).length > 0 ? (
-                    links.filter(l => l.active).slice(0, 3).map((link) => (
+                  {links.filter(l => l.active && !l.isSocial).length > 0 ? (
+                    links.filter(l => l.active && !l.isSocial).slice(0, 3).map((link) => (
                       <Button key={link.id} variant="secondary" className="w-full">
                         {link.title}
                       </Button>
@@ -60,7 +60,7 @@ export default function PublicProfilePreview({ profile, links = [], socialLinks 
                       <Button variant="secondary" className="w-full">Example Link 3</Button>
                     </>
                   )}
-                  {links.filter(l => l.active).length > 3 && <p className="text-center text-sm text-muted-foreground">...</p>}
+                  {links.filter(l => l.active && !l.isSocial).length > 3 && <p className="text-center text-sm text-muted-foreground">...</p>}
               </div>
             </div>
         </div>
