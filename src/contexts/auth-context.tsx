@@ -25,21 +25,13 @@ function LoadingScreen() {
     );
 }
 
-/**
- * Fetches a user's profile from Firestore. If the user is new, it creates a new
- * profile document for them.
- * @param user The Firebase authenticated user object.
- * @returns The user's profile from Firestore.
- */
 async function getOrCreateUserProfile(user: User): Promise<UserProfile> {
     const userRef = doc(db, "users", user.uid);
     const userSnap = await getDoc(userRef);
 
     if (userSnap.exists()) {
-        // User already exists, return their profile data.
         return userSnap.data() as UserProfile;
     } else {
-        // This is a new user, create their profile.
         const username = (user.displayName?.replace(/\s+/g, '').toLowerCase() || 'user') + Math.random().toString(36).substring(2, 6);
         
         const newUserProfile: UserProfile = {
@@ -58,11 +50,11 @@ async function getOrCreateUserProfile(user: User): Promise<UserProfile> {
               github: ''
             },
             plan: 'free',
-            createdAt: serverTimestamp(), // Use serverTimestamp for new docs
+            createdAt: serverTimestamp(),
         };
         
         await setDoc(userRef, newUserProfile);
-        return newUserProfile as UserProfile; // Return the newly created profile
+        return newUserProfile;
     }
 }
 
@@ -83,9 +75,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!mounted) return;
 
     const processAuth = async () => {
-      setLoading(true);
-
-      // First, check for redirect result
       try {
         const result = await getRedirectResult(auth);
         if (result && result.user) {
@@ -93,14 +82,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(result.user);
           setUserProfile(profile);
           setLoading(false);
-          // Redirect is handled by the next useEffect
           return; 
         }
       } catch (error) {
         console.error("Error processing redirect result:", error);
       }
 
-      // If no redirect, set up the state change listener
       const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
         if (firebaseUser) {
           const profile = await getOrCreateUserProfile(firebaseUser);
@@ -127,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     if (user && userProfile) {
         if (isAuthPage) {
-            router.replace('/dashboard/links');
+            router.replace('/dashboard');
         }
     } else if (!user && !isAuthPage && !isPublicProfile && pathname !== '/') {
         router.replace('/login');
