@@ -66,7 +66,7 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-6">
          <div>
             <h1 className="text-2xl font-bold">Analytics</h1>
             <p className="text-muted-foreground">
@@ -117,7 +117,7 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
        <div>
           <h1 className="text-2xl font-bold">Analytics</h1>
           <p className="text-muted-foreground">
