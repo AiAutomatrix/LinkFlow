@@ -1,19 +1,18 @@
 
 "use client";
 
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { onAuthStateChanged, User as FirebaseUser, getRedirectResult, Unsubscribe } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp, writeBatch, Timestamp } from 'firebase/firestore';
 import { auth, firestore } from '@/lib/firebase';
 import type { UserProfile } from '@/lib/types';
 import { AuthContext } from '@/contexts/auth-context';
 
-const createProfileForNewUser = async (firebaseUser: FirebaseUser) => {
+const createProfileForNewUser = async (firebaseUser: FirebaseUser): Promise<UserProfile> => {
     const userDocRef = doc(firestore, 'users', firebaseUser.uid);
     const userDocSnap = await getDoc(userDocRef);
 
     if (userDocSnap.exists()) {
-        // Return existing profile data
         const data = userDocSnap.data();
         return {
             uid: firebaseUser.uid,
@@ -24,7 +23,6 @@ const createProfileForNewUser = async (firebaseUser: FirebaseUser) => {
         } as UserProfile;
     }
 
-    // New user, create profile
     const username = (firebaseUser.email?.split('@')[0] || `user_${Date.now()}`).replace(/[^a-zA-Z0-9_.]/g, '').slice(0, 20);
     const usernameDocRef = doc(firestore, 'usernames', username);
     const existingUsernameSnap = await getDoc(usernameDocRef);
@@ -50,6 +48,8 @@ const createProfileForNewUser = async (firebaseUser: FirebaseUser) => {
 
     const batch = writeBatch(firestore);
     batch.set(userDocRef, newUserProfileData);
+    
+    // Only create username doc if it doesn't exist to avoid overwriting
     if (!existingUsernameSnap.exists()) {
         batch.set(doc(firestore, "usernames", finalUsername), { uid: firebaseUser.uid });
     }
@@ -59,7 +59,7 @@ const createProfileForNewUser = async (firebaseUser: FirebaseUser) => {
     return { 
         uid: firebaseUser.uid,
         ...newUserProfileData, 
-        createdAt: new Date().toISOString() // return with placeholder date
+        createdAt: new Date().toISOString()
     } as UserProfile;
 };
 
@@ -73,26 +73,25 @@ const AuthProvider = ({ children }: { children: React.ReactNode; }) => {
         
         const initializeAuth = async () => {
             try {
-                // First, check for the result of a redirect login. This handles the case
-                // where the user was redirected to Google and is now returning to the app.
-                const credential = await getRedirectResult(auth);
-                if (credential) {
-                    // A user was found from the redirect.
-                    // We can now create their profile if it doesn't exist.
-                    const profile = await createProfileForNewUser(credential.user);
+                // This is the recommended way to handle redirects.
+                // It completes the sign-in flow and returns the signed-in user.
+                const result = await getRedirectResult(auth);
+                if (result) {
+                    // This means a user has just signed in via redirect.
+                    const profile = await createProfileForNewUser(result.user);
                     setUser(profile);
-                    setFirebaseUser(credential.user);
-                    setAuthReady(true);
+                    setFirebaseUser(result.user);
                     // The main navigation logic in pages will handle redirecting to the dashboard.
-                    // Since we have a user, we can skip setting up the listener for now.
+                    // We can set authReady and stop here for this render.
+                    setAuthReady(true);
                     return; 
                 }
             } catch (error) {
                 console.error("Error processing redirect result:", error);
             }
 
-            // If no redirect result, set up the normal auth state listener.
-            // This handles direct email/password logins and existing sessions.
+            // If there was no redirect result, set up the normal auth state listener.
+            // This handles existing sessions and direct email/password logins.
             unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
                 if (fbUser) {
                     setFirebaseUser(fbUser);
@@ -110,7 +109,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode; }) => {
                         } as UserProfile;
                         setUser(processedUser);
                     } else {
-                        // This can happen on first sign-up with email/password
+                        // This case handles the first sign-up with email/password.
                         const profile = await createProfileForNewUser(fbUser);
                         setUser(profile);
                     }

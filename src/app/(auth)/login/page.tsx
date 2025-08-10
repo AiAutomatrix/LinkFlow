@@ -29,6 +29,7 @@ import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect } fr
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/auth-context";
+import { Loader2 } from "lucide-react";
 
 const formSchema = z.object({
   email: z.string().email({
@@ -88,11 +89,7 @@ export default function LoginPage() {
     setLoading(true);
     const provider = new GoogleAuthProvider();
     try {
-        // Use signInWithRedirect for the most reliable cross-browser experience.
         await signInWithRedirect(auth, provider);
-        // The user will be redirected to Google's sign-in page.
-        // After they sign in, they will be redirected back to this app.
-        // The AuthProvider will handle detecting the authentication state.
     } catch (error: any) {
         toast({
             variant: "destructive",
@@ -103,9 +100,8 @@ export default function LoginPage() {
     }
   };
   
-  // Don't render the form until we know if the user is logged in or not
   if (!authReady || user) {
-    return <div className="flex min-h-screen flex-col items-center justify-center p-4"><p>Loading...</p></div>;
+    return <div className="flex min-h-screen flex-col items-center justify-center p-4"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
 
   return (
@@ -152,7 +148,7 @@ export default function LoginPage() {
         </Form>
         <Separator className="my-4" />
         <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={loading}>
-          <GoogleIcon className="mr-2 h-4 w-4" />
+          {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="mr-2 h-4 w-4" />}
           Login with Google
         </Button>
         <div className="mt-4 text-center text-sm">
