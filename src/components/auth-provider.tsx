@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { onAuthStateChanged, User as FirebaseUser, Unsubscribe } from 'firebase/auth';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp, writeBatch, Timestamp } from 'firebase/firestore';
 import { auth, firestore } from '@/lib/firebase';
 import type { UserProfile } from '@/lib/types';
@@ -49,6 +49,7 @@ const createProfileForNewUser = async (firebaseUser: FirebaseUser): Promise<User
     const batch = writeBatch(firestore);
     batch.set(userDocRef, newUserProfileData);
     
+    // Only set username if it's unique
     if (!existingUsernameSnap.exists()) {
         batch.set(doc(firestore, "usernames", finalUsername), { uid: firebaseUser.uid });
     }
