@@ -104,11 +104,7 @@ export default function DashboardLayout({
               <UserNav />
             </div>
           </header>
-          <main className="p-4 sm:p-6">
-            <div className="max-w-7xl mx-auto">
-              {children}
-            </div>
-          </main>
+          <main className="p-4 sm:p-6">{children}</main>
         </SidebarInset>
       </SidebarProvider>
   );
