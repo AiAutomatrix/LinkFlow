@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { onAuthStateChanged, User as FirebaseUser, Unsubscribe } from 'firebase/auth';
+import { onAuthStateChanged, User as FirebaseUser, Unsubscribe, getRedirectResult, GoogleAuthProvider, signInWithRedirect } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp, writeBatch, Timestamp } from 'firebase/firestore';
 import { auth, firestore } from '@/lib/firebase';
 import type { UserProfile } from '@/lib/types';

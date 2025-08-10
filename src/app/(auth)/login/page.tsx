@@ -25,10 +25,11 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
 import { Loader2 } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 const formSchema = z.object({
   email: z.string().email({
@@ -74,6 +75,19 @@ export default function LoginPage() {
       setLoading(false);
     }
   }
+
+  const handleGoogleSignIn = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+        await signInWithRedirect(auth, provider);
+    } catch(error: any) {
+        toast({
+            variant: "destructive",
+            title: "Google Sign-In Failed",
+            description: error.message,
+        });
+    }
+  };
   
   if (!authReady || user) {
     return <div className="flex min-h-screen flex-col items-center justify-center p-4"><Loader2 className="h-8 w-8 animate-spin" /></div>;
@@ -121,6 +135,13 @@ export default function LoginPage() {
             </Button>
           </form>
         </Form>
+        <div className="relative my-4">
+            <Separator />
+            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">OR</span>
+        </div>
+        <Button variant="outline" className="w-full" onClick={handleGoogleSignIn}>
+            Sign in with Google
+        </Button>
         <div className="mt-4 text-center text-sm">
           Don&apos;t have an account?{" "}
           <Link href="/signup" className="underline">
