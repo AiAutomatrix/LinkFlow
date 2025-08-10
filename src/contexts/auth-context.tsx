@@ -54,43 +54,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    const handleAuth = async () => {
-        try {
-            const result = await getRedirectResult(auth);
-            if (result && result.user) {
-                const profile = await createProfileForNewUser(result.user);
-                setUser(result.user);
-                setUserProfile(profile);
-                setLoading(false);
-                setIsInitialLoad(false);
-                return;
-            }
-        } catch (error) {
-            console.error("Error processing redirect result:", error);
+    const processAuth = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result && result.user) {
+          const profile = await createProfileForNewUser(result.user);
+          setUser(result.user);
+          setUserProfile(profile);
+          setLoading(false);
+          // Navigation will be handled by the next useEffect
+          return; 
         }
+      } catch (error) {
+        console.error("Error processing redirect result:", error);
+      }
+      
+      // If no redirect result, set up the state change listener
+      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        if (firebaseUser) {
+          setUser(firebaseUser);
+          const profile = await createProfileForNewUser(firebaseUser);
+          setUserProfile(profile);
+        } else {
+          setUser(null);
+          setUserProfile(null);
+        }
+        setLoading(false);
+      });
 
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            if (firebaseUser) {
-                setUser(firebaseUser);
-                const profile = await createProfileForNewUser(firebaseUser);
-                setUserProfile(profile);
-            } else {
-                setUser(null);
-                setUserProfile(null);
-            }
-            setLoading(false);
-            setIsInitialLoad(false);
-        });
-
-        return () => unsubscribe();
+      return () => unsubscribe();
     };
     
-    handleAuth();
+    processAuth();
   }, []);
 
   useEffect(() => {
@@ -101,14 +100,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (user && userProfile) {
         if (isAuthPage) {
-            router.replace('/dashboard/links');
+            router.replace('/dashboard');
         }
     } else if (!user && !isAuthPage && !isPublicProfile && pathname !== '/') {
         router.replace('/login');
     }
   }, [user, userProfile, loading, pathname, router]);
 
-  if (isInitialLoad) {
+  if (loading) {
      return <div style={{ minHeight: "100vh", display:"flex", alignItems:"center", justifyContent:"center" }}>Loading…</div>;
   }
   
