@@ -1,5 +1,6 @@
+
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, initializeAuth, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
@@ -14,7 +15,12 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
+
+// Explicitly initialize Auth with browser-based persistence
+const auth = initializeAuth(app, {
+  persistence: browserLocalPersistence,
+});
+
 const firestore = getFirestore(app);
 const storage = getStorage(app);
 
