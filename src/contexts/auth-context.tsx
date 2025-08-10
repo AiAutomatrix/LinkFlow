@@ -24,19 +24,29 @@ async function createProfileForNewUser(user: User): Promise<UserProfile> {
         const newProfileData: Omit<UserProfile, 'createdAt'> = {
             uid: user.uid,
             displayName: user.displayName || 'New User',
-            username: (user.displayName?.split(' ')[0] || 'user') + Math.random().toString(36).substring(2, 6).toLowerCase(),
+            username: (user.displayName?.replace(/\s+/g, '').toLowerCase() || 'user') + Math.random().toString(36).substring(2, 6),
             email: user.email || '',
             photoURL: user.photoURL || '',
             bio: '',
             theme: 'light',
             animatedBackground: false,
-            socialLinks: {},
+            socialLinks: {
+              email: '',
+              instagram: '',
+              facebook: '',
+              github: ''
+            },
             plan: 'free',
         };
         await setDoc(userRef, { ...newProfileData, createdAt: serverTimestamp() });
         return { ...newProfileData, createdAt: new Date().toISOString() } as UserProfile;
     }
-    return userSnap.data() as UserProfile;
+    const data = userSnap.data();
+    // Ensure socialLinks is always an object
+    if (!data.socialLinks) {
+        data.socialLinks = {};
+    }
+    return data as UserProfile;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -47,30 +57,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    let unsubscribe: (() => void) | undefined;
-    
-    (async () => {
+    const handleAuth = async () => {
+        // First, check for redirect result
         try {
             const result = await getRedirectResult(auth);
             if (result) {
+                // User signed in or signed up via redirect.
                 const firebaseUser = result.user;
-                setUser(firebaseUser);
                 const profile = await createProfileForNewUser(firebaseUser);
+                setUser(firebaseUser);
                 setUserProfile(profile);
                 setLoading(false);
-                return;
+                // Redirect handled in the second useEffect
+                return; 
             }
         } catch (error) {
             console.error("Error processing redirect result:", error);
         }
-        
-        unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+
+        // If no redirect result, set up the normal auth state listener.
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
                 setUser(firebaseUser);
                 const userRef = doc(db, 'users', firebaseUser.uid);
                 const userSnap = await getDoc(userRef);
                 if (userSnap.exists()) {
-                    setUserProfile(userSnap.data() as UserProfile);
+                    const data = userSnap.data();
+                     if (!data.socialLinks) {
+                        data.socialLinks = {};
+                    }
+                    setUserProfile(data as UserProfile);
+                } else {
+                    // This can happen if the user exists in Auth but not Firestore.
+                    // Let's create their profile.
+                    const profile = await createProfileForNewUser(firebaseUser);
+                    setUserProfile(profile);
                 }
             } else {
                 setUser(null);
@@ -78,30 +99,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
             setLoading(false);
         });
-    })();
 
-    return () => {
-        if (unsubscribe) {
-            unsubscribe();
-        }
+        return () => unsubscribe();
     };
-}, []);
+    
+    handleAuth();
+
+  }, []); // Run only once on mount
+
 
   useEffect(() => {
-    if (loading) return;
+    if (loading) return; // Don't do anything while loading
 
     const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
 
-    if (!user && !isAuthPage) {
+    if (user && userProfile) {
+        if (isAuthPage) {
+            router.replace('/dashboard/links');
+        }
+    } else if (!user && !isAuthPage) {
         router.replace('/login');
-    } else if (user && isAuthPage) {
-        router.replace('/dashboard/links');
     }
-  }, [user, loading, pathname, router]);
-
+  }, [user, userProfile, loading, pathname, router]);
 
   if (loading) {
-     return <div style={{ textAlign: "center", marginTop: "2rem", minHeight: "100vh", display:"flex", alignItems:"center",justifyContent:"center" }}>Loading…</div>;
+     return <div style={{ minHeight: "100vh", display:"flex", alignItems:"center", justifyContent:"center" }}>Loading…</div>;
   }
   
   const value = {
