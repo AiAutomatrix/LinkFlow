@@ -3,8 +3,6 @@
 
 import AnimatedBackground from "@/components/animated-background";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import type { Link as LinkType, UserProfile } from "@/lib/types";
 import { Mail, Instagram, Facebook, Github } from 'lucide-react';
 
@@ -21,6 +19,15 @@ export default function PublicProfilePreview({ profile, links = [], socialLinks 
     };
 
     const currentSocialLinks = socialLinks || profile.socialLinks || {};
+
+    const LinkButton = ({ children }: { children: React.ReactNode }) => (
+      <div
+        className="w-full text-center bg-secondary text-secondary-foreground font-semibold p-4 rounded-lg shadow-md transition-transform transform hover:scale-105 active:scale-[0.98] cursor-pointer"
+      >
+        {children}
+      </div>
+    );
+
 
   return (
     <Card className="md:sticky top-20">
@@ -49,15 +56,15 @@ export default function PublicProfilePreview({ profile, links = [], socialLinks 
               <div className="mt-8 space-y-4 w-full max-w-xs mx-auto">
                   {links.filter(l => l.active && !l.isSocial).length > 0 ? (
                     links.filter(l => l.active && !l.isSocial).slice(0, 3).map((link) => (
-                      <Button key={link.id} variant="secondary" className="w-full">
+                      <LinkButton key={link.id}>
                         {link.title}
-                      </Button>
+                      </LinkButton>
                     ))
                   ) : (
                     <>
-                      <Button className="w-full">Example Link 1</Button>
-                      <Button className="w-full">Example Link 2</Button>
-                      <Button variant="secondary" className="w-full">Example Link 3</Button>
+                      <LinkButton>Example Link 1</LinkButton>
+                      <LinkButton>Example Link 2</LinkButton>
+                      <LinkButton>Example Link 3</LinkButton>
                     </>
                   )}
                   {links.filter(l => l.active && !l.isSocial).length > 3 && <p className="text-center text-sm text-muted-foreground">...</p>}

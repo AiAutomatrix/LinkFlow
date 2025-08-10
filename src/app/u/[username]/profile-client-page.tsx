@@ -3,7 +3,6 @@
 
 import type { Link as LinkType, UserProfile } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
 import Logo from '@/components/logo';
 import AnimatedBackground from '@/components/animated-background';
 import { Mail, Instagram, Facebook, Github } from 'lucide-react';
@@ -46,13 +45,11 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId: user.uid, linkId: link.id }),
             });
-            toast({
-                title: "Redirecting...",
-                description: `You clicked on "${link.title}".`
-            });
+            // We don't show a toast on the public page for a cleaner UX
             window.open(link.url, '_blank');
         } catch (error) {
             console.error('Failed to track click:', error);
+            // Still open the link even if tracking fails
             window.open(link.url, '_blank');
         }
     };
@@ -89,7 +86,7 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
         if (endDate && now > endDate) return false;
 
         return true;
-    });
+    }).sort((a, b) => a.order - b.order);
 
 
     return (
@@ -97,7 +94,7 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
             {user.animatedBackground && <AnimatedBackground />}
             <div className="w-full max-w-md mx-auto z-10">
                 <div className="flex flex-col items-center text-center">
-                    <Avatar className="h-24 w-24 border-2 border-white">
+                    <Avatar className="h-24 w-24 border-2 border-white/50">
                         <AvatarImage src={user.photoURL || undefined} alt={user.displayName} />
                         <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
                     </Avatar>
@@ -122,14 +119,13 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
                 <div className="mt-8 space-y-4">
                 {activeLinks.map((link) => {
                     return (
-                        <Button 
+                        <button 
                             key={link.id}
-                            className="w-full h-14 text-md shadow-md transition-transform transform active:scale-[0.98] link-button truncate" 
-                            variant="secondary"
-                             onClick={() => handleLinkClick(link)}
+                            className="w-full text-center bg-secondary text-secondary-foreground font-semibold p-4 rounded-lg shadow-md transition-transform transform hover:scale-105 active:scale-[0.98] truncate"
+                            onClick={() => handleLinkClick(link)}
                         >
                            {link.title}
-                        </Button>
+                        </button>
                     )
                 })}
                 </div>
