@@ -186,8 +186,8 @@ export default function LinksPage() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        <div className="lg:col-span-2 order-2 lg:order-1 space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div className="lg:col-span-2 order-2 lg:order-1 space-y-4">
             <div className="flex items-center justify-between">
                 <div>
                 <h1 className="text-2xl font-bold">Links</h1>
@@ -321,7 +321,7 @@ export default function LinksPage() {
                             />
                         </CardContent>
                     </Card>
-                    <Button type="submit" disabled={loadingSocial} className="mt-6">
+                    <Button type="submit" disabled={loadingSocial} className="mt-4">
                         {loadingSocial && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Update Social Links
                     </Button>

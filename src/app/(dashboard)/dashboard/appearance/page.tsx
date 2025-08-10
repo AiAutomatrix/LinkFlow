@@ -166,10 +166,10 @@ export default function AppearancePage() {
   }
   
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-      <div className="lg:col-span-2 order-2 lg:order-1 space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      <div className="lg:col-span-2 order-2 lg:order-1 space-y-4">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <Card>
                 <CardHeader>
                     <CardTitle>Profile Picture</CardTitle>

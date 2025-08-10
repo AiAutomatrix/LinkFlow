@@ -66,7 +66,7 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
          <div>
             <h1 className="text-2xl font-bold">Analytics</h1>
             <p className="text-muted-foreground">
@@ -117,7 +117,7 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
        <div>
           <h1 className="text-2xl font-bold">Analytics</h1>
           <p className="text-muted-foreground">
@@ -154,8 +154,8 @@ export default function AnalyticsPage() {
         </Card>
       </div>
       
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card className="md:col-span-2">
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-5">
+        <Card className="lg:col-span-3">
             <CardHeader>
                 <CardTitle>Top Links by Clicks</CardTitle>
             </CardHeader>
@@ -186,7 +186,7 @@ export default function AnalyticsPage() {
         </Card>
 
         {socialLinks.length > 0 && (
-            <Card>
+            <Card className="lg:col-span-2">
                 <CardHeader>
                     <CardTitle>Social Links</CardTitle>
                     <p className="text-sm text-muted-foreground pt-1">Click counts for your social media icons.</p>
