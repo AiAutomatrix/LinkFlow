@@ -1,4 +1,3 @@
-
 import type { Timestamp } from 'firebase/firestore';
 
 export interface UserProfile {
@@ -11,6 +10,12 @@ export interface UserProfile {
   plan: 'free' | 'pro';
   theme?: string;
   animatedBackground?: boolean;
+  socialLinks?: {
+    email?: string;
+    instagram?: string;
+    facebook?: string;
+    github?: string;
+  };
   // Allow string for serialized data from server components
   createdAt: Timestamp | string; 
 }

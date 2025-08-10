@@ -8,105 +8,86 @@ import { auth, firestore } from '@/lib/firebase';
 import type { UserProfile } from '@/lib/types';
 import { AuthContext } from '@/contexts/auth-context';
 
-type AuthProviderProps = {
-  children: React.ReactNode;
-};
-
-const processUserData = (uid: string, data: any): UserProfile => {
-    const createdAt = data.createdAt instanceof Timestamp 
-        ? data.createdAt.toDate().toISOString()
-        : data.createdAt;
-
-    return { 
-      uid, 
-      ...data,
-      createdAt,
-    } as UserProfile;
-}
-
 const createProfileForNewUser = async (firebaseUser: FirebaseUser) => {
     const userDocRef = doc(firestore, 'users', firebaseUser.uid);
-    const userDoc = await getDoc(userDocRef);
+    const userDocSnap = await getDoc(userDocRef);
 
-    if (userDoc.exists()) {
-      return userDoc.data();
+    if (userDocSnap.exists()) {
+        return userDocSnap.data();
     }
 
-    // This is a new user, create their profile documents
-    const username = (firebaseUser.email || firebaseUser.uid).split('@')[0].replace(/[^a-zA-Z0-9]/g, '');
+    // New user, create profile
+    const username = (firebaseUser.email || firebaseUser.uid).split('@')[0].replace(/[^a-zA-Z0-9_.]/g, '').slice(0, 20) || `user_${Date.now()}`;
     const usernameDocRef = doc(firestore, 'usernames', username);
-    const createdAt = serverTimestamp();
 
-    const newUserProfile: Omit<UserProfile, 'uid' | 'createdAt'> = {
-      email: firebaseUser.email || "",
-      displayName: firebaseUser.displayName || "New User",
-      bio: "Welcome to my LinkFlow profile!",
-      photoURL: firebaseUser.photoURL || "",
-      username: username,
-      plan: "free",
-      theme: "light",
-      animatedBackground: false,
+    const newUserProfileData = {
+        email: firebaseUser.email || "",
+        displayName: firebaseUser.displayName || "New User",
+        photoURL: firebaseUser.photoURL || "",
+        bio: "",
+        username: username,
+        plan: "free",
+        theme: "light",
+        animatedBackground: false,
+        socialLinks: {
+            email: "",
+            instagram: "",
+            facebook: "",
+            github: "",
+        },
+        createdAt: serverTimestamp(),
     };
 
     const batch = writeBatch(firestore);
-    batch.set(userDocRef, { ...newUserProfile, createdAt });
+    batch.set(userDocRef, newUserProfileData);
     batch.set(usernameDocRef, { uid: firebaseUser.uid });
     await batch.commit();
 
-    // Return the newly created profile data (with a placeholder for the timestamp)
-    return { ...newUserProfile, createdAt: new Date().toISOString() };
+    return { ...newUserProfileData, createdAt: new Date() }; // return with placeholder date
 };
 
 
-const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
-  const [authReady, setAuthReady] = useState(false);
+const AuthProvider = ({ children }: { children: React.ReactNode; }) => {
+    const [user, setUser] = useState<UserProfile | null>(null);
+    const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
+    const [authReady, setAuthReady] = useState(false);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
-      if (fbUser) {
-        setFirebaseUser(fbUser);
-        try {
-            const userDocRef = doc(firestore, 'users', fbUser.uid);
-            let userDoc = await getDoc(userDocRef);
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+            if (fbUser) {
+                const profileData = await createProfileForNewUser(fbUser);
+                const userDocRef = doc(firestore, 'users', fbUser.uid);
+                const userDoc = await getDoc(userDocRef);
+                const finalProfileData = userDoc.data();
 
-            // If user exists in Auth but not Firestore (e.g., first Google login)
-            if (!userDoc.exists()) {
-                await createProfileForNewUser(fbUser);
-                userDoc = await getDoc(userDocRef); // Re-fetch the newly created doc
-            }
-
-            if (userDoc.exists()) {
-                const userData = userDoc.data();
-                const processedUser = processUserData(fbUser.uid, userData);
-                setUser(processedUser);
+                if (finalProfileData) {
+                    const processedUser = {
+                        uid: fbUser.uid,
+                        ...finalProfileData,
+                        createdAt: finalProfileData.createdAt instanceof Timestamp
+                            ? finalProfileData.createdAt.toDate().toISOString()
+                            : new Date().toISOString(),
+                    } as UserProfile;
+                    setUser(processedUser);
+                }
+                setFirebaseUser(fbUser);
             } else {
-                // This case should be rare after the change above
-                console.error("Failed to create or find user document after login.");
-                auth.signOut();
                 setUser(null);
+                setFirebaseUser(null);
             }
-        } catch (error) {
-            console.error("Error during authentication process:", error);
-            auth.signOut();
-            setUser(null);
-        }
-      } else {
-        setFirebaseUser(null);
-        setUser(null);
-      }
-      setAuthReady(true);
-    });
+            setAuthReady(true);
+        });
 
-    return () => unsubscribe();
-  }, []);
+        return () => unsubscribe();
+    }, []);
 
-  return (
-    <AuthContext.Provider value={{ user, firebaseUser, authReady, setUser }}>
-      {children}
-    </AuthContext.Provider>
-  );
+    const value = { user, firebaseUser, authReady, setUser };
+
+    return (
+        <AuthContext.Provider value={value}>
+            {children}
+        </AuthContext.Provider>
+    );
 };
 
 export default AuthProvider;

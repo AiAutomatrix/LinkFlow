@@ -34,6 +34,7 @@ async function getUserData(username: string): Promise<UserProfile | null> {
         plan: profileData.plan,
         theme: profileData.theme,
         animatedBackground: profileData.animatedBackground,
+        socialLinks: profileData.socialLinks || {},
         // Convert timestamp to ISO string
         createdAt: profileData.createdAt ? (profileData.createdAt as Timestamp).toDate().toISOString() : new Date().toISOString()
     } as UserProfile;
@@ -41,7 +42,6 @@ async function getUserData(username: string): Promise<UserProfile | null> {
 
 async function getUserLinks(uid: string): Promise<LinkType[]> {
     const linksCollection = collection(firestore, 'users', uid, 'links');
-    const now = Timestamp.now();
     
     const q = query(linksCollection, orderBy('order', 'asc'));
       
@@ -54,23 +54,11 @@ async function getUserLinks(uid: string): Promise<LinkType[]> {
       } as LinkType
     });
   
-    const activeLinks = allLinks.filter(link => {
-      if (link.active === false) return false;
-  
-      const hasStartDate = !!link.startDate;
-      const hasEndDate = !!link.endDate;
-      
-      const startDate = link.startDate ? (link.startDate as Timestamp) : undefined;
-      const endDate = link.endDate ? (link.endDate as Timestamp) : undefined;
-  
-      if (hasStartDate && startDate! > now) return false;
-      if (hasEndDate && endDate! < now) return false;
-  
-      return true;
-    });
+    // Server-side filtering of links is handled in the client component now
+    // to ensure only active links are shown, including schedule checks.
 
     // Manually serialize complex objects to be plain objects
-    return activeLinks.map(link => ({
+    return allLinks.map(link => ({
         ...link,
         // Convert any Timestamps to ISO strings
         createdAt: link.createdAt ? ((link.createdAt as unknown) as Timestamp).toDate().toISOString() : new Date().toISOString(),

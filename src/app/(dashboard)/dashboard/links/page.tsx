@@ -75,34 +75,34 @@ export default function LinksPage() {
     if (!user) return;
     const linksCollection = collection(firestore, 'users', user.uid, 'links');
     
-    const newLinkData: any = {
+    const newLinkData: Omit<Link, 'id'> = {
         title,
         url,
         order: links.length,
-        active: true,
+        active: true, // Default to active
         clicks: 0,
         createdAt: serverTimestamp(),
+        startDate: startDate ? Timestamp.fromDate(startDate) : undefined,
+        endDate: endDate ? Timestamp.fromDate(endDate) : undefined
     };
-
-    if (startDate) {
-        newLinkData.startDate = Timestamp.fromDate(startDate);
-    }
-    if (endDate) {
-        newLinkData.endDate = Timestamp.fromDate(endDate);
-    }
 
     await addDoc(linksCollection, newLinkData);
     setDialogOpen(false);
   };
   
-  const handleUpdateLink = async (linkId: string, title: string, url: string, startDate?: Date, endDate?: Date) => {
+  const handleUpdateLink = async (linkId: string, data: Partial<Link>) => {
     if (!user) return;
     const linkDocRef = doc(firestore, 'users', user.uid, 'links', linkId);
     
-    const updateData: any = { title, url };
+    const updateData: any = { ...data };
     
-    updateData.startDate = startDate ? Timestamp.fromDate(startDate) : null;
-    updateData.endDate = endDate ? Timestamp.fromDate(endDate) : null;
+    // Convert dates back to Timestamps for Firestore
+    if (data.startDate) {
+        updateData.startDate = Timestamp.fromDate(data.startDate as Date);
+    }
+    if (data.endDate) {
+        updateData.endDate = Timestamp.fromDate(data.endDate as Date);
+    }
 
     await updateDoc(linkDocRef, updateData);
   };
@@ -144,7 +144,6 @@ export default function LinksPage() {
       await batch.commit();
     } catch (error) {
       console.error("Failed to reorder links:", error);
-      // Optionally revert state on error
     }
   };
 
@@ -175,7 +174,7 @@ export default function LinksPage() {
       <Card>
         <CardHeader>
           <CardTitle>Your Links</CardTitle>
-          <CardDescription>Click the arrows to reorder.</CardDescription>
+          <CardDescription>Click the arrows to reorder, or the switch to toggle visibility.</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (

@@ -11,17 +11,18 @@ import LinkForm from "./link-form";
 import { useState } from "react";
 import { format } from 'date-fns';
 import { Timestamp } from "firebase/firestore";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 type LinkCardProps = {
   link: Link;
   index: number;
   totalLinks: number;
-  onUpdate: (linkId: string, title: string, url: string, startDate?: Date, endDate?: Date) => void;
+  onUpdate: (linkId: string, data: Partial<Link>) => void;
   onDelete: (linkId: string) => void;
   onMove: (linkId: string, direction: 'up' | 'down') => void;
 };
 
-// Helper to convert Timestamp to Date if needed
 const toDate = (date: any): Date | undefined => {
     if (!date) return undefined;
     if (date instanceof Date) return date;
@@ -29,14 +30,17 @@ const toDate = (date: any): Date | undefined => {
     return undefined;
 }
 
-
 export default function LinkCard({ link, index, totalLinks, onUpdate, onDelete, onMove }: LinkCardProps) {
     const [isEditOpen, setEditOpen] = useState(false);
   
-    const handleUpdate = (title: string, url: string, startDate?: Date, endDate?: Date) => {
-      onUpdate(link.id, title, url, startDate, endDate);
+    const handleFormSubmit = (title: string, url: string, startDate?: Date, endDate?: Date) => {
+      onUpdate(link.id, { title, url, startDate, endDate });
       setEditOpen(false);
     };
+
+    const handleToggleActive = (active: boolean) => {
+        onUpdate(link.id, { active });
+    }
 
     const hasSchedule = link.startDate || link.endDate;
     const startDate = toDate(link.startDate);
@@ -44,10 +48,11 @@ export default function LinkCard({ link, index, totalLinks, onUpdate, onDelete, 
 
     return (
         <Card className="flex items-center p-3 gap-3">
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 items-center justify-center">
                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove(link.id, 'up')} disabled={index === 0}>
                     <ArrowUp className="h-4 w-4" />
                 </Button>
+                <span className="text-xs text-muted-foreground">{index + 1}</span>
                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove(link.id, 'down')} disabled={index === totalLinks - 1}>
                     <ArrowDown className="h-4 w-4" />
                 </Button>
@@ -67,11 +72,19 @@ export default function LinkCard({ link, index, totalLinks, onUpdate, onDelete, 
                 )}
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
                 <div className="text-right hidden sm:block">
                     <p className="text-sm font-bold">{link.clicks || 0}</p>
                     <p className="text-xs text-muted-foreground">clicks</p>
                 </div>
+
+                <div className="flex items-center space-x-2">
+                    <Switch id={`active-switch-${link.id}`} checked={link.active} onCheckedChange={handleToggleActive} />
+                    <Label htmlFor={`active-switch-${link.id}`} className="text-sm">
+                        {link.active ? 'On' : 'Off'}
+                    </Label>
+                </div>
+
                 <Dialog open={isEditOpen} onOpenChange={setEditOpen}>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -97,7 +110,7 @@ export default function LinkCard({ link, index, totalLinks, onUpdate, onDelete, 
                             <DialogTitle>Edit Link</DialogTitle>
                         </DialogHeader>
                         <LinkForm
-                            onSubmit={handleUpdate}
+                            onSubmit={handleFormSubmit}
                             onCancel={() => setEditOpen(false)}
                             initialData={link}
                         />

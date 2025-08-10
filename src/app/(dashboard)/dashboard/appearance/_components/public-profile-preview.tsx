@@ -6,6 +6,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { Link, UserProfile } from "@/lib/types";
+import { Mail, Instagram, Facebook, Github } from 'lucide-react';
+
 
 type PreviewProps = {
   profile: Partial<UserProfile> & { photoURL?: string };
@@ -16,6 +18,8 @@ export default function PublicProfilePreview({ profile, links = [] }: PreviewPro
     const getInitials = (name: string = "") => {
         return name.split(" ").map((n) => n[0]).join("");
     };
+
+    const socialLinks = profile.socialLinks || {};
 
   return (
     <Card className="md:sticky top-20">
@@ -33,9 +37,17 @@ export default function PublicProfilePreview({ profile, links = [] }: PreviewPro
               <h1 className="text-xl font-bold mt-4 text-foreground">{profile.displayName || "Your Name"}</h1>
               <p className="text-muted-foreground text-sm">@{profile.username || "username"}</p>
               <p className="text-center mt-2 text-sm text-foreground/80">{profile.bio || "Your bio will appear here."}</p>
+              
+              <div className="flex gap-4 justify-center mt-4 text-foreground/80">
+                {socialLinks.email && <Mail className="h-6 w-6" />}
+                {socialLinks.instagram && <Instagram className="h-6 w-6" />}
+                {socialLinks.facebook && <Facebook className="h-6 w-6" />}
+                {socialLinks.github && <Github className="h-6 w-6" />}
+              </div>
+              
               <div className="mt-8 space-y-4 w-full max-w-xs mx-auto">
-                  {links.length > 0 ? (
-                    links.slice(0, 3).map((link) => (
+                  {links.filter(l => l.active).length > 0 ? (
+                    links.filter(l => l.active).slice(0, 3).map((link) => (
                       <Button key={link.id} variant="secondary" className="w-full">
                         {link.title}
                       </Button>
@@ -47,7 +59,7 @@ export default function PublicProfilePreview({ profile, links = [] }: PreviewPro
                       <Button variant="secondary" className="w-full">Example Link 3</Button>
                     </>
                   )}
-                  {links.length > 3 && <p className="text-center text-sm text-muted-foreground">...</p>}
+                  {links.filter(l => l.active).length > 3 && <p className="text-center text-sm text-muted-foreground">...</p>}
               </div>
             </div>
         </div>

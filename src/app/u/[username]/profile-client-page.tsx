@@ -5,7 +5,6 @@ import type { Link as LinkType, UserProfile } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/logo';
-import Link from 'next/link';
 import AnimatedBackground from '@/components/animated-background';
 import { Mail, Instagram, Facebook, Github } from 'lucide-react';
 
@@ -14,6 +13,22 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
     const getInitials = (name: string = '') => {
         return name.split(' ').map(n => n[0]).join('')
     }
+
+    const now = new Date();
+    const activeLinks = links.filter(link => {
+        if (!link.active) return false;
+
+        const startDate = link.startDate ? new Date(link.startDate as string) : null;
+        const endDate = link.endDate ? new Date(link.endDate as string) : null;
+
+        if (startDate && now < startDate) return false;
+        if (endDate && now > endDate) return false;
+
+        return true;
+    });
+
+    const socialLinks = user.socialLinks || {};
+
 
     return (
         <div data-theme={user.theme || 'light'} className="relative flex flex-col items-center min-h-screen pt-12 px-4 bg-background text-foreground overflow-hidden">
@@ -29,42 +44,49 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
                     <p className="mt-4 text-sm max-w-xs text-foreground/80">{user.bio}</p>
 
                     <div className="flex gap-4 justify-center mt-4 text-foreground/80">
-                        <a aria-label="Send email" href="mailto:your@email.com" className="hover:text-primary transition-colors">
-                            <Mail className="h-6 w-6" />
-                        </a>
-                        <a
-                            aria-label="My Instagram"
-                            href="https://www.instagram.com/bigtimetreat"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hover:text-primary transition-colors"
-                        >
-                            <Instagram className="h-6 w-6" />
-                        </a>
-                        <a
-                            aria-label="My Facebook"
-                            href="https://facebook.com/yourusername"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hover:text-primary transition-colors"
-                        >
-                           <Facebook className="h-6 w-6" />
-                        </a>
-                        <a
-                            aria-label="My Github"
-                            href="https://github.com/yourusername"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hover:text-primary transition-colors"
-                        >
-                            <Github className="h-6 w-6" />
-                        </a>
+                        {socialLinks.email && (
+                            <a aria-label="Send email" href={`mailto:${socialLinks.email}`} className="hover:text-primary transition-colors">
+                                <Mail className="h-6 w-6" />
+                            </a>
+                        )}
+                        {socialLinks.instagram && (
+                             <a
+                                aria-label="My Instagram"
+                                href={socialLinks.instagram}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:text-primary transition-colors"
+                            >
+                                <Instagram className="h-6 w-6" />
+                            </a>
+                        )}
+                        {socialLinks.facebook && (
+                            <a
+                                aria-label="My Facebook"
+                                href={socialLinks.facebook}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:text-primary transition-colors"
+                            >
+                            <Facebook className="h-6 w-6" />
+                            </a>
+                        )}
+                        {socialLinks.github && (
+                             <a
+                                aria-label="My Github"
+                                href={socialLinks.github}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:text-primary transition-colors"
+                            >
+                                <Github className="h-6 w-6" />
+                            </a>
+                        )}
                     </div>
                 </div>
 
                 <div className="mt-8 space-y-4">
-                {links.map((link) => {
-                    const redirectUrl = `/redirect?userId=${user.uid}&linkId=${link.id}&url=${encodeURIComponent(link.url)}`;
+                {activeLinks.map((link) => {
                     return (
                         <Button 
                             key={link.id}
