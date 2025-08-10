@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
-import AuthProvider from '@/components/auth-provider';
 import { cn } from '@/lib/utils';
 import GoogleAnalytics from '@/components/google-analytics';
 import { Suspense } from 'react';
@@ -27,10 +26,8 @@ export default function RootLayout({
         <Suspense>
           <GoogleAnalytics />
         </Suspense>
-        <AuthProvider>
-          {children}
-          <Toaster />
-        </AuthProvider>
+        {children}
+        <Toaster />
       </body>
     </html>
   );

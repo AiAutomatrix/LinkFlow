@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Link as LinkIcon, Eye, Users } from "lucide-react";
+import { BarChart, Link as LinkIcon, Eye } from "lucide-react";
 import {
   Bar,
   XAxis,
@@ -13,58 +13,30 @@ import {
   ResponsiveContainer,
   BarChart as RechartsBarChart,
 } from "recharts";
-import { useAuth } from "@/contexts/auth-context";
-import { firestore } from "@/lib/firebase";
 import type { Link } from "@/lib/types";
-import { collection, query, onSnapshot, orderBy, Timestamp } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// Helper to safely convert different date formats to a Date object
-const toDate = (date: any): Date | undefined => {
-    if (!date) return undefined;
-    if (date instanceof Date) return date;
-    if (date instanceof Timestamp) return date.toDate();
-    if (typeof date === 'string') return new Date(date);
-    return undefined;
-}
-
-
 export default function AnalyticsPage() {
-  const { user } = useAuth();
   const [links, setLinks] = useState<Link[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
-        setLoading(false);
-        return;
-    };
-    
     setLoading(true);
-    const linksCollection = collection(firestore, "users", user.uid, "links");
-    const q = query(linksCollection, orderBy("clicks", "desc"));
-
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const linksData = querySnapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          createdAt: toDate(data.createdAt),
-          startDate: toDate(data.startDate),
-          endDate: toDate(data.endDate),
-        } as Link;
-      });
-      setLinks(linksData);
+    // Mock data fetching
+    const timer = setTimeout(() => {
+      const mockLinks: Link[] = [
+        { id: '1', title: 'My Portfolio', url: 'https://a.com', order: 0, active: true, clicks: 101, isSocial: false },
+        { id: '2', title: 'My Blog', url: 'https://b.com', order: 1, active: true, clicks: 256, isSocial: false },
+        { id: 'social_instagram', title: 'Instagram', url: 'https://insta.com', order: -1, active: true, clicks: 50, isSocial: true },
+        { id: 'social_github', title: 'Github', url: 'https://github.com', order: -1, active: true, clicks: 75, isSocial: true },
+      ];
+      setLinks(mockLinks);
       setLoading(false);
-    }, (error) => {
-        console.error("Error fetching real-time analytics:", error);
-        setLoading(false);
-    });
+    }, 1000);
 
-    return () => unsubscribe();
-  }, [user]);
+    return () => clearTimeout(timer);
+  }, []);
 
   const regularLinks = links.filter(l => !l.isSocial);
   const socialLinks = links.filter(l => l.isSocial);
@@ -73,7 +45,6 @@ export default function AnalyticsPage() {
   const totalRegularLinks = regularLinks.length;
   const avgClicks = totalRegularLinks > 0 ? (totalClicks / totalRegularLinks).toFixed(2) : "0";
   
-  // Include all links in the chart
   const chartData = links.filter(l => (l.clicks || 0) > 0).slice(0, 10).map(link => ({ name: link.title, clicks: link.clicks || 0 }));
 
 

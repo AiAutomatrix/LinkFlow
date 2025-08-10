@@ -10,7 +10,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/auth-context";
 import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
@@ -30,12 +29,12 @@ import Link from "next/link";
 
 
 export default function SettingsPage() {
-  const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const plan = "free";
+  const username = "username";
 
   const handleUpgrade = () => {
-    // This would typically redirect to a Stripe Checkout session
     setLoading(true);
     toast({ title: "Redirecting to payment..."});
     setTimeout(() => {
@@ -61,20 +60,20 @@ export default function SettingsPage() {
           <CardTitle>Your Plan</CardTitle>
           <CardDescription>
             You are currently on the{" "}
-            <Badge variant={user?.plan === "pro" ? "default" : "secondary"}>
-              {user?.plan || "Free"} Plan
+            <Badge variant={plan === "pro" ? "default" : "secondary"}>
+              {plan || "Free"} Plan
             </Badge>
             .
           </CardDescription>
         </CardHeader>
         <CardContent>
           <p>
-            {user?.plan === "pro"
+            {plan === "pro"
               ? "You have access to all Pro features. Thank you for your support!"
               : "Upgrade to Pro to unlock custom domains, advanced analytics, and more."}
           </p>
         </CardContent>
-        {user?.plan !== "pro" && (
+        {plan !== "pro" && (
           <CardFooter>
             <Button onClick={handleUpgrade} disabled={loading}>
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Star className="mr-2 h-4 w-4" />}
@@ -92,13 +91,11 @@ export default function SettingsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {user && (
             <div className="flex items-center space-x-2">
               <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold">
-                {`.../u/${user.username}`}
+                {`.../u/${username}`}
               </code>
             </div>
-          )}
         </CardContent>
         <CardFooter>
             <Button asChild variant="secondary">

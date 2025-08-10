@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import Logo from '@/components/logo';
 import AnimatedBackground from '@/components/animated-background';
 import { Mail, Instagram, Facebook, Github } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 type SocialLink = {
     id: string;
@@ -25,6 +26,7 @@ const SocialIcon = ({ platform }: { platform: SocialLink['platform'] }) => {
 };
 
 export default function ProfileClientPage({ user, links }: { user: UserProfile; links: LinkType[] }) {
+    const { toast } = useToast();
     
     const getInitials = (name: string = '') => {
         return name.split(' ').map(n => n[0]).join('')
@@ -32,7 +34,6 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
 
     const now = new Date();
     
-    // Separate regular links from social links by filtering the main links array
     const regularLinks = links.filter(link => !link.isSocial);
     const socialLinks: SocialLink[] = links
       .filter(link => link.isSocial && link.id.startsWith('social_'))
@@ -55,20 +56,11 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
         return true;
     });
 
-    const handleLinkClick = (userId: string, linkId: string, url: string) => {
-        // We prevent the default navigation so we can first send the click event
-        // This is primarily for regular links which navigate away from the page
-        
-        // Send the click event in the background
-        fetch(`/api/clicks`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, linkId }),
-          keepalive: true, // Important for requests that might outlive the page
-        });
-
-        // Open the link in a new tab
-        window.open(url, '_blank');
+    const handleLinkClick = (linkTitle: string) => {
+        toast({
+            title: "Link Clicked!",
+            description: `You clicked on "${linkTitle}". In a real app, this would be tracked.`
+        })
     };
 
 
@@ -96,7 +88,7 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
                                 className="hover:text-primary transition-colors"
                                 onClick={(e) => {
                                     e.preventDefault();
-                                    handleLinkClick(user.uid, link.id, link.url);
+                                    handleLinkClick(link.title);
                                 }}
                             >
                                 <SocialIcon platform={link.platform} />
@@ -119,7 +111,7 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
                                rel="noopener noreferrer" 
                                onClick={(e) => {
                                  e.preventDefault();
-                                 handleLinkClick(user.uid, link.id, link.url);
+                                 handleLinkClick(link.title);
                                }}>
                                 {link.title}
                             </a>
