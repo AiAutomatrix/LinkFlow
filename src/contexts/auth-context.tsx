@@ -2,8 +2,8 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { onAuthStateChanged, User, getRedirectResult } from 'firebase/auth';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import type { UserProfile } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -23,26 +23,83 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        setUser(firebaseUser);
-        const userRef = doc(db, 'users', firebaseUser.uid);
-        const userSnap = await getDoc(userRef);
-        if (userSnap.exists()) {
-          setUserProfile(userSnap.data() as UserProfile);
+    const handleAuthFlow = async () => {
+      // Check for redirect result first
+      try {
+        const result = await getRedirectResult(auth);
+        if (result) {
+          // This means a user has just signed in via redirect.
+          const firebaseUser = result.user;
+          const userRef = doc(db, 'users', firebaseUser.uid);
+          const userSnap = await getDoc(userRef);
+
+          if (!userSnap.exists()) {
+            // Create profile for new user
+            const newProfile: Omit<UserProfile, 'createdAt'> & { createdAt: object } = {
+              uid: firebaseUser.uid,
+              displayName: firebaseUser.displayName || 'New User',
+              username: firebaseUser.uid.slice(0, 8),
+              email: firebaseUser.email || '',
+              photoURL: firebaseUser.photoURL || '',
+              bio: '',
+              theme: 'light',
+              animatedBackground: false,
+              socialLinks: {},
+              plan: 'free',
+              createdAt: serverTimestamp(),
+            };
+            await setDoc(userRef, newProfile);
+            setUserProfile({ ...newProfile, createdAt: new Date().toISOString() } as UserProfile);
+          }
+          // The onAuthStateChanged listener below will handle setting the user state.
+        }
+      } catch (error) {
+        console.error("Error processing redirect result:", error);
+      }
+
+      // Now, set up the regular auth state listener
+      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        if (firebaseUser) {
+          setUser(firebaseUser);
+          const userRef = doc(db, 'users', firebaseUser.uid);
+          const userSnap = await getDoc(userRef);
+          if (userSnap.exists()) {
+            setUserProfile(userSnap.data() as UserProfile);
+          } else {
+             // This case might happen if DB entry fails after auth success.
+             // We can attempt to create it again.
+            const newProfile: Omit<UserProfile, 'createdAt'> & { createdAt: object } = {
+              uid: firebaseUser.uid,
+              displayName: firebaseUser.displayName || 'New User',
+              username: firebaseUser.uid.slice(0, 8),
+              email: firebaseUser.email || '',
+              photoURL: firebaseUser.photoURL || '',
+              bio: '',
+              theme: 'light',
+              animatedBackground: false,
+              socialLinks: {},
+              plan: 'free',
+              createdAt: serverTimestamp(),
+            };
+            await setDoc(userRef, newProfile);
+            setUserProfile({ ...newProfile, createdAt: new Date().toISOString() } as UserProfile);
+          }
         } else {
-          // Handle case where user exists in Auth but not Firestore
+          setUser(null);
           setUserProfile(null);
         }
-      } else {
-        setUser(null);
-        setUserProfile(null);
-      }
-      setLoading(false);
-    });
+        setLoading(false);
+      });
+
+      return unsubscribe;
+    };
+
+    const unsubscribePromise = handleAuthFlow();
 
     // Cleanup subscription on unmount
-    return () => unsubscribe();
+    return () => {
+      unsubscribePromise.then(unsubscribe => unsubscribe && unsubscribe());
+    };
   }, []);
 
   const value = {
@@ -55,10 +112,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="space-y-4">
-            <Skeleton className="h-10 w-64" />
-            <Skeleton className="h-10 w-64" />
-            <Skeleton className="h-10 w-64" />
+        <div className="space-y-4 text-center">
+            <p className="text-lg font-semibold">Authenticating...</p>
+            <Skeleton className="h-10 w-64 mx-auto" />
+            <Skeleton className="h-10 w-64 mx-auto" />
+            <Skeleton className="h-10 w-64 mx-auto" />
         </div>
       </div>
     );

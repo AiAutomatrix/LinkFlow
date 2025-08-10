@@ -3,6 +3,7 @@ import {
     createUserWithEmailAndPassword, 
     GoogleAuthProvider, 
     signInWithPopup,
+    signInWithRedirect,
     updateProfile as updateFirebaseAuthProfile,
     signInWithEmailAndPassword
 } from "firebase/auth";
@@ -29,41 +30,20 @@ export async function signUpWithEmail(email: string, password: string, displayNa
         theme: "light",
         animatedBackground: false,
         socialLinks: {},
+        plan: "free",
         createdAt: new Date(),
-    } as Omit<UserProfile, 'plan'>); // plan will be set by default in Firestore rules or a backend function if needed
+    } as Omit<UserProfile, 'createdAt'> & { createdAt: Date });
     
     return user;
 }
 
 
 /**
- * Signs in a user with Google, creating a profile if it's their first time.
+ * Signs in a user with Google using the redirect method.
  */
 export async function signInWithGoogle() {
     const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-
-    const userRef = doc(db, "users", user.uid);
-    const userSnap = await getDoc(userRef);
-
-    if (!userSnap.exists()) {
-        // This is a new user, create their profile
-        await setDoc(userRef, {
-            uid: user.uid,
-            displayName: user.displayName,
-            username: user.uid.slice(0, 8), // default username
-            email: user.email,
-            photoURL: user.photoURL || null,
-            bio: "",
-            theme: "light",
-            animatedBackground: false,
-            socialLinks: {},
-            createdAt: new Date(),
-        } as Omit<UserProfile, 'plan'>);
-    }
-    
-    return user;
+    await signInWithRedirect(auth, provider);
 }
 
 /**
