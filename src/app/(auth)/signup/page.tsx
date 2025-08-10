@@ -70,7 +70,7 @@ export default function SignupPage() {
     setLoading(true);
     try {
       await signUpWithEmail(values.email, values.password, values.displayName);
-      router.push('/dashboard');
+      // The redirect is handled by the AuthProvider
     } catch (error: any) {
       toast({
         variant: "destructive",

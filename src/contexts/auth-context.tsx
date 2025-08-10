@@ -1,10 +1,10 @@
 
-"use client";
+'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { onAuthStateChanged, User, getRedirectResult } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
+import { auth } from '@/lib/firebase';
+import { getOrCreateUserProfile } from '@/lib/auth';
 import type { UserProfile } from '@/lib/types';
 import { usePathname, useRouter } from 'next/navigation';
 
@@ -25,45 +25,12 @@ function LoadingScreen() {
     );
 }
 
-async function getOrCreateUserProfile(user: User): Promise<UserProfile> {
-    const userRef = doc(db, "users", user.uid);
-    const userSnap = await getDoc(userRef);
-
-    if (userSnap.exists()) {
-        return userSnap.data() as UserProfile;
-    } else {
-        const username = (user.displayName?.replace(/\s+/g, '').toLowerCase() || 'user') + Math.random().toString(36).substring(2, 6);
-        
-        const newUserProfile: UserProfile = {
-            uid: user.uid,
-            displayName: user.displayName || 'New User',
-            username: username,
-            email: user.email || '',
-            photoURL: user.photoURL || '',
-            bio: '',
-            theme: 'light',
-            animatedBackground: false,
-            socialLinks: {
-              email: '',
-              instagram: '',
-              facebook: '',
-              github: ''
-            },
-            plan: 'free',
-            createdAt: serverTimestamp(),
-        };
-        
-        await setDoc(userRef, newUserProfile);
-        return newUserProfile;
-    }
-}
-
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  
   const router = useRouter();
   const pathname = usePathname();
 
@@ -74,26 +41,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!mounted) return;
 
-    const processAuth = async () => {
+    // This function will handle all authentication logic
+    const handleAuth = async () => {
+      setLoading(true);
+      
       try {
+        // First, check for a redirect result from Google
         const result = await getRedirectResult(auth);
         if (result && result.user) {
           const profile = await getOrCreateUserProfile(result.user);
           setUser(result.user);
           setUserProfile(profile);
           setLoading(false);
-          return; 
+          // The user has just logged in, so we can stop here.
+          // The navigation logic below will handle redirecting them.
+          return;
         }
       } catch (error) {
         console.error("Error processing redirect result:", error);
       }
-
+      
+      // If no redirect, set up the normal auth state listener
       const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
         if (firebaseUser) {
+          // If a user is found, ensure we have their profile
           const profile = await getOrCreateUserProfile(firebaseUser);
           setUser(firebaseUser);
           setUserProfile(profile);
         } else {
+          // No user is logged in
           setUser(null);
           setUserProfile(null);
         }
@@ -103,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return () => unsubscribe();
     };
 
-    processAuth();
+    handleAuth();
   }, [mounted]);
 
   useEffect(() => {
@@ -113,15 +89,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const isPublicProfile = pathname.startsWith('/u/');
     
     if (user && userProfile) {
+        // If user is logged in, redirect away from auth pages
         if (isAuthPage) {
             router.replace('/dashboard');
         }
     } else if (!user && !isAuthPage && !isPublicProfile && pathname !== '/') {
+        // If user is not logged in and not on a public page, redirect to login
         router.replace('/login');
     }
   }, [user, userProfile, loading, pathname, router, mounted]);
 
-  if (!mounted || loading) {
+  // While the initial mount or auth state is resolving, show a loading screen.
+  if (loading || !mounted) {
      return <LoadingScreen />;
   }
   

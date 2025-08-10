@@ -66,7 +66,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signInWithEmail(values.email, values.password);
-      router.push('/dashboard');
+      // The redirect is handled by the AuthProvider
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -82,8 +82,8 @@ export default function LoginPage() {
     setGoogleLoading(true);
     try {
       await signInWithGoogle();
-      // The redirect flow will handle navigation, but we keep the loading state
-      // in case the user closes the tab before the redirect is initiated.
+      // The redirect flow will handle navigation, no need to do anything here.
+      // We keep the loading state in case the redirect is slow.
     } catch (error: any) {
       toast({
         variant: "destructive",
