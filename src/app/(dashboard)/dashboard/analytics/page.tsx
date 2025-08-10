@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Link as LinkIcon, Eye } from "lucide-react";
+import { BarChart, Link as LinkIcon, Eye, Users } from "lucide-react";
 import {
   Bar,
   XAxis,
@@ -66,10 +66,15 @@ export default function AnalyticsPage() {
     return () => unsubscribe();
   }, [user]);
 
+  const regularLinks = links.filter(l => !l.isSocial);
+  const socialLinks = links.filter(l => l.isSocial);
+
   const totalClicks = links.reduce((acc, link) => acc + (link.clicks || 0), 0);
-  const totalLinks = links.length;
-  const avgClicks = totalLinks > 0 ? (totalClicks / totalLinks).toFixed(2) : "0";
-  const chartData = links.slice(0, 10).map(link => ({ name: link.title, clicks: link.clicks || 0 }));
+  const totalRegularLinks = regularLinks.length;
+  const avgClicks = totalRegularLinks > 0 ? (totalClicks / totalRegularLinks).toFixed(2) : "0";
+  
+  // Include all links in the chart
+  const chartData = links.filter(l => (l.clicks || 0) > 0).slice(0, 10).map(link => ({ name: link.title, clicks: link.clicks || 0 }));
 
 
   if (loading) {
@@ -84,7 +89,7 @@ export default function AnalyticsPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Clicks</CardTitle>
+                    <CardTitle className="text-sm font-medium">Total Clicks (All Links)</CardTitle>
                     <Eye className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -93,7 +98,7 @@ export default function AnalyticsPage() {
             </Card>
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Links</CardTitle>
+                    <CardTitle className="text-sm font-medium">Custom Links</CardTitle>
                     <LinkIcon className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -112,7 +117,7 @@ export default function AnalyticsPage() {
         </div>
         <Card>
             <CardHeader>
-                <CardTitle>Top 10 Links by Clicks</CardTitle>
+                <CardTitle>Top Links by Clicks</CardTitle>
             </CardHeader>
             <CardContent>
                 <ResponsiveContainer width="100%" height={350}>
@@ -135,7 +140,7 @@ export default function AnalyticsPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Clicks</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Clicks (All Links)</CardTitle>
             <Eye className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -144,11 +149,11 @@ export default function AnalyticsPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Links</CardTitle>
+            <CardTitle className="text-sm font-medium">Custom Links</CardTitle>
             <LinkIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalLinks}</div>
+            <div className="text-2xl font-bold">{totalRegularLinks}</div>
           </CardContent>
         </Card>
         <Card>
@@ -161,35 +166,56 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
       </div>
-      <Card>
-        <CardHeader>
-          <CardTitle>Top 10 Links by Clicks</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={350}>
-            {totalLinks > 0 ? (
-                <RechartsBarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
-                <Tooltip
-                    contentStyle={{
-                    backgroundColor: "hsl(var(--background))",
-                    borderColor: "hsl(var(--border))",
-                    }}
-                />
-                <Legend />
-                <Bar dataKey="clicks" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                </RechartsBarChart>
-            ) : (
-                <div className="flex h-full w-full flex-col items-center justify-center">
-                    <p className="text-muted-foreground">No link data to display.</p>
-                    <p className="text-sm text-muted-foreground">Click your links on the public page to see data here.</p>
-                </div>
-            )}
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+      
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card className="md:col-span-2">
+            <CardHeader>
+                <CardTitle>Top Links by Clicks</CardTitle>
+            </CardHeader>
+            <CardContent>
+            <ResponsiveContainer width="100%" height={350}>
+                {links.length > 0 ? (
+                    <RechartsBarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
+                    <Tooltip
+                        contentStyle={{
+                        backgroundColor: "hsl(var(--background))",
+                        borderColor: "hsl(var(--border))",
+                        }}
+                    />
+                    <Legend />
+                    <Bar dataKey="clicks" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                    </RechartsBarChart>
+                ) : (
+                    <div className="flex h-full w-full flex-col items-center justify-center">
+                        <p className="text-muted-foreground">No link data to display.</p>
+                        <p className="text-sm text-muted-foreground">Click your links on the public page to see data here.</p>
+                    </div>
+                )}
+            </ResponsiveContainer>
+            </CardContent>
+        </Card>
+
+        {socialLinks.length > 0 && (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Social Links</CardTitle>
+                    <p className="text-sm text-muted-foreground pt-1">Click counts for your social media icons.</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    {socialLinks.map(link => (
+                        <div key={link.id} className="flex items-center justify-between">
+                            <span className="font-medium">{link.title}</span>
+                            <span className="text-muted-foreground font-bold">{link.clicks || 0} Clicks</span>
+                        </div>
+                    ))}
+                </CardContent>
+            </Card>
+        )}
+      </div>
+
     </div>
   );
 }
