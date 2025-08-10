@@ -3,6 +3,7 @@
 
 import AnimatedBackground from "@/components/animated-background";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
 import type { Link as LinkType, UserProfile } from "@/lib/types";
 import { Mail, Instagram, Facebook, Github } from 'lucide-react';
 
