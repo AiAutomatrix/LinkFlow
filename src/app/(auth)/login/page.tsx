@@ -77,11 +77,14 @@ export default function LoginPage() {
   }
 
   async function handleGoogleSignIn() {
+    console.log("[LoginPage] Google sign-in button clicked.");
     setGoogleLoading(true);
     try {
       await signInWithGoogle();
       // The onAuthStateChanged listener in AuthProvider handles success.
+      console.log("[LoginPage] signInWithGoogle promise resolved. Waiting for AuthProvider.");
     } catch (error: any) {
+      console.error("[LoginPage] Error during Google Sign-In:", error);
       toast({
         variant: "destructive",
         title: "Google Sign-In Failed",
@@ -89,6 +92,7 @@ export default function LoginPage() {
       });
     } finally {
         // The user might close the popup, so we always stop the loader.
+        console.log("[LoginPage] Setting Google loading to false.");
         setGoogleLoading(false);
     }
   }

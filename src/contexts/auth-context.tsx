@@ -25,7 +25,7 @@ function LoadingScreen() {
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <span>Loading...</span>
+            <span>Loading Auth...</span>
         </div>
       </div>
     );
@@ -40,32 +40,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
+    console.log("[AuthProvider] Setting up onAuthStateChanged listener.");
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      console.log("[onAuthStateChanged] Listener triggered.");
       if (firebaseUser) {
-        const profile = await getOrCreateUserProfile(firebaseUser);
-        setUser(firebaseUser);
-        setUserProfile(profile);
+        console.log(`[onAuthStateChanged] User detected: ${firebaseUser.uid}, email: ${firebaseUser.email}`);
+        // User is signed in.
+        try {
+          console.log("[onAuthStateChanged] Fetching or creating user profile...");
+          const profile = await getOrCreateUserProfile(firebaseUser);
+          console.log("[onAuthStateChanged] Profile successfully fetched/created:", profile);
+          setUser(firebaseUser);
+          setUserProfile(profile);
+        } catch (error) {
+            console.error("[onAuthStateChanged] Error getting user profile:", error);
+            // Handle error, maybe sign out the user
+            setUser(null);
+            setUserProfile(null);
+        }
       } else {
+        // User is signed out.
+        console.log("[onAuthStateChanged] No user detected. Clearing state.");
         setUser(null);
         setUserProfile(null);
       }
+      console.log("[onAuthStateChanged] Setting loading to false.");
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+        console.log("[AuthProvider] Cleaning up onAuthStateChanged listener.");
+        unsubscribe();
+    }
   }, []);
 
   useEffect(() => {
-    if (loading) return;
+    if (loading) {
+        console.log("[RoutingEffect] Skipping, auth is loading.");
+        return;
+    };
+    console.log(`[RoutingEffect] Running. Path: ${pathname}, User: ${!!user}, Profile: ${!!userProfile}`);
 
     const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
     const isPublicPage = pathname.startsWith('/u/') || pathname === '/';
     
     if (user && userProfile && isAuthPage) {
+        console.log("[RoutingEffect] User is logged in and on an auth page, redirecting to /dashboard.");
         router.replace('/dashboard');
     }
     
     if (!user && !isAuthPage && !isPublicPage) {
+        console.log("[RoutingEffect] User is not logged in and on a protected page, redirecting to /login.");
         router.replace('/login');
     }
     
