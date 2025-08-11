@@ -59,7 +59,7 @@ export async function getOrCreateUserProfile(user: User): Promise<UserProfile> {
 
     if (userSnap.exists()) {
         // User profile already exists, return it.
-        return userSnap.data() as UserProfile;
+        return { uid: user.uid, ...userSnap.data() } as UserProfile;
     } else {
         // This is a new user, create their profile.
         let username = user.displayName?.replace(/\s+/g, '').toLowerCase() || 'user';
@@ -98,17 +98,11 @@ export async function getOrCreateUserProfile(user: User): Promise<UserProfile> {
             createdAt: serverTimestamp(),
         };
         
-        const usernameRef = doc(db, "usernames", finalUsername);
-        const batch = writeBatch(db);
-        
-        batch.set(userRef, newUserProfile);
-        batch.set(usernameRef, { uid: user.uid });
-        
-        await batch.commit();
+        await setDoc(userRef, newUserProfile);
 
         // After creation, fetch the document to get the server-generated timestamp
         const newUserSnap = await getDoc(userRef);
-        return newUserSnap.data() as UserProfile;
+        return { uid: user.uid, ...newUserSnap.data() } as UserProfile;
     }
 }
 
