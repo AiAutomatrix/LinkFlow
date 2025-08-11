@@ -6,7 +6,6 @@ import {
   updateProfile as updateFirebaseAuthProfile,
   signInWithEmailAndPassword,
   User,
-  signInWithRedirect,
 } from "firebase/auth";
 import { doc, setDoc, getDoc, serverTimestamp, updateDoc, collection, query, where, limit, getDocs, writeBatch } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -14,13 +13,27 @@ import { auth, db, storage } from "./firebase";
 import type { UserProfile } from "./types";
 
 /**
- * Signs in a user with Google using a redirect.
+ * Signs in a user with Google using a popup window.
+ * This is generally more reliable than redirects as it doesn't navigate the user away.
  */
 export async function signInWithGoogle() {
     const provider = new GoogleAuthProvider();
-    // Using signInWithRedirect for a more reliable cross-browser experience.
-    // The result is handled by the onAuthStateChanged listener in AuthProvider.
-    await signInWithRedirect(auth, provider);
+    provider.setCustomParameters({
+        prompt: "select_account" // Ensures account selector always appears
+    });
+    try {
+        await signInWithPopup(auth, provider);
+        // The onAuthStateChanged listener in AuthProvider will handle the user creation/redirect.
+    } catch (error: any) {
+        // Handle specific errors, like popup closed by user
+        if (error.code === 'auth/popup-closed-by-user') {
+            console.log("Google Sign-In popup closed by user.");
+            // We can re-throw or handle it silently
+            throw new Error("Sign-in process was canceled.");
+        }
+        console.error("Google sign-in error:", error);
+        throw error; // Re-throw other errors to be caught by the UI
+    }
 }
 
 /**

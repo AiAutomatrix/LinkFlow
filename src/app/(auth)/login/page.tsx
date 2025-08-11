@@ -87,7 +87,8 @@ export default function LoginPage() {
         title: "Google Sign-In Failed",
         description: error.message,
       });
-      setGoogleLoading(false); // only set to false on error, otherwise redirect happens
+    } finally {
+        setGoogleLoading(false); // The user might close the popup
     }
   }
 
