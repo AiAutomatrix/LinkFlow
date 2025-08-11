@@ -2,7 +2,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { onAuthStateChanged, User, getRedirectResult } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { getOrCreateUserProfile } from '@/lib/auth';
 import type { UserProfile } from '@/lib/types';
@@ -40,19 +40,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        const profile = await getOrCreateUserProfile(firebaseUser);
-        setUser(firebaseUser);
-        setUserProfile(profile);
-      } else {
-        setUser(null);
-        setUserProfile(null);
-      }
-      setLoading(false);
-    });
-    
-    return () => unsubscribe();
+    // First, check for the redirect result. This is crucial for Google Sign-In.
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result?.user) {
+          // A user signed in via redirect. Set them and create their profile.
+           const profile = await getOrCreateUserProfile(result.user);
+           setUser(result.user);
+           setUserProfile(profile);
+        }
+      })
+      .catch((error) => {
+        console.error("Error handling redirect result:", error);
+      })
+      .finally(() => {
+        // After checking for redirect, set up the normal auth state listener.
+        // This will handle all other cases (email login, existing sessions, logout).
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+          if (firebaseUser) {
+            // User is signed in. Ensure we have their profile.
+            // This might seem redundant, but it's a fallback and handles session persistence.
+            if (!userProfile || userProfile.uid !== firebaseUser.uid) {
+                const profile = await getOrCreateUserProfile(firebaseUser);
+                setUserProfile(profile);
+            }
+            setUser(firebaseUser);
+          } else {
+            // User is signed out.
+            setUser(null);
+            setUserProfile(null);
+          }
+          setLoading(false);
+        });
+        
+        return () => unsubscribe();
+      });
   }, []);
 
   useEffect(() => {

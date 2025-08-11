@@ -7,7 +7,6 @@ import {
   signInWithEmailAndPassword,
   User,
   signInWithRedirect,
-  getRedirectResult,
 } from "firebase/auth";
 import { doc, setDoc, getDoc, serverTimestamp, updateDoc, collection, query, where, limit, getDocs, writeBatch } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -15,13 +14,13 @@ import { auth, db, storage } from "./firebase";
 import type { UserProfile } from "./types";
 
 /**
- * Signs in a user with Google using a popup window.
+ * Signs in a user with Google using a redirect.
  */
 export async function signInWithGoogle() {
     const provider = new GoogleAuthProvider();
-    // Using signInWithPopup for a more reliable UX that doesn't navigate away.
+    // Using signInWithRedirect for a more reliable cross-browser experience.
     // The result is handled by the onAuthStateChanged listener in AuthProvider.
-    await signInWithPopup(auth, provider);
+    await signInWithRedirect(auth, provider);
 }
 
 /**
