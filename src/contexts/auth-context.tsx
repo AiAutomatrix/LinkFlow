@@ -82,12 +82,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         router.replace('/login');
       }
     }
-    // No other redirects are needed. Public pages should be accessible regardless of auth state.
+    // No other redirects are needed. Public pages like '/' or '/u/...' should be accessible.
     
   }, [user, loading, pathname, router]);
 
 
-  // While loading is true for auth pages, we show a full screen loader.
+  // While loading is true for auth-protected or auth-related pages, we show a full screen loader.
   // This prevents any rendering of the app until we have a definitive auth state.
   if (loading && (pathname.startsWith('/dashboard') || pathname.startsWith('/login') || pathname.startsWith('/signup'))) {
      return <LoadingScreen />;
