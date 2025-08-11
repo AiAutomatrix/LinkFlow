@@ -81,7 +81,7 @@ export default function Home() {
         </main>
 
         <footer className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-400">
-          {year && <p>&copy; {year} LinkFlow. All rights reserved.</p>}
+          {year !== null ? <p>&copy; {year} LinkFlow. All rights reserved.</p> : <div className="h-6"></div>}
         </footer>
       </div>
     </div>

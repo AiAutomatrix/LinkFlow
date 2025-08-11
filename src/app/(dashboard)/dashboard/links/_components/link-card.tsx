@@ -37,13 +37,13 @@ export default function LinkCard({ link, index, totalLinks, onUpdate, onDelete, 
     useEffect(() => {
         const startDate = toDate(link.startDate);
         const endDate = toDate(link.endDate);
+        let text = '';
         if (startDate || endDate) {
             const start = startDate ? format(startDate, "LLL d") : 'Always';
             const end = endDate ? format(endDate, "LLL d, y") : 'Never';
-            setScheduleText(`${start} → ${end}`);
-        } else {
-            setScheduleText('');
+            text = `${start} → ${end}`;
         }
+        setScheduleText(text);
     }, [link.startDate, link.endDate]);
   
     const handleFormSubmit = (title: string, url: string, startDate?: Date, endDate?: Date) => {
