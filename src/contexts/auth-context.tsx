@@ -49,13 +49,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const profile = await getOrCreateUserProfile(firebaseUser);
         setUser(firebaseUser);
         setUserProfile(profile);
+        // Only set loading to false after user and profile are loaded.
+        setLoading(false);
       } else {
         // User is signed out.
         setUser(null);
         setUserProfile(null);
+        // Set loading to false as we have a definitive auth state.
+        setLoading(false);
       }
-      // Only set loading to false after user and profile are loaded or confirmed to be null.
-      setLoading(false);
     });
 
     return () => unsubscribe();
