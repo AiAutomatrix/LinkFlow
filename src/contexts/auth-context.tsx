@@ -34,19 +34,15 @@ function LoadingScreen() {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  // Loading is true by default and set to false only after all auth checks are complete.
   const [loading, setLoading] = useState(true);
   
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    // onAuthStateChanged is the single source of truth for the user's session.
-    // It handles sign-in, sign-out, and the initial check on page load.
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // User is signed in. Get or create their profile data.
-        // The app remains in a "loading" state until this is complete.
+        // User is signed in. Get or create their profile.
         const profile = await getOrCreateUserProfile(firebaseUser);
         setUser(firebaseUser);
         setUserProfile(profile);
@@ -63,28 +59,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // This effect handles all routing logic.
-    // It is explicitly designed to ONLY RUN WHEN LOADING IS FINISHED.
+    // This effect handles all routing logic and only runs when loading is finished.
     if (loading) return;
 
     const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
     const isPublicPage = pathname.startsWith('/u/') || pathname === '/';
     
-    // If we have a user AND their profile, and they land on an auth page,
-    // they are fully logged in, so redirect to the dashboard.
+    // If we have a user AND their profile, and they are on an auth page, redirect them.
     if (user && userProfile && isAuthPage) {
         router.replace('/dashboard');
+        return;
     }
     
-    // If there's no user, and they are trying to access a protected page,
-    // send them to the login page.
+    // If there's no user, and they are trying to access a protected page, send them to login.
     if (!user && !isAuthPage && !isPublicPage) {
         router.replace('/login');
+        return;
     }
     
   }, [user, userProfile, loading, pathname, router]);
 
-  // While loading, show a full-screen loading spinner to prevent any "flashing" of content.
+  // While loading, show a full-screen loading spinner to prevent content flashing.
   if (loading) {
      return <LoadingScreen />;
   }
