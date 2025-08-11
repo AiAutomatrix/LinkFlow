@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
@@ -42,6 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         // User is signed in. Get or create their profile.
+        // setLoading(true) happens before this to prevent flicker
         const profile = await getOrCreateUserProfile(firebaseUser);
         setUser(firebaseUser);
         setUserProfile(profile);
