@@ -15,15 +15,19 @@ const firebaseConfig = {
 
 let app: FirebaseApp;
 let auth: Auth;
+let db: Firestore;
+let storage: FirebaseStorage;
 
-// Initialize Firebase
-if (getApps().length === 0) {
-    app = initializeApp(firebaseConfig);
+// This check ensures that Firebase is only initialized once.
+if (!getApps().length) {
+  app = initializeApp(firebaseConfig);
 } else {
-    app = getApp();
+  app = getApp();
 }
 
 auth = getAuth(app);
+db = getFirestore(app);
+storage = getStorage(app);
 
 // This is the critical change: We only set persistence on the client-side.
 // This ensures that the user's session is stored in local storage and persists
@@ -34,8 +38,5 @@ if (typeof window !== 'undefined') {
     console.error("Firebase persistence error:", error);
   });
 }
-
-const db: Firestore = getFirestore(app);
-const storage: FirebaseStorage = getStorage(app);
 
 export { app, auth, db, storage };
