@@ -87,9 +87,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, loading, pathname, router]);
 
 
-  // While loading is true, we show a full screen loader.
+  // While loading is true for auth pages, we show a full screen loader.
   // This prevents any rendering of the app until we have a definitive auth state.
-  if (loading) {
+  if (loading && (pathname.startsWith('/dashboard') || pathname.startsWith('/login') || pathname.startsWith('/signup'))) {
      return <LoadingScreen />;
   }
   
