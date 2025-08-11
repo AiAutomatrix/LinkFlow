@@ -4,6 +4,8 @@ import {
   updateProfile as updateFirebaseAuthProfile,
   signInWithEmailAndPassword,
   User,
+  GoogleAuthProvider,
+  signInWithPopup,
 } from "firebase/auth";
 import { doc, setDoc, getDoc, serverTimestamp, updateDoc, collection, query, where, limit, getDocs } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -87,6 +89,17 @@ export async function signInWithEmail(email: string, password: string) {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     // getOrCreateUserProfile will be called by the onAuthStateChanged listener
     return userCredential.user;
+}
+
+/**
+ * Signs in or signs up a user using their Google account.
+ */
+export async function signInWithGoogle() {
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
+    // The onAuthStateChanged listener in AuthProvider will handle the profile
+    // creation and redirection.
+    return result.user;
 }
 
 /**
