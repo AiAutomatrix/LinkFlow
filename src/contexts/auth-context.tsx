@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
@@ -51,7 +50,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
         setUserProfile(null);
       }
-      // CRITICAL: Set loading to false only after all user/profile fetching is done.
       setLoading(false);
     });
 
