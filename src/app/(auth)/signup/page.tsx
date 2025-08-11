@@ -19,7 +19,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
@@ -27,8 +26,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { signInWithGoogle, signUpWithEmail } from "@/lib/auth";
-import GoogleIcon from "@/components/google-icon";
+import { signUpWithEmail } from "@/lib/auth";
 
 const formSchema = z.object({
   displayName: z.string().min(2, "Name must be at least 2 characters."),
@@ -42,7 +40,6 @@ const formSchema = z.object({
 
 export default function SignupPage() {
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -67,22 +64,6 @@ export default function SignupPage() {
       });
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function handleGoogleSignIn() {
-    setGoogleLoading(true);
-    try {
-      await signInWithGoogle();
-      // The onAuthStateChanged listener in AuthProvider handles success.
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Google Sign-In Failed",
-        description: error.message,
-      });
-    } finally {
-        setGoogleLoading(false);
     }
   }
 
@@ -139,17 +120,12 @@ export default function SignupPage() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={loading || googleLoading}>
+            <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create an account
             </Button>
           </form>
         </Form>
-        <Separator className="my-2" />
-        <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={loading || googleLoading}>
-            {googleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
-            <span className="ml-2">Sign up with Google</span>
-        </Button>
       </CardContent>
       <CardFooter>
         <div className="text-center text-sm w-full">

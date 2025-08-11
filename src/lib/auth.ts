@@ -1,8 +1,6 @@
 
 import {
   createUserWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup,
   updateProfile as updateFirebaseAuthProfile,
   signInWithEmailAndPassword,
   User,
@@ -11,28 +9,6 @@ import { doc, setDoc, getDoc, serverTimestamp, updateDoc, collection, query, whe
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { auth, db, storage } from "./firebase";
 import type { UserProfile } from "./types";
-
-/**
- * Signs in a user with Google using a popup window.
- * This function now relies on the persistence set in firebase.ts.
- */
-export async function signInWithGoogle() {
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({
-        prompt: "select_account"
-    });
-    try {
-        await signInWithPopup(auth, provider);
-        // The onAuthStateChanged listener in AuthProvider will handle the result.
-    } catch (error: any) {
-        // The UI will catch and display these errors.
-        if (error.code === 'auth/popup-closed-by-user') {
-            throw new Error("Login was canceled.");
-        }
-        console.error("Google sign-in error:", error.code, error.message);
-        throw new Error("Failed to sign in with Google.");
-    }
-}
 
 /**
  * Checks if a username is already taken.
