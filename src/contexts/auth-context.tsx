@@ -61,10 +61,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
     const isPublicPage = pathname.startsWith('/u/') || pathname === '/';
     
+    // If we have a user and profile, and they are on an auth page, redirect to dashboard.
     if (user && userProfile) { 
         if (isAuthPage) {
             router.replace('/dashboard');
         }
+    // If there's no user, and they are trying to access a protected page, redirect to login.
     } else if (!isAuthPage && !isPublicPage) {
         router.replace('/login');
     }

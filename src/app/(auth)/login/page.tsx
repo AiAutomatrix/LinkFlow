@@ -87,8 +87,7 @@ export default function LoginPage() {
         title: "Google Sign-In Failed",
         description: error.message,
       });
-    } finally {
-        setGoogleLoading(false);
+      setGoogleLoading(false); // only set to false on error, otherwise redirect happens
     }
   }
 

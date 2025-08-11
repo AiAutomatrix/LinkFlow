@@ -6,6 +6,8 @@ import {
   updateProfile as updateFirebaseAuthProfile,
   signInWithEmailAndPassword,
   User,
+  signInWithRedirect,
+  getRedirectResult,
 } from "firebase/auth";
 import { doc, setDoc, getDoc, serverTimestamp, updateDoc, collection, query, where, limit, getDocs, writeBatch } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -17,9 +19,9 @@ import type { UserProfile } from "./types";
  */
 export async function signInWithGoogle() {
     const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth, provider);
-    await getOrCreateUserProfile(result.user);
-    return result.user;
+    // Using signInWithPopup for a more reliable UX that doesn't navigate away.
+    // The result is handled by the onAuthStateChanged listener in AuthProvider.
+    await signInWithPopup(auth, provider);
 }
 
 /**
@@ -106,8 +108,7 @@ export async function signUpWithEmail(email: string, password: string, displayNa
     const user = userCredential.user;
     // Update Firebase auth profile display name
     await updateFirebaseAuthProfile(user, { displayName });
-    // This will create the profile in Firestore
-    await getOrCreateUserProfile(user); 
+    // This will create the profile in Firestore via the onAuthStateChanged listener
     return user;
 }
 

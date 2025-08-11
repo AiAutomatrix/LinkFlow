@@ -91,8 +91,7 @@ export default function SignupPage() {
         title: "Google Sign-In Failed",
         description: error.message,
       });
-    } finally {
-        setGoogleLoading(false);
+      setGoogleLoading(false);
     }
   }
 
