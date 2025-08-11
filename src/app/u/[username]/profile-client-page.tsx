@@ -72,11 +72,9 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId: user.uid, linkId: link.id }),
             });
-            // We don't show a toast on the public page for a cleaner UX
             window.open(link.url, '_blank');
         } catch (error) {
             console.error('Failed to track click:', error);
-            // Still open the link even if tracking fails
             window.open(link.url, '_blank');
         }
     };

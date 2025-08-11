@@ -13,17 +13,11 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// This ensures we initialize the app only once.
 const app: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
-
 const auth: Auth = getAuth(app);
 const db: Firestore = getFirestore(app);
 const storage: FirebaseStorage = getStorage(app);
 
-// This is the crucial part that was missing/misconfigured.
-// It ensures the user's session is saved in the browser's local storage.
-// This makes the session persistent across tabs and prevents the auth state from being lost
-// after the popup flow completes.
 if (typeof window !== 'undefined') {
   setPersistence(auth, browserLocalPersistence).catch((error) => {
     console.error("Firebase persistence error:", error);

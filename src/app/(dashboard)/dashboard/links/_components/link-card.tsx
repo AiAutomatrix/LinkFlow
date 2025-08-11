@@ -27,12 +27,13 @@ const toDate = (date: any): Date | undefined => {
     if (!date) return undefined;
     if (date instanceof Date) return date;
     if (date instanceof Timestamp) return date.toDate();
+    if (typeof date === 'string') return new Date(date);
     return undefined;
 }
 
 export default function LinkCard({ link, index, totalLinks, onUpdate, onDelete, onMove }: LinkCardProps) {
     const [isEditOpen, setEditOpen] = useState(false);
-    const [scheduleText, setScheduleText] = useState('');
+    const [scheduleText, setScheduleText] = useState<string | null>(null);
 
     useEffect(() => {
         const startDate = toDate(link.startDate);

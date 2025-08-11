@@ -3,7 +3,6 @@
 
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
 import Logo from '@/components/logo';
 import { useState, useEffect } from 'react';
@@ -81,7 +80,7 @@ export default function Home() {
         </main>
 
         <footer className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-400">
-          {year !== null ? <p>&copy; {year} LinkFlow. All rights reserved.</p> : <div className="h-6"></div>}
+          {year ? <p>&copy; {year} LinkFlow. All rights reserved.</p> : <div className="h-6"></div>}
         </footer>
       </div>
     </div>

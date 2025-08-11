@@ -40,61 +40,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    console.log("[AuthProvider] Setting up onAuthStateChanged listener.");
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      console.log("[onAuthStateChanged] Listener triggered.");
       if (firebaseUser) {
-        console.log(`[onAuthStateChanged] User detected: ${firebaseUser.uid}, email: ${firebaseUser.email}`);
-        // User is signed in.
         try {
-          console.log("[onAuthStateChanged] Fetching or creating user profile...");
           const profile = await getOrCreateUserProfile(firebaseUser);
-          console.log("[onAuthStateChanged] Profile successfully fetched/created:", profile);
           setUser(firebaseUser);
           setUserProfile(profile);
         } catch (error) {
-            console.error("[onAuthStateChanged] Error getting user profile:", error);
-            // Handle error, maybe sign out the user
+            console.error("Error getting user profile:", error);
             setUser(null);
             setUserProfile(null);
         } finally {
-            console.log("[onAuthStateChanged] Setting loading to false after user processing.");
             setLoading(false);
         }
       } else {
-        // User is signed out.
-        console.log("[onAuthStateChanged] No user detected. Clearing state.");
         setUser(null);
         setUserProfile(null);
-        console.log("[onAuthStateChanged] Setting loading to false as no user is signed in.");
         setLoading(false);
       }
     });
 
-    return () => {
-        console.log("[AuthProvider] Cleaning up onAuthStateChanged listener.");
-        unsubscribe();
-    }
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
-    if (loading) {
-        console.log("[RoutingEffect] Skipping, auth is loading.");
-        return;
-    };
-    console.log(`[RoutingEffect] Running. Path: ${pathname}, User: ${!!user}, Profile: ${!!userProfile}`);
+    if (loading) return;
 
     const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
     const isPublicPage = pathname.startsWith('/u/') || pathname === '/';
     
-    if (user && userProfile) { // Ensure profile is also loaded
+    if (user && userProfile) {
         if (isAuthPage) {
-            console.log("[RoutingEffect] User is logged in and on an auth page, redirecting to /dashboard.");
             router.replace('/dashboard');
         }
-    } else { // No user
+    } else {
         if (!isAuthPage && !isPublicPage) {
-            console.log("[RoutingEffect] User is not logged in and on a protected page, redirecting to /login.");
             router.replace('/login');
         }
     }
