@@ -62,11 +62,13 @@ export async function getOrCreateUserProfile(user: User): Promise<UserProfile> {
         let finalUsername = username;
         let attempts = 0;
         
+        // Ensure the generated username is unique.
         while (await isUsernameTaken(finalUsername)) {
             attempts++;
             const randomSuffix = Math.floor(1000 + Math.random() * 9000);
             finalUsername = `${username.slice(0, 10)}_${randomSuffix}`;
             if (attempts > 5) {
+                // Fallback to a highly unique username if conflicts persist.
                 finalUsername = `user_${user.uid.slice(0, 8)}`;
                 break;
             }

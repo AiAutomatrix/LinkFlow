@@ -16,6 +16,7 @@ const firebaseConfig = {
 let app: FirebaseApp;
 let auth: Auth;
 
+// Initialize Firebase
 if (getApps().length === 0) {
     app = initializeApp(firebaseConfig);
 } else {
@@ -25,6 +26,8 @@ if (getApps().length === 0) {
 auth = getAuth(app);
 
 // This is the critical change: We only set persistence on the client-side.
+// This ensures that the user's session is stored in local storage and persists
+// across browser tabs and page reloads, fixing the "Popup closed by user" error.
 if (typeof window !== 'undefined') {
   setPersistence(auth, browserLocalPersistence).catch((error) => {
     // We can't do much here, but it's good to know if it fails.
@@ -35,4 +38,4 @@ if (typeof window !== 'undefined') {
 const db: Firestore = getFirestore(app);
 const storage: FirebaseStorage = getStorage(app);
 
-export { app, auth, db, storage, db as firestore };
+export { app, auth, db, storage };
