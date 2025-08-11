@@ -4,23 +4,22 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // User profiles
+    // PUBLIC: Anyone can read a user's public profile data (username, bio, links).
+    // This allows the public profile pages to work.
     match /users/{userId} {
-      // Allow anyone to read a user's public profile data.
-      // This is necessary for the /u/[username] pages to work.
       allow read: if true;
       
-      // Allow a user to create, update, and delete their own profile.
+      // PRIVATE: Only the authenticated user can write to their own profile.
       allow write: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    // User links
-    match /users/{userId}/links/{linkId} {
-        // Allow anyone to read the links for a public profile.
-        allow read: if true;
 
-        // Allow an authenticated user to create, update, and delete their own links.
+      // LINKS: Handle the 'links' sub-collection.
+      match /links/{linkId} {
+        // PUBLIC: Links are part of the public profile, so anyone can read them.
+        allow read: if true;
+        
+        // PRIVATE: Only the owner of the profile can create, update, or delete their own links.
         allow write: if request.auth != null && request.auth.uid == userId;
+      }
     }
   }
 }
