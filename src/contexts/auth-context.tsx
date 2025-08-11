@@ -40,14 +40,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    console.log("AuthProvider: Subscribing to onAuthStateChanged.");
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      console.log("AuthProvider: onAuthStateChanged event fired.");
       if (firebaseUser) {
-        console.log("AuthProvider: User is signed in, UID:", firebaseUser.uid);
         try {
           const profile = await getOrCreateUserProfile(firebaseUser);
-          console.log("AuthProvider: User profile fetched/created:", profile.username);
           setUser(firebaseUser);
           setUserProfile(profile);
         } catch (error) {
@@ -55,11 +51,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(null);
             setUserProfile(null);
         } finally {
-            console.log("AuthProvider: Finished auth flow, setting loading to false.");
             setLoading(false);
         }
       } else {
-        console.log("AuthProvider: No user is signed in.");
         setUser(null);
         setUserProfile(null);
         setLoading(false);
@@ -67,7 +61,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => {
-      console.log("AuthProvider: Unsubscribing from onAuthStateChanged.");
       unsubscribe();
     }
   }, []);
@@ -76,20 +69,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // This effect now ONLY runs when loading is finished.
     if (loading) return;
     
-    console.log("AuthProvider: Auth state loaded. Running routing logic.");
     const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
     const isPublicPage = pathname.startsWith('/u/') || pathname === '/';
     
     // If we have a user and they are on an auth page, redirect them.
     if (user) { // user is sufficient here since userProfile loading is handled above.
         if (isAuthPage) {
-            console.log("AuthProvider: User is on auth page, redirecting to /dashboard.");
             router.replace('/dashboard');
         }
     } else { // If we don't have a user...
         // and they are on a protected page, redirect them to login.
         if (!isAuthPage && !isPublicPage) {
-            console.log("AuthProvider: User not logged in and on protected page, redirecting to /login.");
             router.replace('/login');
         }
     }

@@ -69,12 +69,9 @@ export default function LoginPage() {
   async function handleGoogleSignIn() {
     setGoogleLoading(true);
     try {
-      console.log("LoginPage: Initiating Google Sign-In.");
       await signInWithGoogle();
-      console.log("LoginPage: Google Sign-In popup finished.");
       // The onAuthStateChanged listener in AuthProvider handles success.
     } catch (error: any) {
-      console.error("LoginPage: Google Sign-In caught error:", error.message);
       toast({
         variant: "destructive",
         title: "Google Sign-In Failed",
