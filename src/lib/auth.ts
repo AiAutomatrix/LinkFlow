@@ -92,13 +92,13 @@ export async function signInWithEmail(email: string, password: string) {
 }
 
 /**
- * Signs in or signs up a user using their Google account.
+ * Signs in or signs up a user using their Google account via a popup.
  */
 export async function signInWithGoogle() {
     const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(auth, provider);
     // The onAuthStateChanged listener in AuthProvider will handle the profile
-    // creation and redirection.
+    // creation and redirection automatically because persistence is now correctly set.
     return result.user;
 }
 
