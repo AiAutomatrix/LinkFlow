@@ -8,8 +8,6 @@ import AnimatedBackground from '@/components/animated-background';
 import { Mail, Instagram, Facebook, Github } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { Timestamp } from 'firebase/firestore';
-import { useEffect, useState } from 'react';
 
 type SocialLink = {
     id: string;
@@ -29,40 +27,9 @@ const SocialIcon = ({ platform }: { platform: SocialLink['platform'] }) => {
     }
 };
 
-const toDate = (date: any): Date | null => {
-    if (!date) return null;
-    if (date instanceof Date) return date;
-    if (date instanceof Timestamp) return date.toDate();
-    if (typeof date === 'string') return new Date(date);
-    return null;
-}
-
-export default function ProfileClientPage({ user, links }: { user: UserProfile; links: LinkType[] }) {
+export default function ProfileClientPage({ user, activeLinks }: { user: UserProfile; activeLinks: LinkType[] }) {
     const { toast } = useToast();
     const router = useRouter();
-    // This state holds only the links that should be rendered on the client.
-    const [activeLinks, setActiveLinks] = useState<LinkType[]>([]);
-    
-    // This logic is now deferred until the client has hydrated, preventing a mismatch.
-    useEffect(() => {
-        const now = new Date();
-        const filteredLinks = links.filter(link => {
-            if (!link.active || link.isSocial) return false;
-    
-            const startDate = toDate(link.startDate);
-            const endDate = toDate(link.endDate);
-            
-            // Check if the link is within its active date range.
-            if (startDate && now < startDate) return false;
-            if (endDate && now > endDate) return false;
-    
-            return true;
-        }).sort((a, b) => a.order - b.order);
-        
-        setActiveLinks(filteredLinks);
-
-    }, [links]);
-
 
     const getInitials = (name: string = '') => {
         return name.split(' ').map(n => n[0]).join('')

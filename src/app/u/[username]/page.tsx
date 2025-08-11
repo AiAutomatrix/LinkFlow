@@ -1,7 +1,7 @@
 
 import type { Link as LinkType, UserProfile } from '@/lib/types';
 import ProfileClientPage from './profile-client-page';
-import { collection, query, where, getDocs, limit, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit, Timestamp, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { notFound } from 'next/navigation';
 
@@ -43,10 +43,18 @@ async function getUserData(username: string): Promise<UserProfile | null> {
 
 async function getUserLinks(uid: string): Promise<LinkType[]> {
     const linksRef = collection(db, `users/${uid}/links`);
-    const q = query(linksRef); // You might want to add orderBy('order') here later
+    const q = query(linksRef, orderBy('order'));
     const querySnapshot = await getDocs(q);
     
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LinkType));
+}
+
+const toDate = (date: any): Date | null => {
+    if (!date) return null;
+    if (date instanceof Date) return date;
+    if (date instanceof Timestamp) return date.toDate();
+    if (typeof date === 'string') return new Date(date);
+    return null;
 }
 
 
@@ -59,9 +67,24 @@ export default async function UserProfilePage({ params }: { params: { username: 
 
     const linksData = await getUserLinks(userData.uid);
 
+    // --- Server-side filtering ---
+    const now = new Date();
+    const activeLinksData = linksData.filter(link => {
+        if (!link.active || link.isSocial) return false;
+
+        const startDate = toDate(link.startDate);
+        const endDate = toDate(link.endDate);
+        
+        if (startDate && now < startDate) return false;
+        if (endDate && now > endDate) return false;
+
+        return true;
+    });
+    // --- End server-side filtering ---
+
     // Serialize the data before passing it to the client component to avoid server/client mismatch errors.
     const user = serializeFirestoreData(userData) as UserProfile;
-    const links = linksData.map(link => serializeFirestoreData(link)) as LinkType[];
+    const activeLinks = activeLinksData.map(link => serializeFirestoreData(link)) as LinkType[];
 
-    return <ProfileClientPage user={user} links={links} />;
+    return <ProfileClientPage user={user} activeLinks={activeLinks} />;
 }
