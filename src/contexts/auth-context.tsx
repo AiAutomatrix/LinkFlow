@@ -25,7 +25,7 @@ function LoadingScreen() {
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <span>Loading Auth...</span>
+            <span>Loading...</span>
         </div>
       </div>
     );
@@ -57,15 +57,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Handle error, maybe sign out the user
             setUser(null);
             setUserProfile(null);
+        } finally {
+            console.log("[onAuthStateChanged] Setting loading to false after user processing.");
+            setLoading(false);
         }
       } else {
         // User is signed out.
         console.log("[onAuthStateChanged] No user detected. Clearing state.");
         setUser(null);
         setUserProfile(null);
+        console.log("[onAuthStateChanged] Setting loading to false as no user is signed in.");
+        setLoading(false);
       }
-      console.log("[onAuthStateChanged] Setting loading to false.");
-      setLoading(false);
     });
 
     return () => {
@@ -84,14 +87,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
     const isPublicPage = pathname.startsWith('/u/') || pathname === '/';
     
-    if (user && userProfile && isAuthPage) {
-        console.log("[RoutingEffect] User is logged in and on an auth page, redirecting to /dashboard.");
-        router.replace('/dashboard');
-    }
-    
-    if (!user && !isAuthPage && !isPublicPage) {
-        console.log("[RoutingEffect] User is not logged in and on a protected page, redirecting to /login.");
-        router.replace('/login');
+    if (user && userProfile) { // Ensure profile is also loaded
+        if (isAuthPage) {
+            console.log("[RoutingEffect] User is logged in and on an auth page, redirecting to /dashboard.");
+            router.replace('/dashboard');
+        }
+    } else { // No user
+        if (!isAuthPage && !isPublicPage) {
+            console.log("[RoutingEffect] User is not logged in and on a protected page, redirecting to /login.");
+            router.replace('/login');
+        }
     }
     
   }, [user, userProfile, loading, pathname, router]);
