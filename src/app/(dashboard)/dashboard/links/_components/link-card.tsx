@@ -8,7 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import type { Link } from "@/lib/types";
 import { MoreHorizontal, Pencil, Trash2, CalendarDays, ArrowUp, ArrowDown } from "lucide-react";
 import LinkForm from "./link-form";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from 'date-fns';
 import { Timestamp } from "firebase/firestore";
 import { Switch } from "@/components/ui/switch";
@@ -32,6 +32,19 @@ const toDate = (date: any): Date | undefined => {
 
 export default function LinkCard({ link, index, totalLinks, onUpdate, onDelete, onMove }: LinkCardProps) {
     const [isEditOpen, setEditOpen] = useState(false);
+    const [scheduleText, setScheduleText] = useState('');
+
+    useEffect(() => {
+        const startDate = toDate(link.startDate);
+        const endDate = toDate(link.endDate);
+        if (startDate || endDate) {
+            const start = startDate ? format(startDate, "LLL d") : 'Always';
+            const end = endDate ? format(endDate, "LLL d, y") : 'Never';
+            setScheduleText(`${start} → ${end}`);
+        } else {
+            setScheduleText('');
+        }
+    }, [link.startDate, link.endDate]);
   
     const handleFormSubmit = (title: string, url: string, startDate?: Date, endDate?: Date) => {
       onUpdate(link.id, { title, url, startDate, endDate });
@@ -41,11 +54,7 @@ export default function LinkCard({ link, index, totalLinks, onUpdate, onDelete, 
     const handleToggleActive = (active: boolean) => {
         onUpdate(link.id, { active });
     }
-
-    const hasSchedule = link.startDate || link.endDate;
-    const startDate = toDate(link.startDate);
-    const endDate = toDate(link.endDate);
-
+    
     const truncatedUrl = link.url.length > 35 ? `${link.url.substring(0, 35)}...` : link.url;
 
     return (
@@ -62,14 +71,10 @@ export default function LinkCard({ link, index, totalLinks, onUpdate, onDelete, 
             <div className="flex-grow overflow-hidden min-w-0">
                 <p className="font-semibold truncate">{link.title}</p>
                 <p className="text-sm text-muted-foreground truncate" title={link.url}>{truncatedUrl}</p>
-                {hasSchedule && (
+                {scheduleText && (
                     <div className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1.5">
                         <CalendarDays className="h-3.5 w-3.5" />
-                        <span>
-                            {startDate ? format(startDate, "LLL d") : 'Always'}
-                            {' → '}
-                            {endDate ? format(endDate, "LLL d, y") : 'Never'}
-                        </span>
+                        <span>{scheduleText}</span>
                     </div>
                 )}
             </div>

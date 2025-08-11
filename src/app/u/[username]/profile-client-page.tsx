@@ -9,6 +9,7 @@ import { Mail, Instagram, Facebook, Github } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Timestamp } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
 
 type SocialLink = {
     id: string;
@@ -28,15 +29,41 @@ const SocialIcon = ({ platform }: { platform: SocialLink['platform'] }) => {
     }
 };
 
+const toDate = (date: any): Date | null => {
+    if (!date) return null;
+    if (date instanceof Date) return date;
+    if (date instanceof Timestamp) return date.toDate();
+    if (typeof date === 'string') return new Date(date);
+    return null;
+}
+
 export default function ProfileClientPage({ user, links }: { user: UserProfile; links: LinkType[] }) {
     const { toast } = useToast();
     const router = useRouter();
+    const [activeLinks, setActiveLinks] = useState<LinkType[]>([]);
+    
+    useEffect(() => {
+        const now = new Date();
+        const filteredLinks = links.filter(link => {
+            if (!link.active || link.isSocial) return false;
+    
+            const startDate = toDate(link.startDate);
+            const endDate = toDate(link.endDate);
+            
+            if (startDate && now < startDate) return false;
+            if (endDate && now > endDate) return false;
+    
+            return true;
+        }).sort((a, b) => a.order - b.order);
+        
+        setActiveLinks(filteredLinks);
+
+    }, [links]);
+
 
     const getInitials = (name: string = '') => {
         return name.split(' ').map(n => n[0]).join('')
     }
-
-    const now = new Date();
     
     const handleLinkClick = async (link: LinkType | SocialLink) => {
         try {
@@ -67,27 +94,6 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
             isSocial: true,
         }
       });
-
-    const toDate = (date: any): Date | null => {
-        if (!date) return null;
-        if (date instanceof Date) return date;
-        if (date instanceof Timestamp) return date.toDate();
-        if (typeof date === 'string') return new Date(date);
-        return null;
-    }
-
-    const activeLinks = links.filter(link => {
-        if (!link.active || link.isSocial) return false;
-
-        const startDate = toDate(link.startDate);
-        const endDate = toDate(link.endDate);
-        
-        if (startDate && now < startDate) return false;
-        if (endDate && now > endDate) return false;
-
-        return true;
-    }).sort((a, b) => a.order - b.order);
-
 
     return (
         <div data-theme={user.theme || 'light'} className="relative flex flex-col items-center min-h-screen pt-12 px-4 bg-background text-foreground overflow-hidden">

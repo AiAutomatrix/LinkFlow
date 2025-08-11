@@ -1,10 +1,20 @@
+
+"use client";
+
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
 import Logo from '@/components/logo';
+import { useState, useEffect } from 'react';
 
 export default function Home() {
+  const [year, setYear] = useState(new Date().getFullYear());
+
+  useEffect(() => {
+    setYear(new Date().getFullYear());
+  }, []);
+
   return (
     <div className="relative flex flex-col min-h-screen w-full overflow-hidden bg-gray-900 text-white">
       {/* Animated Blob Background */}
@@ -71,7 +81,7 @@ export default function Home() {
         </main>
 
         <footer className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-400">
-          <p>&copy; {new Date().getFullYear()} LinkFlow. All rights reserved.</p>
+          <p>&copy; {year} LinkFlow. All rights reserved.</p>
         </footer>
       </div>
     </div>
