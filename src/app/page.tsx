@@ -9,7 +9,7 @@ import Logo from '@/components/logo';
 import { useState, useEffect } from 'react';
 
 export default function Home() {
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [year, setYear] = useState<number | null>(null);
 
   useEffect(() => {
     setYear(new Date().getFullYear());
@@ -81,7 +81,7 @@ export default function Home() {
         </main>
 
         <footer className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-400">
-          <p>&copy; {year} LinkFlow. All rights reserved.</p>
+          {year && <p>&copy; {year} LinkFlow. All rights reserved.</p>}
         </footer>
       </div>
     </div>
