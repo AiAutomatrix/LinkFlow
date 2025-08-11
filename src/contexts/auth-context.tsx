@@ -44,8 +44,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // It fires on sign-in (email, Google popup), sign-out, and initial page load.
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // User is signed in.
-        // Get or create their profile data from Firestore.
+        // User is signed in. Get or create their profile data from Firestore.
+        // The app will remain in a "loading" state until this is complete.
         const profile = await getOrCreateUserProfile(firebaseUser);
         setUser(firebaseUser);
         setUserProfile(profile);
@@ -54,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
         setUserProfile(null);
       }
+      // Only set loading to false after user and profile are loaded or confirmed to be null.
       setLoading(false);
     });
 
@@ -61,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []); // Empty dependency array ensures this runs only once on mount
 
   useEffect(() => {
+    // This effect handles routing logic and should only run when loading is complete.
     if (loading) return;
 
     const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
