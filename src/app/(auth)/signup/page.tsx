@@ -84,14 +84,15 @@ export default function SignupPage() {
     setGoogleLoading(true);
     try {
       await signInWithGoogle();
-      // The redirect flow will handle navigation
+      // The redirect is handled by the AuthProvider
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Google Sign-In Failed",
         description: error.message,
       });
-      setGoogleLoading(false);
+    } finally {
+        setGoogleLoading(false);
     }
   }
 

@@ -80,15 +80,15 @@ export default function LoginPage() {
     setGoogleLoading(true);
     try {
       await signInWithGoogle();
-      // The redirect flow will handle navigation, no need to do anything here.
-      // We keep the loading state in case the redirect is slow.
+      // The redirect flow is handled by the AuthProvider now.
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Google Sign-In Failed",
         description: error.message,
       });
-      setGoogleLoading(false);
+    } finally {
+        setGoogleLoading(false);
     }
   }
 

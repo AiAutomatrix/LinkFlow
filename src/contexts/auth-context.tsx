@@ -2,7 +2,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { onAuthStateChanged, User, getRedirectResult } from 'firebase/auth';
+import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { getOrCreateUserProfile } from '@/lib/auth';
 import type { UserProfile } from '@/lib/types';
@@ -35,67 +35,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [initialLoad, setInitialLoad] = useState(true); // To handle redirect checks
   
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    // This effect runs once on initial mount to check for a redirect result.
-    getRedirectResult(auth)
-      .then(async (result) => {
-        if (result && result.user) {
-          // A user has just signed in via redirect.
-          // The onAuthStateChanged listener below will handle setting the user state.
-          // We just need to ensure we don't mark loading as false prematurely.
-        }
-      })
-      .catch((error) => {
-        console.error("Error processing redirect result:", error);
-      })
-      .finally(() => {
-        // This indicates the redirect check is complete.
-        setInitialLoad(false); 
-      });
-
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // User is signed in. Fetch their profile.
         const profile = await getOrCreateUserProfile(firebaseUser);
         setUser(firebaseUser);
         setUserProfile(profile);
       } else {
-        // User is signed out.
         setUser(null);
         setUserProfile(null);
       }
-      // Defer setting loading to false until the initial redirect check is also done.
-      if (!initialLoad) {
-        setLoading(false);
-      }
+      setLoading(false);
     });
     
     return () => unsubscribe();
-  }, [initialLoad]); // Dependency on initialLoad ensures correct sequencing
+  }, []);
 
   useEffect(() => {
-    if (loading || initialLoad) return; // Don't run navigation logic until auth state is fully resolved.
+    if (loading) return;
 
     const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
     const isPublicPage = pathname.startsWith('/u/') || pathname === '/';
     
     if (user && userProfile) { 
-        // User is logged in.
         if (isAuthPage) {
-            router.replace('/dashboard/links');
+            router.replace('/dashboard');
         }
     } else if (!isAuthPage && !isPublicPage) {
-        // User is not logged in and is trying to access a protected page.
         router.replace('/login');
     }
-  }, [user, userProfile, loading, initialLoad, pathname, router]);
+  }, [user, userProfile, loading, pathname, router]);
 
-  if (loading || initialLoad) {
+  if (loading) {
      return <LoadingScreen />;
   }
   

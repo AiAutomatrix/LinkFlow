@@ -2,7 +2,7 @@
 import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
-  signInWithRedirect,
+  signInWithPopup,
   updateProfile as updateFirebaseAuthProfile,
   signInWithEmailAndPassword,
   User,
@@ -13,11 +13,13 @@ import { auth, db, storage } from "./firebase";
 import type { UserProfile } from "./types";
 
 /**
- * Signs in a user with Google using the redirect method.
+ * Signs in a user with Google using a popup window.
  */
 export async function signInWithGoogle() {
     const provider = new GoogleAuthProvider();
-    await signInWithRedirect(auth, provider);
+    const result = await signInWithPopup(auth, provider);
+    await getOrCreateUserProfile(result.user);
+    return result.user;
 }
 
 /**
