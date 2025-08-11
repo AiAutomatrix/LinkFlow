@@ -73,7 +73,7 @@ export default function SignupPage() {
       toast({
         variant: "destructive",
         title: "Sign Up Failed",
-        description: error.message,
+        description: "That email might already be in use.",
       });
     } finally {
       setLoading(false);
@@ -84,7 +84,7 @@ export default function SignupPage() {
     setGoogleLoading(true);
     try {
       await signInWithGoogle();
-      // The redirect is handled by the AuthProvider
+      // The onAuthStateChanged listener in AuthProvider handles success.
     } catch (error: any) {
       toast({
         variant: "destructive",

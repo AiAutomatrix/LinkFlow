@@ -34,6 +34,7 @@ function LoadingScreen() {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  // Loading is true by default and set to false only after all auth checks are complete.
   const [loading, setLoading] = useState(true);
   
   const router = useRouter();
@@ -41,46 +42,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // onAuthStateChanged is the single source of truth for the user's session.
-    // It fires on sign-in (email, Google popup), sign-out, and initial page load.
+    // It handles sign-in, sign-out, and the initial check on page load.
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // User is signed in. Get or create their profile data from Firestore.
-        // The app will remain in a "loading" state until this is complete.
+        // User is signed in. Get or create their profile data.
+        // The app remains in a "loading" state until this is complete.
         const profile = await getOrCreateUserProfile(firebaseUser);
         setUser(firebaseUser);
         setUserProfile(profile);
-        // Only set loading to false after user and profile are loaded.
-        setLoading(false);
       } else {
         // User is signed out.
         setUser(null);
         setUserProfile(null);
-        // Set loading to false as we have a definitive auth state.
-        setLoading(false);
       }
+      // CRITICAL: Set loading to false only after all user/profile fetching is done.
+      setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
 
   useEffect(() => {
-    // This effect handles routing logic and should only run when loading is complete.
+    // This effect handles all routing logic.
+    // It is explicitly designed to ONLY RUN WHEN LOADING IS FINISHED.
     if (loading) return;
 
     const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
     const isPublicPage = pathname.startsWith('/u/') || pathname === '/';
     
-    // If we have a user and profile, and they are on an auth page, redirect to dashboard.
-    if (user && userProfile) { 
-        if (isAuthPage) {
-            router.replace('/dashboard');
-        }
-    // If there's no user, and they are trying to access a protected page, redirect to login.
-    } else if (!isAuthPage && !isPublicPage) {
+    // If we have a user AND their profile, and they land on an auth page,
+    // they are fully logged in, so redirect to the dashboard.
+    if (user && userProfile && isAuthPage) {
+        router.replace('/dashboard');
+    }
+    
+    // If there's no user, and they are trying to access a protected page,
+    // send them to the login page.
+    if (!user && !isAuthPage && !isPublicPage) {
         router.replace('/login');
     }
+    
   }, [user, userProfile, loading, pathname, router]);
 
+  // While loading, show a full-screen loading spinner to prevent any "flashing" of content.
   if (loading) {
      return <LoadingScreen />;
   }

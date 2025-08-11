@@ -1,8 +1,8 @@
 
 import { initializeApp, getApp, getApps, FirebaseApp } from 'firebase/app';
-import { getAuth, Auth, setPersistence, browserLocalPersistence, connectAuthEmulator } from 'firebase/auth';
-import { getFirestore, Firestore, connectFirestoreEmulator } from 'firebase/firestore';
-import { getStorage, FirebaseStorage, connectStorageEmulator } from 'firebase/storage';
+import { getAuth, Auth, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore';
+import { getStorage, FirebaseStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -13,22 +13,21 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
-let storage: FirebaseStorage;
+// This ensures we initialize the app only once.
+const app: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
-if (getApps().length === 0) {
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApp();
+const auth: Auth = getAuth(app);
+const db: Firestore = getFirestore(app);
+const storage: FirebaseStorage = getStorage(app);
+
+// This is the crucial part that was missing/misconfigured.
+// It ensures the user's session is saved in the browser's local storage.
+// This makes the session persistent across tabs and prevents the auth state from being lost
+// after the popup flow completes in a full-screen browser.
+if (typeof window !== 'undefined') {
+  setPersistence(auth, browserLocalPersistence).catch((error) => {
+    console.error("Firebase persistence error:", error);
+  });
 }
-
-auth = getAuth(app);
-db = getFirestore(app);
-storage = getStorage(app);
-
-// This ensures persistence is set for the initialized auth instance.
-setPersistence(auth, browserLocalPersistence).catch(console.error);
 
 export { app, auth, db, storage, db as firestore };

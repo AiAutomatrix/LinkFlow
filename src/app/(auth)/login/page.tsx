@@ -69,7 +69,7 @@ export default function LoginPage() {
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: error.message,
+        description: "Invalid email or password.",
       });
     } finally {
       setLoading(false);
@@ -80,7 +80,7 @@ export default function LoginPage() {
     setGoogleLoading(true);
     try {
       await signInWithGoogle();
-      // The redirect flow is handled by the AuthProvider now.
+      // The onAuthStateChanged listener in AuthProvider handles success.
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -88,7 +88,8 @@ export default function LoginPage() {
         description: error.message,
       });
     } finally {
-        setGoogleLoading(false); // The user might close the popup
+        // The user might close the popup, so we always stop the loader.
+        setGoogleLoading(false);
     }
   }
 
