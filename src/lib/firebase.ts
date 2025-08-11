@@ -27,7 +27,7 @@ auth = getAuth(app);
 
 // This is the critical change: We only set persistence on the client-side.
 // This ensures that the user's session is stored in local storage and persists
-// across browser tabs and page reloads, fixing the "Popup closed by user" error.
+// across browser tabs and page reloads, fixing auth state issues.
 if (typeof window !== 'undefined') {
   setPersistence(auth, browserLocalPersistence).catch((error) => {
     // We can't do much here, but it's good to know if it fails.
