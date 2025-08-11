@@ -42,13 +42,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // User is signed in. Get or create their profile.
-        // setLoading(true) happens before this to prevent flicker
         const profile = await getOrCreateUserProfile(firebaseUser);
         setUser(firebaseUser);
         setUserProfile(profile);
       } else {
-        // User is signed out.
         setUser(null);
         setUserProfile(null);
       }
@@ -59,27 +56,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // This effect handles all routing logic and only runs when loading is finished.
     if (loading) return;
 
     const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
     const isPublicPage = pathname.startsWith('/u/') || pathname === '/';
     
-    // If we have a user AND their profile, and they are on an auth page, redirect them.
     if (user && userProfile && isAuthPage) {
         router.replace('/dashboard');
-        return;
     }
     
-    // If there's no user, and they are trying to access a protected page, send them to login.
     if (!user && !isAuthPage && !isPublicPage) {
         router.replace('/login');
-        return;
     }
     
   }, [user, userProfile, loading, pathname, router]);
 
-  // While loading, show a full-screen loading spinner to prevent content flashing.
   if (loading) {
      return <LoadingScreen />;
   }
