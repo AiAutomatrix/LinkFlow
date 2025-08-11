@@ -54,6 +54,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signInWithEmail(values.email, values.password);
+      // Redirect is handled by the AuthProvider
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -68,12 +69,16 @@ export default function LoginPage() {
   async function handleGoogleSignIn() {
     setGoogleLoading(true);
     try {
+      console.log("LoginPage: Initiating Google Sign-In.");
       await signInWithGoogle();
+      console.log("LoginPage: Google Sign-In popup finished.");
+      // The onAuthStateChanged listener in AuthProvider handles success.
     } catch (error: any) {
+      console.error("LoginPage: Google Sign-In caught error:", error.message);
       toast({
         variant: "destructive",
         title: "Google Sign-In Failed",
-        description: error.message,
+        description: error.message, // "Login was canceled."
       });
     } finally {
         setGoogleLoading(false);

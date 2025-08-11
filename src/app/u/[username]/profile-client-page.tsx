@@ -40,8 +40,10 @@ const toDate = (date: any): Date | null => {
 export default function ProfileClientPage({ user, links }: { user: UserProfile; links: LinkType[] }) {
     const { toast } = useToast();
     const router = useRouter();
+    // This state holds only the links that should be rendered on the client.
     const [activeLinks, setActiveLinks] = useState<LinkType[]>([]);
     
+    // This logic is now deferred until the client has hydrated, preventing a mismatch.
     useEffect(() => {
         const now = new Date();
         const filteredLinks = links.filter(link => {
@@ -50,6 +52,7 @@ export default function ProfileClientPage({ user, links }: { user: UserProfile; 
             const startDate = toDate(link.startDate);
             const endDate = toDate(link.endDate);
             
+            // Check if the link is within its active date range.
             if (startDate && now < startDate) return false;
             if (endDate && now > endDate) return false;
     

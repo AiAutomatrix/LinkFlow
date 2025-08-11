@@ -35,16 +35,23 @@ export default function LinkCard({ link, index, totalLinks, onUpdate, onDelete, 
     const [isEditOpen, setEditOpen] = useState(false);
     const [scheduleText, setScheduleText] = useState<string | null>(null);
 
+    // Date formatting is now deferred to a useEffect hook, preventing hydration errors.
     useEffect(() => {
-        const startDate = toDate(link.startDate);
-        const endDate = toDate(link.endDate);
-        let text = '';
-        if (startDate || endDate) {
-            const start = startDate ? format(startDate, "LLL d") : 'Always';
-            const end = endDate ? format(endDate, "LLL d, y") : 'Never';
-            text = `${start} → ${end}`;
+        try {
+            const startDate = toDate(link.startDate);
+            const endDate = toDate(link.endDate);
+            let text = '';
+            if (startDate || endDate) {
+                // Use a consistent format that doesn't depend on server/client locale differences.
+                const start = startDate ? format(startDate, "LLL d") : 'Always';
+                const end = endDate ? format(endDate, "LLL d, yyyy") : 'Never';
+                text = `${start} → ${end}`;
+            }
+            setScheduleText(text);
+        } catch (e) {
+            // In case of an invalid date string from Firestore
+            setScheduleText("Invalid date range");
         }
-        setScheduleText(text);
     }, [link.startDate, link.endDate]);
   
     const handleFormSubmit = (title: string, url: string, startDate?: Date, endDate?: Date) => {

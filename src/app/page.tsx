@@ -10,6 +10,7 @@ import { useState, useEffect } from 'react';
 export default function Home() {
   const [year, setYear] = useState<number | null>(null);
 
+  // This prevents a hydration mismatch. The year is only rendered on the client.
   useEffect(() => {
     setYear(new Date().getFullYear());
   }, []);
@@ -80,6 +81,7 @@ export default function Home() {
         </main>
 
         <footer className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-400">
+          {/* This now renders null on server and the correct year on client */}
           {year ? <p>&copy; {year} LinkFlow. All rights reserved.</p> : <div className="h-6"></div>}
         </footer>
       </div>
