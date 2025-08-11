@@ -66,25 +66,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // This effect now ONLY runs when loading is finished.
     if (loading) return;
-    
+
     const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
-    const isPublicPage = pathname.startsWith('/u/') || pathname === '/';
-    
-    // If we have a user and they are on an auth page, redirect them.
-    if (user) { // user is sufficient here since userProfile loading is handled above.
-        if (isAuthPage) {
-            router.replace('/dashboard');
-        }
-    } else { // If we don't have a user...
-        // and they are on a protected page, redirect them to login.
-        if (!isAuthPage && !isPublicPage) {
-            router.replace('/login');
-        }
+    const isDashboardPage = pathname.startsWith('/dashboard');
+
+    if (user) {
+      // If user is logged in and tries to access login/signup, redirect to dashboard
+      if (isAuthPage) {
+        router.replace('/dashboard');
+      }
+    } else {
+      // If user is not logged in and tries to access a dashboard page, redirect to login
+      if (isDashboardPage) {
+        router.replace('/login');
+      }
     }
+    // No other redirects are needed. Public pages should be accessible regardless of auth state.
     
   }, [user, loading, pathname, router]);
+
 
   // While loading is true, we show a full screen loader.
   // This prevents any rendering of the app until we have a definitive auth state.
