@@ -26,7 +26,8 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { signUpWithEmail } from "@/lib/auth";
+import { signUpWithEmail, signInWithGoogle } from "@/lib/auth";
+import { Separator } from "@/components/ui/separator";
 
 const formSchema = z.object({
   displayName: z.string().min(2, "Name must be at least 2 characters."),
@@ -38,8 +39,18 @@ const formSchema = z.object({
   }),
 });
 
+const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg role="img" viewBox="0 0 24 24" {...props}>
+      <path
+        fill="currentColor"
+        d="M12.48 10.92v3.28h7.84c-.24 1.84-.85 3.18-1.73 4.1-1.02 1.02-2.62 3.08-4.75 3.08-3.99 0-7.22-3.33-7.22-7.33s3.23-7.33 7.22-7.33c2.23 0 3.68.88 4.54 1.72l2.5-2.5C18.68 2.06 16.14 1 12.48 1 7.02 1 3 5.02 3 9.98s4.02 8.98 9.48 8.98c5.44 0 9.04-3.87 9.04-9.22 0-.6-.06-1.22-.16-1.84h-8.88z"
+      />
+    </svg>
+  );
+
 export default function SignupPage() {
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -66,6 +77,25 @@ export default function SignupPage() {
       setLoading(false);
     }
   }
+
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    try {
+        await signInWithGoogle();
+        // Redirect is handled by the AuthProvider
+    } catch (error: any) {
+        if (error.code !== 'auth/popup-closed-by-user') {
+             toast({
+                variant: "destructive",
+                title: "Sign Up Failed",
+                description: "Could not sign up with Google. Please try again.",
+            });
+        }
+    } finally {
+        setGoogleLoading(false);
+    }
+  };
+
 
   return (
     <Card className="w-full max-w-sm">
@@ -120,12 +150,26 @@ export default function SignupPage() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full" disabled={loading || googleLoading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create an account
             </Button>
           </form>
         </Form>
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">
+              Or continue with
+            </span>
+          </div>
+        </div>
+        <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={loading || googleLoading}>
+          {googleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="mr-2 h-4 w-4" />}
+          Google
+        </Button>
       </CardContent>
       <CardFooter>
         <div className="text-center text-sm w-full">
