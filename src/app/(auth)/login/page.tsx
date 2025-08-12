@@ -67,18 +67,19 @@ export default function LoginPage() {
 
   async function handleGoogleSignIn() {
     setGoogleLoading(true);
-    console.log("LoginPage: Attempting Google Sign-In with redirect...");
     try {
       await signInWithGoogle();
-      // Page will redirect, so no further action is needed here.
-      // The loading spinner will show until the page navigates away.
+      // The onAuthStateChanged listener in AuthProvider will handle the redirect.
     } catch (error: any) {
-      console.error("LoginPage: Google Sign-In failed.", error);
-      toast({
-        variant: "destructive",
-        title: "Google Sign-In Failed",
-        description: "Could not sign in with Google. Please try again.",
-      });
+      if (error.code !== 'auth/popup-closed-by-user') {
+        console.error("LoginPage: Google Sign-In failed.", error);
+        toast({
+          variant: "destructive",
+          title: "Google Sign-In Failed",
+          description: "Could not sign in with Google. Please try again.",
+        });
+      }
+    } finally {
       setGoogleLoading(false);
     }
   }

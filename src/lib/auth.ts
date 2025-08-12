@@ -5,8 +5,7 @@ import {
   signInWithEmailAndPassword,
   User,
   GoogleAuthProvider,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
 } from "firebase/auth";
 import { doc, setDoc, getDoc, serverTimestamp, updateDoc, collection, query, where, limit, getDocs } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -98,13 +97,14 @@ export async function signInWithEmail(email: string, password: string) {
 }
 
 /**
- * Signs in or signs up a user using their Google account via a page redirect.
+ * Signs in or signs up a user using their Google account via a popup window.
  */
 export async function signInWithGoogle() {
-    console.log("signInWithGoogle: Initiating redirect sign-in.");
+    console.log("signInWithGoogle: Initiating popup sign-in.");
     const provider = new GoogleAuthProvider();
-    await signInWithRedirect(auth, provider);
-    // The browser will now redirect. The result is handled in AuthProvider.
+    const result = await signInWithPopup(auth, provider);
+    // The result is handled by the onAuthStateChanged listener in AuthProvider.
+    return result.user;
 }
 
 /**
