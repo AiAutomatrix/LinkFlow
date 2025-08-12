@@ -28,18 +28,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      console.log("AuthProvider: onAuthStateChanged event fired.");
       if (firebaseUser) {
-        console.log("AuthProvider: User is signed in with UID:", firebaseUser.uid);
         // Fetch profile only if it's not already the current user's profile
         if (userProfile?.uid !== firebaseUser.uid) {
             const profile = await getOrCreateUserProfile(firebaseUser);
-            console.log("AuthProvider: User profile fetched/created:", profile.username);
             setUser(firebaseUser);
             setUserProfile(profile);
         }
       } else {
-        console.log("AuthProvider: User is signed out.");
         setUser(null);
         setUserProfile(null);
       }
@@ -48,7 +44,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => {
-      console.log("AuthProvider: Cleaning up onAuthStateChanged listener.");
       unsubscribe();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -63,13 +58,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (user) {
       // If user is logged in and tries to access login/signup, redirect to dashboard
       if (isAuthPage) {
-        console.log("AuthProvider: User is logged in, redirecting from auth page to dashboard.");
         router.replace('/dashboard');
       }
     } else {
       // If user is not logged in and tries to access a dashboard page, redirect to login
       if (isDashboardPage) {
-        console.log("AuthProvider: User is not logged in, redirecting from dashboard to login.");
         router.replace('/login');
       }
     }

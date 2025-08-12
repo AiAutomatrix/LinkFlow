@@ -26,15 +26,12 @@ async function isUsernameTaken(username: string): Promise<boolean> {
  * If the user exists, it fetches and returns their existing profile.
  */
 export async function getOrCreateUserProfile(user: User): Promise<UserProfile> {
-    console.log("getOrCreateUserProfile: Called for user:", user.uid);
     const userRef = doc(db, "users", user.uid);
     const userSnap = await getDoc(userRef);
 
     if (userSnap.exists()) {
-        console.log("getOrCreateUserProfile: Existing user profile found.");
         return { uid: user.uid, ...userSnap.data() } as UserProfile;
     } else {
-        console.log("getOrCreateUserProfile: No existing profile. Creating new one.");
         let username = user.displayName?.replace(/\s+/g, '').toLowerCase() || 'user';
         username = username.replace(/[^a-z0-9_]/g, '').slice(0, 15);
         
@@ -52,7 +49,6 @@ export async function getOrCreateUserProfile(user: User): Promise<UserProfile> {
                 break;
             }
         }
-        console.log("getOrCreateUserProfile: Final username:", finalUsername);
 
         const newUserProfile: UserProfile = {
             uid: user.uid,
@@ -69,7 +65,6 @@ export async function getOrCreateUserProfile(user: User): Promise<UserProfile> {
         };
         
         await setDoc(userRef, newUserProfile);
-        console.log("getOrCreateUserProfile: New profile created in Firestore.");
         const newUserSnap = await getDoc(userRef);
         return { uid: user.uid, ...newUserSnap.data() } as UserProfile;
     }
@@ -100,10 +95,10 @@ export async function signInWithEmail(email: string, password: string) {
  * Signs in or signs up a user using their Google account via a popup window.
  */
 export async function signInWithGoogle() {
-    console.log("signInWithGoogle: Initiating popup sign-in.");
     const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(auth, provider);
     // The result is handled by the onAuthStateChanged listener in AuthProvider.
+    // We just need to return the user from the successful popup sign-in.
     return result.user;
 }
 

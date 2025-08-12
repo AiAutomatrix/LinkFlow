@@ -71,13 +71,10 @@ export default function SignupPage() {
 
   async function handleGoogleSignIn() {
     setGoogleLoading(true);
-    console.log("SignupPage: Attempting Google Sign-In...");
     try {
       await signInWithGoogle();
-      console.log("SignupPage: signInWithGoogle call completed.");
       // The onAuthStateChanged listener in AuthProvider handles success.
     } catch (error: any) {
-        console.error("SignupPage: Google Sign-In failed in component.", error);
         if (error.code !== 'auth/popup-closed-by-user') {
           toast({
             variant: "destructive",
