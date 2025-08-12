@@ -40,7 +40,7 @@ export default function LinkCard({ link, index, totalLinks, onUpdate, onDelete, 
         try {
             const startDate = toDate(link.startDate);
             const endDate = toDate(link.endDate);
-            let text = '';
+            let text: string | null = null;
             if (startDate || endDate) {
                 // Use a consistent format that doesn't depend on server/client locale differences.
                 const start = startDate ? format(startDate, "LLL d") : 'Always';

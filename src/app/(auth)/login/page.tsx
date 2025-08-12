@@ -71,6 +71,8 @@ export default function LoginPage() {
       await signInWithGoogle();
       // The onAuthStateChanged listener in AuthProvider will handle the redirect.
     } catch (error: any) {
+      // This specific error code means the user intentionally closed the popup.
+      // We don't need to show an error message in this case.
       if (error.code !== 'auth/popup-closed-by-user') {
         console.error("LoginPage: Google Sign-In failed.", error);
         toast({

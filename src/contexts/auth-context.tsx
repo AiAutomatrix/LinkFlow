@@ -28,47 +28,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setLoading(true); // Set loading to true whenever auth state might be changing
       if (firebaseUser) {
-        // Fetch profile only if it's not already the current user's profile
-        if (userProfile?.uid !== firebaseUser.uid) {
-            const profile = await getOrCreateUserProfile(firebaseUser);
-            setUser(firebaseUser);
-            setUserProfile(profile);
-        }
+        // Fetch profile and wait for it to complete
+        const profile = await getOrCreateUserProfile(firebaseUser);
+        setUser(firebaseUser);
+        setUserProfile(profile);
       } else {
         setUser(null);
         setUserProfile(null);
       }
-      // Finished initial auth check, set loading to false.
+      // Finished all auth checks and data fetching, set loading to false.
       setLoading(false);
     });
 
-    return () => {
-      unsubscribe();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
+    // Do not run routing logic until the initial loading is complete
     if (loading) return;
 
+    const isLoggedIn = !!user;
     const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
     const isDashboardPage = pathname.startsWith('/dashboard');
 
-    if (user) {
-      // If user is logged in and tries to access login/signup, redirect to dashboard
-      if (isAuthPage) {
-        router.replace('/dashboard');
-      }
-    } else {
-      // If user is not logged in and tries to access a dashboard page, redirect to login
-      if (isDashboardPage) {
-        router.replace('/login');
-      }
+    if (isLoggedIn && isAuthPage) {
+      router.replace('/dashboard');
+    } else if (!isLoggedIn && isDashboardPage) {
+      router.replace('/login');
     }
     
   }, [user, loading, pathname, router]);
 
+  // While initial authentication is in progress, show a loading screen.
+  // This prevents the app from rendering in a temporary, incorrect state.
   if (loading) {
      return <LoadingScreen />;
   }

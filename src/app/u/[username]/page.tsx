@@ -9,18 +9,21 @@ import { notFound } from 'next/navigation';
 // This is necessary because Server Components can't pass complex objects to Client Components.
 const serializeFirestoreData = (data: any) => {
     if (!data) return data;
+    if (typeof data !== 'object') return data;
 
     const serializedData: { [key: string]: any } = {};
     for (const key in data) {
-        const value = data[key];
-        if (value instanceof Timestamp) {
-            // Convert Timestamp to a plain ISO string
-            serializedData[key] = value.toDate().toISOString();
-        } else if (value && typeof value === 'object' && !Array.isArray(value)) {
-            // Recursively serialize nested objects
-            serializedData[key] = serializeFirestoreData(value);
-        } else {
-            serializedData[key] = value;
+        if (Object.prototype.hasOwnProperty.call(data, key)) {
+            const value = data[key];
+            if (value instanceof Timestamp) {
+                // Convert Timestamp to a plain ISO string
+                serializedData[key] = value.toDate().toISOString();
+            } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+                // Recursively serialize nested objects
+                serializedData[key] = serializeFirestoreData(value);
+            } else {
+                serializedData[key] = value;
+            }
         }
     }
     return serializedData;
@@ -49,15 +52,6 @@ async function getUserLinks(uid: string): Promise<LinkType[]> {
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LinkType));
 }
 
-const toDate = (date: any): Date | null => {
-    if (!date) return null;
-    if (date instanceof Date) return date;
-    if (date instanceof Timestamp) return date.toDate();
-    if (typeof date === 'string') return new Date(date);
-    return null;
-}
-
-
 export default async function UserProfilePage({ params }: { params: { username: string } }) {
     const userData = await getUserData(params.username);
     
@@ -65,26 +59,14 @@ export default async function UserProfilePage({ params }: { params: { username: 
         notFound();
     }
 
-    const linksData = await getUserLinks(userData.uid);
+    // Fetch all links, active or not. Filtering will now happen on the client-side
+    // to avoid hydration errors related to date comparisons.
+    const allLinksData = await getUserLinks(userData.uid);
 
-    // --- Server-side filtering ---
-    const now = new Date();
-    const activeLinksData = linksData.filter(link => {
-        if (!link.active || link.isSocial) return false;
-
-        const startDate = toDate(link.startDate);
-        const endDate = toDate(link.endDate);
-        
-        if (startDate && now < startDate) return false;
-        if (endDate && now > endDate) return false;
-
-        return true;
-    });
-    // --- End server-side filtering ---
-
-    // Serialize the data before passing it to the client component to avoid server/client mismatch errors.
+    // Serialize the data before passing it to the client component.
     const user = serializeFirestoreData(userData) as UserProfile;
-    const activeLinks = activeLinksData.map(link => serializeFirestoreData(link)) as LinkType[];
+    // Pass all links to the client, not just the active ones.
+    const links = allLinksData.map(link => serializeFirestoreData(link)) as LinkType[];
 
-    return <ProfileClientPage user={user} activeLinks={activeLinks} />;
+    return <ProfileClientPage user={user} links={links} />;
 }

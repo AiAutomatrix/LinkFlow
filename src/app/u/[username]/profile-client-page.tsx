@@ -8,6 +8,8 @@ import AnimatedBackground from '@/components/animated-background';
 import { Mail, Instagram, Facebook, Github } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { Timestamp } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
 
 type SocialLink = {
     id: string;
@@ -27,9 +29,37 @@ const SocialIcon = ({ platform }: { platform: SocialLink['platform'] }) => {
     }
 };
 
-export default function ProfileClientPage({ user, activeLinks }: { user: UserProfile; activeLinks: LinkType[] }) {
+const toDate = (date: any): Date | null => {
+    if (!date) return null;
+    if (date instanceof Date) return date;
+    if (date instanceof Timestamp) return date.toDate();
+    if (typeof date === 'string') return new Date(date);
+    return null;
+}
+
+export default function ProfileClientPage({ user, links: serverLinks }: { user: UserProfile; links: LinkType[] }) {
     const { toast } = useToast();
     const router = useRouter();
+    const [activeLinks, setActiveLinks] = useState<LinkType[]>([]);
+
+    // This is the correct way to handle client-specific logic like date filtering.
+    // It runs only on the client, after the initial render, preventing hydration errors.
+    useEffect(() => {
+      const now = new Date();
+      const filteredLinks = serverLinks.filter(link => {
+          if (!link.active) return false;
+
+          const startDate = toDate(link.startDate);
+          const endDate = toDate(link.endDate);
+          
+          if (startDate && now < startDate) return false;
+          if (endDate && now > endDate) return false;
+
+          return true;
+      });
+      setActiveLinks(filteredLinks);
+    }, [serverLinks]);
+
 
     const getInitials = (name: string = '') => {
         return name.split(' ').map(n => n[0]).join('')

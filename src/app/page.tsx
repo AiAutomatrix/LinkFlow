@@ -63,7 +63,7 @@ export default function Home() {
               <div className="flex justify-center">
                 <div className="relative w-[350px] h-[700px] bg-black/30 backdrop-blur-md border border-white/20 rounded-3xl p-4 shadow-2xl">
                     <div className="w-full h-full flex flex-col items-center justify-center text-center">
-                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 mb-4"></div>
+                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 mb-4" data-ai-hint="avatar placeholder"></div>
                         <h2 className="text-xl font-bold">@username</h2>
                         <p className="text-sm text-gray-300 mb-8">Your bio goes here. Make it short and sweet!</p>
 
@@ -82,7 +82,7 @@ export default function Home() {
 
         <footer className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-400">
           {/* This now renders null on server and the correct year on client */}
-          {year ? <p>&copy; {year} LinkFlow. All rights reserved.</p> : <div className="h-6"></div>}
+          <div className="h-6">{year && <p>&copy; {year} LinkFlow. All rights reserved.</p>}</div>
         </footer>
       </div>
     </div>
