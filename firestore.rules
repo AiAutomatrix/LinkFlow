@@ -4,17 +4,22 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Public User Profiles: Allow anyone to read user profiles for public pages.
+    // User profile data
     match /users/{userId} {
-      allow read: if true;
+      // Allow anyone to read the public profile information.
+      allow get: if true;
       
-      // User-specific data: Only the authenticated user can write to their own document.
+      // Only the authenticated user can write to their own profile.
       allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // User links data
+    match /users/{userId}/links/{linkId} {
+      // Allow anyone to read the list of links for a public profile.
+      allow get, list: if true;
 
-      // Links Subcollection: Only the authenticated user can manage their own links.
-      match /links/{linkId} {
-        allow read, write, delete: if request.auth != null && request.auth.uid == userId;
-      }
+      // Only the authenticated user can write to their own links.
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
