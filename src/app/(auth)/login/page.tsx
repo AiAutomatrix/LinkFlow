@@ -26,8 +26,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { signInWithEmail, signInWithGoogle } from "@/lib/auth";
-import GoogleIcon from "@/components/google-icon";
+import { signInWithEmail } from "@/lib/auth";
 
 const formSchema = z.object({
   email: z.string().email({
@@ -38,7 +37,6 @@ const formSchema = z.object({
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -62,27 +60,6 @@ export default function LoginPage() {
       });
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function handleGoogleSignIn() {
-    setGoogleLoading(true);
-    try {
-      await signInWithGoogle();
-      // The onAuthStateChanged listener in AuthProvider will handle the redirect.
-    } catch (error: any) {
-      // This specific error code means the user intentionally closed the popup.
-      // We don't need to show an error message in this case.
-      if (error.code !== 'auth/popup-closed-by-user') {
-        console.error("LoginPage: Google Sign-In failed.", error);
-        toast({
-          variant: "destructive",
-          title: "Google Sign-In Failed",
-          description: "Could not sign in with Google. Please try again.",
-        });
-      }
-    } finally {
-      setGoogleLoading(false);
     }
   }
 
@@ -126,30 +103,12 @@ export default function LoginPage() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={loading || googleLoading}>
+            <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign In
             </Button>
           </form>
         </Form>
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
-              Or continue with
-            </span>
-          </div>
-        </div>
-        <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={loading || googleLoading}>
-          {googleLoading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <GoogleIcon className="mr-2 h-4 w-4" />
-          )}
-          Google
-        </Button>
       </CardContent>
       <CardFooter>
         <div className="text-center text-sm w-full">
