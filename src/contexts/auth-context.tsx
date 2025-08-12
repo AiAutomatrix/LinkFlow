@@ -2,7 +2,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { onAuthStateChanged, User, getRedirectResult } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { getOrCreateUserProfile } from '@/lib/auth';
 import type { UserProfile } from '@/lib/types';
@@ -40,29 +40,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
+    // This effect runs once on mount to handle the redirect result.
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result) {
+          console.log("AuthProvider: Handled redirect result. User:", result.user.displayName);
+          // The onAuthStateChanged listener below will handle the profile creation
+          // and state updates. This just confirms the redirect was processed.
+        }
+      })
+      .catch((error) => {
+        console.error("AuthProvider: Error from getRedirectResult:", error);
+      });
+      
     console.log("AuthProvider: Setting up onAuthStateChanged listener.");
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       console.log("AuthProvider: onAuthStateChanged event fired.");
       if (firebaseUser) {
         console.log("AuthProvider: User is signed in with UID:", firebaseUser.uid);
         try {
-          const profile = await getOrCreateUserProfile(firebaseUser);
-          console.log("AuthProvider: User profile fetched/created:", profile.username);
-          setUser(firebaseUser);
-          setUserProfile(profile);
+          // Check if profile is already loaded to avoid redundant fetches
+          if (userProfile?.uid !== firebaseUser.uid) {
+            const profile = await getOrCreateUserProfile(firebaseUser);
+            console.log("AuthProvider: User profile fetched/created:", profile.username);
+            setUser(firebaseUser);
+            setUserProfile(profile);
+          }
         } catch (error) {
             console.error("AuthProvider: Error getting user profile:", error);
             setUser(null);
             setUserProfile(null);
         } finally {
-            console.log("AuthProvider: Loading state set to false.");
+            console.log("AuthProvider: Loading state set to false (user is present).");
             setLoading(false);
         }
       } else {
         console.log("AuthProvider: User is signed out.");
         setUser(null);
         setUserProfile(null);
-        console.log("AuthProvider: Loading state set to false.");
+        console.log("AuthProvider: Loading state set to false (no user).");
         setLoading(false);
       }
     });
@@ -92,14 +108,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         router.replace('/login');
       }
     }
-    // No other redirects are needed. Public pages like '/' or '/u/...' should be accessible.
     
   }, [user, loading, pathname, router]);
 
-
-  // While loading is true for auth-protected or auth-related pages, we show a full screen loader.
-  // This prevents any rendering of the app until we have a definitive auth state.
-  if (loading && (pathname.startsWith('/dashboard') || pathname.startsWith('/login') || pathname.startsWith('/signup'))) {
+  // While loading is true, show a loader to prevent UI flashes or incorrect redirects.
+  if (loading) {
      return <LoadingScreen />;
   }
   

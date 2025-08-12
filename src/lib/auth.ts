@@ -5,7 +5,8 @@ import {
   signInWithEmailAndPassword,
   User,
   GoogleAuthProvider,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
 } from "firebase/auth";
 import { doc, setDoc, getDoc, serverTimestamp, updateDoc, collection, query, where, limit, getDocs } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -56,8 +57,8 @@ export async function getOrCreateUserProfile(user: User): Promise<UserProfile> {
 
         const newUserProfile: UserProfile = {
             uid: user.uid,
-            displayName: user.displayName || 'New User',
             username: finalUsername,
+            displayName: user.displayName || 'New User',
             email: user.email || '',
             photoURL: user.photoURL || '',
             bio: '',
@@ -97,22 +98,13 @@ export async function signInWithEmail(email: string, password: string) {
 }
 
 /**
- * Signs in or signs up a user using their Google account via a popup.
+ * Signs in or signs up a user using their Google account via a page redirect.
  */
 export async function signInWithGoogle() {
-    console.log("signInWithGoogle: Initiating popup sign-in.");
+    console.log("signInWithGoogle: Initiating redirect sign-in.");
     const provider = new GoogleAuthProvider();
-    try {
-        const result = await signInWithPopup(auth, provider);
-        console.log("signInWithGoogle: Popup successful. User:", result.user.displayName);
-        // The onAuthStateChanged listener in AuthProvider will handle the profile
-        // creation and redirection automatically because persistence is now correctly set.
-        return result.user;
-    } catch (error) {
-        console.error("signInWithGoogle: Popup sign-in failed.", error);
-        // Re-throw the error so the calling component can handle it.
-        throw error;
-    }
+    await signInWithRedirect(auth, provider);
+    // The browser will now redirect. The result is handled in AuthProvider.
 }
 
 /**

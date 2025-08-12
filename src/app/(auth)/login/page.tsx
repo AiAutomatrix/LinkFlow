@@ -67,22 +67,18 @@ export default function LoginPage() {
 
   async function handleGoogleSignIn() {
     setGoogleLoading(true);
-    console.log("LoginPage: Attempting Google Sign-In...");
+    console.log("LoginPage: Attempting Google Sign-In with redirect...");
     try {
       await signInWithGoogle();
-      console.log("LoginPage: signInWithGoogle call completed.");
-      // The onAuthStateChanged listener in AuthProvider handles success.
+      // Page will redirect, so no further action is needed here.
+      // The loading spinner will show until the page navigates away.
     } catch (error: any) {
-      console.error("LoginPage: Google Sign-In failed in component.", error);
-      // The most common error is the user closing the popup. We don't need to show a toast for this.
-      if (error.code !== 'auth/popup-closed-by-user') {
-          toast({
-            variant: "destructive",
-            title: "Google Sign-In Failed",
-            description: "Could not sign in with Google. Please try again.",
-          });
-      }
-    } finally {
+      console.error("LoginPage: Google Sign-In failed.", error);
+      toast({
+        variant: "destructive",
+        title: "Google Sign-In Failed",
+        description: "Could not sign in with Google. Please try again.",
+      });
       setGoogleLoading(false);
     }
   }
