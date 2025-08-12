@@ -40,10 +40,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
+    console.log("AuthProvider: Setting up onAuthStateChanged listener.");
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      console.log("AuthProvider: onAuthStateChanged event fired.");
       if (firebaseUser) {
+        console.log("AuthProvider: User is signed in with UID:", firebaseUser.uid);
         try {
           const profile = await getOrCreateUserProfile(firebaseUser);
+          console.log("AuthProvider: User profile fetched/created:", profile.username);
           setUser(firebaseUser);
           setUserProfile(profile);
         } catch (error) {
@@ -51,16 +55,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(null);
             setUserProfile(null);
         } finally {
+            console.log("AuthProvider: Loading state set to false.");
             setLoading(false);
         }
       } else {
+        console.log("AuthProvider: User is signed out.");
         setUser(null);
         setUserProfile(null);
+        console.log("AuthProvider: Loading state set to false.");
         setLoading(false);
       }
     });
 
     return () => {
+      console.log("AuthProvider: Cleaning up onAuthStateChanged listener.");
       unsubscribe();
     }
   }, []);
@@ -74,11 +82,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (user) {
       // If user is logged in and tries to access login/signup, redirect to dashboard
       if (isAuthPage) {
+        console.log("AuthProvider: User is logged in, redirecting from auth page to dashboard.");
         router.replace('/dashboard');
       }
     } else {
       // If user is not logged in and tries to access a dashboard page, redirect to login
       if (isDashboardPage) {
+        console.log("AuthProvider: User is not logged in, redirecting from dashboard to login.");
         router.replace('/login');
       }
     }

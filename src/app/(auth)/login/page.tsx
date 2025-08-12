@@ -67,10 +67,13 @@ export default function LoginPage() {
 
   async function handleGoogleSignIn() {
     setGoogleLoading(true);
+    console.log("LoginPage: Attempting Google Sign-In...");
     try {
       await signInWithGoogle();
+      console.log("LoginPage: signInWithGoogle call completed.");
       // The onAuthStateChanged listener in AuthProvider handles success.
     } catch (error: any) {
+      console.error("LoginPage: Google Sign-In failed in component.", error);
       // The most common error is the user closing the popup.
       if (error.code !== 'auth/popup-closed-by-user') {
           toast({
