@@ -8,31 +8,41 @@ import GoogleAnalytics from '@/components/google-analytics';
 import { Suspense } from 'react';
 import { AuthProvider, useAuth } from "@/contexts/auth-context";
 import { usePathname } from 'next/navigation';
-import DashboardLayout from './(dashboard)/dashboard/layout';
 import AuthLayout from './(auth)/layout';
+import Loading from './loading';
 
 function AppContent({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const pathname = usePathname();
   const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
+  const isDashboardPage = pathname.startsWith('/dashboard');
 
   if (loading) {
-      // This is now handled by loading.tsx at the root level
-      return null;
+    // Show a loading screen for auth-sensitive routes while we check the user's status.
+    if (isDashboardPage || isAuthPage) {
+      return <Loading />;
+    }
   }
   
-  if (user && !isAuthPage) {
-    return <DashboardLayout>{children}</DashboardLayout>
+  // If the user is logged in, and we are on a dashboard page,
+  // the dashboard layout is already applied by Next.js file-based routing.
+  // So we just render the children.
+  if (user && isDashboardPage) {
+    return <>{children}</>;
   }
-
+  
+  // If the user is not logged in and not on a public page, we don't know what to do yet,
+  // but auth provider will redirect.
   if(!user && !isAuthPage && pathname !== '/') {
-    return <>{children}</>
+    return <>{children}</>;
   }
   
+  // For login/signup pages, wrap with the AuthLayout.
   if (isAuthPage) {
-    return <AuthLayout>{children}</AuthLayout>
+    return <AuthLayout>{children}</AuthLayout>;
   }
 
+  // For all other pages (like the landing page), just render the children.
   return <>{children}</>;
 }
 
