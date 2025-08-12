@@ -74,7 +74,7 @@ export default function LoginPage() {
       // The onAuthStateChanged listener in AuthProvider handles success.
     } catch (error: any) {
       console.error("LoginPage: Google Sign-In failed in component.", error);
-      // The most common error is the user closing the popup.
+      // The most common error is the user closing the popup. We don't need to show a toast for this.
       if (error.code !== 'auth/popup-closed-by-user') {
           toast({
             variant: "destructive",
