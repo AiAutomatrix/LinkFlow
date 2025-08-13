@@ -25,14 +25,9 @@ export default function DashboardLayout({
     { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
   ];
 
-  if (loading) {
+  if (loading || !user) {
     return <Loading />;
   }
-
-  if (!user) {
-    return null; // The AuthProvider will handle the redirect
-  }
-
 
   return (
     <SidebarProvider>

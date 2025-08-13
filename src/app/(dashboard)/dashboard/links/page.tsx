@@ -24,7 +24,6 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Skeleton } from "@/components/ui/skeleton";
 import LinkCard from "./_components/link-card";
 import {
   Dialog,
@@ -39,6 +38,7 @@ import PublicProfilePreview from "../appearance/_components/public-profile-previ
 import { useAuth } from "@/contexts/auth-context";
 import { collection, onSnapshot, query, orderBy, addDoc, updateDoc, doc, writeBatch, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import Loading from "@/app/loading";
 
 
 const socialLinksSchema = z.object({
@@ -182,7 +182,7 @@ export default function LinksPage() {
   };
   
   if (authLoading || loading) {
-      return <div>Loading...</div>
+      return <Loading />;
   }
 
   return (

@@ -35,6 +35,7 @@ import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/auth-context";
 import { doc, updateDoc, collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import Loading from "@/app/loading";
 
 const profileSchema = z.object({
   displayName: z.string().min(2, "Name must be at least 2 characters.").max(50),
@@ -77,7 +78,7 @@ const themes = [
 export default function AppearancePage() {
   const { toast } = useToast();
   const { user, loading: authLoading, setUser, uploadProfilePicture } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [links, setLinks] = useState<Link[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -121,7 +122,7 @@ export default function AppearancePage() {
 
   async function onSubmit(values: z.infer<typeof profileSchema>) {
     if (!user) return;
-    setLoading(true);
+    setFormLoading(true);
     try {
         const userRef = doc(db, "users", user.uid);
         await updateDoc(userRef, values);
@@ -130,7 +131,7 @@ export default function AppearancePage() {
     } catch (error: any) {
         toast({ variant: 'destructive', title: "Error", description: error.message });
     } finally {
-        setLoading(false);
+        setFormLoading(false);
     }
   }
 
@@ -147,7 +148,7 @@ export default function AppearancePage() {
     
     try {
         const newPhotoURL = await uploadProfilePicture(user.uid, file);
-        setPhotoURL(newPhotoURL); // The user state is updated inside the provider
+        setPhotoURL(newPhotoURL);
         toast({ title: "Profile picture updated!" });
     } catch (error: any) {
         toast({ variant: 'destructive', title: "Upload failed", description: error.message });
@@ -161,7 +162,7 @@ export default function AppearancePage() {
   };
 
   if (authLoading) {
-      return <div>Loading user profile...</div>;
+      return <Loading />;
   }
   
   return (
@@ -327,8 +328,8 @@ export default function AppearancePage() {
             </Card>
 
 
-            <Button type="submit" disabled={loading || uploading}>
-                {(loading || uploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" disabled={formLoading || uploading}>
+                {(formLoading || uploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Update Profile
             </Button>
           </form>

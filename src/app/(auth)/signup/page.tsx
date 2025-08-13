@@ -28,7 +28,6 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
 import { GoogleIcon } from "@/components/google-icon";
-import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
   displayName: z.string().min(2, "Name must be at least 2 characters."),
@@ -42,10 +41,8 @@ const formSchema = z.object({
 
 export default function SignupPage() {
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
   const { toast } = useToast();
   const { signUpWithEmail, signInWithGoogle } = useAuth();
-  const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -60,7 +57,7 @@ export default function SignupPage() {
     setLoading(true);
     try {
       await signUpWithEmail(values.email, values.password, values.displayName);
-      router.push('/dashboard');
+      // The AuthProvider will handle the redirect
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -73,10 +70,10 @@ export default function SignupPage() {
   }
 
   const handleGoogleSignIn = async () => {
-    setGoogleLoading(true);
+    setLoading(true);
     try {
         await signInWithGoogle();
-        router.push('/dashboard');
+        // The AuthProvider will handle the redirect
     } catch (error: any) {
         if (error.code !== 'auth/popup-closed-by-user') {
              toast({
@@ -86,7 +83,7 @@ export default function SignupPage() {
             });
         }
     } finally {
-        setGoogleLoading(false);
+        setLoading(false);
     }
   };
 
@@ -144,7 +141,7 @@ export default function SignupPage() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={loading || googleLoading}>
+            <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create an account
             </Button>
@@ -160,8 +157,8 @@ export default function SignupPage() {
             </span>
           </div>
         </div>
-        <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={loading || googleLoading}>
-          {googleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="mr-2 h-4 w-4" />}
+        <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={loading}>
+          {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="mr-2 h-4 w-4" />}
           Google
         </Button>
       </CardContent>

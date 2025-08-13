@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   onAuthStateChanged,
   User as FirebaseUser,
@@ -12,12 +12,13 @@ import {
   signOut as firebaseSignOut,
   updateProfile,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, storage } from '@/lib/firebase';
 import type { UserProfile } from '@/lib/types';
 import { AuthContext } from '@/contexts/auth-context';
-import { Skeleton } from '@/components/ui/skeleton';
+import Loading from '@/app/loading';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { usePathname, useRouter } from 'next/navigation';
 
 type AuthProviderProps = {
   children: React.ReactNode;
@@ -30,18 +31,21 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const router = useRouter();
+  const pathname = usePathname();
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
-      setFirebaseUser(fbUser);
       if (fbUser) {
+        setFirebaseUser(fbUser);
         const userDocRef = doc(db, 'users', fbUser.uid);
         const userDoc = await getDoc(userDocRef);
         
         if (userDoc.exists()) {
           setUser({ uid: fbUser.uid, ...userDoc.data() } as UserProfile);
         } else {
-          // New user, create profile
-          const username = fbUser.email?.split('@')[0] || fbUser.uid;
+          // New user via Google Sign-In, create their profile.
+          const username = (fbUser.email?.split('@')[0] || fbUser.uid).replace(/[^a-zA-Z0-9_]/g, '');
           const newUserProfile: UserProfile = {
             uid: fbUser.uid,
             email: fbUser.email!,
@@ -52,6 +56,8 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
             plan: 'free',
             theme: 'light',
             createdAt: serverTimestamp(),
+            animatedBackground: false,
+            socialLinks: {},
           };
 
           try {
@@ -64,6 +70,7 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
           }
         }
       } else {
+        setFirebaseUser(null);
         setUser(null);
       }
       setLoading(false);
@@ -72,15 +79,44 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     return () => unsubscribe();
   }, []);
 
+  useEffect(() => {
+    if (loading) return;
+
+    const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
+
+    if (!user && !isAuthPage) {
+      router.push('/login');
+    } else if (user && isAuthPage) {
+      router.push('/dashboard');
+    }
+  }, [user, loading, pathname, router]);
+
+
   const signInWithEmail = async (email: string, password: string): Promise<void> => {
     await signInWithEmailAndPassword(auth, email, password);
   };
 
   const signUpWithEmail = async (email: string, password: string, displayName: string): Promise<void> => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
-    await updateProfile(user, { displayName });
-    // AuthProvider's onAuthStateChanged will handle profile creation
+    const fbUser = userCredential.user;
+    await updateProfile(fbUser, { displayName });
+
+    const username = (email.split('@')[0] || fbUser.uid).replace(/[^a-zA-Z0-9_]/g, '');
+    const userDocRef = doc(db, 'users', fbUser.uid);
+    const newUserProfile: UserProfile = {
+      uid: fbUser.uid,
+      email: fbUser.email!,
+      displayName: displayName,
+      bio: '',
+      photoURL: '',
+      username: username,
+      plan: 'free',
+      theme: 'light',
+      createdAt: serverTimestamp(),
+      animatedBackground: false,
+      socialLinks: {},
+    };
+    await setDoc(userDocRef, newUserProfile);
   };
 
   const signInWithGoogle = async (): Promise<void> => {
@@ -88,9 +124,9 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
         await signInWithPopup(auth, googleProvider);
     } catch (error: any) {
         if (error.code === 'auth/popup-closed-by-user') {
-            return;
+            return; // User closed popup, do nothing.
         }
-        throw error;
+        throw error; // Rethrow other errors.
     }
   };
 
@@ -106,11 +142,9 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     const snapshot = await uploadBytes(storageRef, file);
     const downloadURL = await getDownloadURL(snapshot.ref);
     
-    // Update user profile in firestore
     const userRef = doc(db, "users", userId);
     await updateDoc(userRef, { photoURL: downloadURL });
     
-    // Update local user state
     if(user && user.uid === userId) {
       setUser({...user, photoURL: downloadURL });
     }
@@ -118,24 +152,14 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     return downloadURL;
   };
 
-
-  if (loading) {
-    return (
-      <div className="flex h-screen w-screen items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Skeleton className="h-12 w-12 rounded-full" />
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-[250px]" />
-            <Skeleton className="h-4 w-[200px]" />
-          </div>
-        </div>
-      </div>
-    );
+  const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
+  if (loading || (!user && !isAuthPage) || (user && isAuthPage)) {
+    return <Loading />;
   }
 
   const value = {
       user,
-      userProfile: user, // Add this for easier access in components
+      userProfile: user,
       firebaseUser,
       loading,
       setUser,

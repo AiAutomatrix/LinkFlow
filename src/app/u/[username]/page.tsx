@@ -10,6 +10,7 @@ import { notFound } from 'next/navigation';
 const serializeFirestoreData = (data: any) => {
     if (!data) return data;
     if (typeof data !== 'object') return data;
+    if (Array.isArray(data)) return data.map(serializeFirestoreData);
 
     const serializedData: { [key: string]: any } = {};
     for (const key in data) {

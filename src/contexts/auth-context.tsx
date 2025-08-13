@@ -1,3 +1,4 @@
+
 "use client";
 
 import { createContext, useContext, Dispatch, SetStateAction } from 'react';
@@ -6,6 +7,7 @@ import type { UserProfile } from '@/lib/types';
 
 interface AuthContextType {
   user: UserProfile | null;
+  userProfile: UserProfile | null;
   firebaseUser: FirebaseUser | null;
   loading: boolean;
   setUser: Dispatch<SetStateAction<UserProfile | null>>;
@@ -18,6 +20,7 @@ interface AuthContextType {
 
 export const AuthContext = createContext<AuthContextType>({
   user: null,
+  userProfile: null,
   firebaseUser: null,
   loading: true,
   setUser: () => {},
