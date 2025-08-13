@@ -9,6 +9,11 @@ interface AuthContextType {
   firebaseUser: FirebaseUser | null;
   loading: boolean;
   setUser: Dispatch<SetStateAction<UserProfile | null>>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string, displayName: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  signOut: () => Promise<void>;
+  uploadProfilePicture: (userId: string, file: File) => Promise<string>;
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -16,6 +21,11 @@ export const AuthContext = createContext<AuthContextType>({
   firebaseUser: null,
   loading: true,
   setUser: () => {},
+  signInWithEmail: async () => {},
+  signUpWithEmail: async () => {},
+  signInWithGoogle: async () => {},
+  signOut: async () => {},
+  uploadProfilePicture: async () => '',
 });
 
 export const useAuth = () => useContext(AuthContext);

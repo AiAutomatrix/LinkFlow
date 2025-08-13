@@ -15,10 +15,9 @@ import {
 import { LogOut, Settings, User as UserIcon } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
-import { signOut } from "@/lib/auth";
 
 export function UserNav() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
 
   const getInitials = (name: string = "") => {
     return name.split(' ').map(n => n[0]).join('') || '?';

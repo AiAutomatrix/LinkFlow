@@ -35,7 +35,6 @@ import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/auth-context";
 import { doc, updateDoc, collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { uploadProfilePicture } from "@/lib/auth";
 
 const profileSchema = z.object({
   displayName: z.string().min(2, "Name must be at least 2 characters.").max(50),
@@ -77,7 +76,7 @@ const themes = [
 
 export default function AppearancePage() {
   const { toast } = useToast();
-  const { user, loading: authLoading, setUser } = useAuth();
+  const { user, loading: authLoading, setUser, uploadProfilePicture } = useAuth();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [links, setLinks] = useState<Link[]>([]);
@@ -148,10 +147,7 @@ export default function AppearancePage() {
     
     try {
         const newPhotoURL = await uploadProfilePicture(user.uid, file);
-        const userRef = doc(db, "users", user.uid);
-        await updateDoc(userRef, { photoURL: newPhotoURL });
-        setUser({ ...user, photoURL: newPhotoURL });
-        setPhotoURL(newPhotoURL);
+        setPhotoURL(newPhotoURL); // The user state is updated inside the provider
         toast({ title: "Profile picture updated!" });
     } catch (error: any) {
         toast({ variant: 'destructive', title: "Upload failed", description: error.message });

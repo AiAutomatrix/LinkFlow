@@ -1,16 +1,28 @@
 "use client";
 
 import React, { useState, useEffect, useContext } from 'react';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { doc, getDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
-import { auth, firestore } from '@/lib/firebase';
+import {
+  onAuthStateChanged,
+  User as FirebaseUser,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  signOut as firebaseSignOut,
+  updateProfile,
+} from 'firebase/auth';
+import { doc, getDoc, setDoc, updateDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { auth, firestore, storage } from '@/lib/firebase';
 import type { UserProfile } from '@/lib/types';
 import { AuthContext } from '@/contexts/auth-context';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 type AuthProviderProps = {
   children: React.ReactNode;
 };
+
+const googleProvider = new GoogleAuthProvider();
 
 const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -27,35 +39,26 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
         if (userDoc.exists()) {
           setUser({ uid: fbUser.uid, ...userDoc.data() } as UserProfile);
         } else {
-          // This case handles the first-time sign-in via a social provider
-          // where the profile might not have been created yet.
-          const username = fbUser.uid; // Default to UID, user can change it later
-          const newUserProfile: Omit<UserProfile, 'createdAt'> & { createdAt: any } = {
+          // New user, create profile
+          const username = fbUser.email?.split('@')[0] || fbUser.uid;
+          const newUserProfile: UserProfile = {
             uid: fbUser.uid,
             email: fbUser.email!,
             displayName: fbUser.displayName || 'New User',
-            bio: 'Welcome to my LinkFlow profile!',
+            bio: '',
             photoURL: fbUser.photoURL || '',
             username: username,
             plan: 'free',
+            theme: 'light',
             createdAt: serverTimestamp(),
           };
 
-          const usernameDocRef = doc(firestore, 'usernames', username);
-
           try {
-            const batch = writeBatch(firestore);
-            batch.set(userDocRef, newUserProfile);
-            batch.set(usernameDocRef, { uid: fbUser.uid });
-            await batch.commit();
-
-            // Fetch the newly created doc to get the server-resolved timestamp
-            const newUserDoc = await getDoc(userDocRef);
-            setUser({ uid: fbUser.uid, ...newUserDoc.data() } as UserProfile);
-
+            await setDoc(userDocRef, newUserProfile);
+            const newUserSnap = await getDoc(userDocRef);
+            setUser({ uid: fbUser.uid, ...newUserSnap.data() } as UserProfile);
           } catch (error) {
             console.error("Error creating user profile:", error);
-            // Handle error case, maybe sign the user out
             setUser(null);
           }
         }
@@ -67,6 +70,53 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
 
     return () => unsubscribe();
   }, []);
+
+  const signInWithEmail = async (email: string, password: string): Promise<void> => {
+    await signInWithEmailAndPassword(auth, email, password);
+  };
+
+  const signUpWithEmail = async (email: string, password: string, displayName: string): Promise<void> => {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+    await updateProfile(user, { displayName });
+    // AuthProvider's onAuthStateChanged will handle profile creation
+  };
+
+  const signInWithGoogle = async (): Promise<void> => {
+    try {
+        await signInWithPopup(auth, googleProvider);
+    } catch (error: any) {
+        if (error.code === 'auth/popup-closed-by-user') {
+            return;
+        }
+        throw error;
+    }
+  };
+
+  const signOut = async (): Promise<void> => {
+    await firebaseSignOut(auth);
+  };
+  
+  const uploadProfilePicture = async (userId: string, file: File): Promise<string> => {
+    if (!file) throw new Error("No file provided for upload.");
+    if (!file.type.startsWith("image/")) throw new Error("File is not an image.");
+
+    const storageRef = ref(storage, `profile_pictures/${userId}/profile.jpg`);
+    const snapshot = await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    
+    // Update user profile in firestore
+    const userRef = doc(firestore, "users", userId);
+    await updateDoc(userRef, { photoURL: downloadURL });
+    
+    // Update local user state
+    if(user && user.uid === userId) {
+      setUser({...user, photoURL: downloadURL });
+    }
+
+    return downloadURL;
+  };
+
 
   if (loading) {
     return (
@@ -82,8 +132,20 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     );
   }
 
+  const value = {
+      user,
+      firebaseUser,
+      loading,
+      setUser,
+      signInWithEmail,
+      signUpWithEmail,
+      signInWithGoogle,
+      signOut,
+      uploadProfilePicture,
+  };
+
   return (
-    <AuthContext.Provider value={{ user, firebaseUser, loading, setUser }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

@@ -26,8 +26,9 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { signInWithEmail, signInWithGoogle } from "@/lib/auth";
+import { useAuth } from "@/contexts/auth-context";
 import { GoogleIcon } from "@/components/google-icon";
+import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
   email: z.string().email({
@@ -40,6 +41,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const { toast } = useToast();
+  const { signInWithEmail, signInWithGoogle } = useAuth();
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -53,7 +56,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signInWithEmail(values.email, values.password);
-      // Redirect is handled by the AuthProvider
+      router.push('/dashboard');
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -69,7 +72,7 @@ export default function LoginPage() {
     setGoogleLoading(true);
     try {
         await signInWithGoogle();
-        // Redirect is handled by the AuthProvider
+        router.push('/dashboard');
     } catch (error: any) {
         if (error.code !== 'auth/popup-closed-by-user') {
              toast({

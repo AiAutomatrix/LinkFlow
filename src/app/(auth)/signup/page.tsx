@@ -26,8 +26,9 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { signUpWithEmail, signInWithGoogle } from "@/lib/auth";
+import { useAuth } from "@/contexts/auth-context";
 import { GoogleIcon } from "@/components/google-icon";
+import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
   displayName: z.string().min(2, "Name must be at least 2 characters."),
@@ -43,6 +44,8 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const { toast } = useToast();
+  const { signUpWithEmail, signInWithGoogle } = useAuth();
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -57,7 +60,7 @@ export default function SignupPage() {
     setLoading(true);
     try {
       await signUpWithEmail(values.email, values.password, values.displayName);
-      // The redirect is handled by the AuthProvider
+      router.push('/dashboard');
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -73,7 +76,7 @@ export default function SignupPage() {
     setGoogleLoading(true);
     try {
         await signInWithGoogle();
-        // Redirect is handled by the AuthProvider
+        router.push('/dashboard');
     } catch (error: any) {
         if (error.code !== 'auth/popup-closed-by-user') {
              toast({
