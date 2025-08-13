@@ -6,21 +6,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Logo from '@/components/logo';
 import AnimatedBackground from '@/components/animated-background';
 import { Mail, Instagram, Facebook, Github } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Timestamp } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 
-type SocialLink = {
-    id: string;
-    url: string;
-    platform: 'email' | 'instagram' | 'facebook' | 'github';
-    title: string;
-    isSocial: boolean;
-};
-
-const SocialIcon = ({ platform }: { platform: SocialLink['platform'] }) => {
-    switch (platform) {
+const SocialIcon = ({ platform }: { platform: string }) => {
+    switch (platform.toLowerCase()) {
         case 'email': return <Mail className="h-6 w-6" />;
         case 'instagram': return <Instagram className="h-6 w-6" />;
         case 'facebook': return <Facebook className="h-6 w-6" />;
@@ -38,12 +29,9 @@ const toDate = (date: any): Date | null => {
 }
 
 export default function ProfileClientPage({ user, links: serverLinks }: { user: UserProfile; links: LinkType[] }) {
-    const { toast } = useToast();
     const router = useRouter();
     const [activeLinks, setActiveLinks] = useState<LinkType[]>([]);
 
-    // This is the correct way to handle client-specific logic like date filtering.
-    // It runs only on the client, after the initial render, preventing hydration errors.
     useEffect(() => {
       const now = new Date();
       const filteredLinks = serverLinks.filter(link => {
@@ -65,7 +53,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         return name.split(' ').map(n => n[0]).join('')
     }
     
-    const handleLinkClick = async (link: LinkType | SocialLink) => {
+    const handleLinkClick = async (link: LinkType) => {
         try {
             await fetch('/api/clicks', {
                 method: 'POST',
@@ -79,19 +67,8 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         }
     };
     
-    const socialPlatforms: SocialLink['platform'][] = ['email', 'instagram', 'facebook', 'github'];
-    const socialLinks: SocialLink[] = socialPlatforms
-      .filter(platform => user.socialLinks && user.socialLinks[platform])
-      .map(platform => {
-        const url = platform === 'email' ? `mailto:${user.socialLinks![platform]}` : user.socialLinks![platform]!;
-        return {
-            id: `social_${platform}`,
-            url,
-            platform: platform,
-            title: platform.charAt(0).toUpperCase() + platform.slice(1),
-            isSocial: true,
-        }
-      });
+    const socialLinks = activeLinks.filter(l => l.isSocial);
+    const regularLinks = activeLinks.filter(l => !l.isSocial);
 
     return (
         <div data-theme={user.theme || 'light'} className="relative flex flex-col items-center min-h-screen pt-12 px-4 bg-background text-foreground overflow-hidden">
@@ -110,18 +87,18 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
                         {socialLinks.map(link => (
                             <button
                                 key={link.id}
-                                aria-label={`My ${link.platform}`}
+                                aria-label={`My ${link.title}`}
                                 className="hover:text-primary transition-colors"
                                 onClick={() => handleLinkClick(link)}
                             >
-                                <SocialIcon platform={link.platform} />
+                                <SocialIcon platform={link.title} />
                             </button>
                         ))}
                     </div>
                 </div>
 
                 <div className="mt-8 space-y-4">
-                {activeLinks.map((link) => {
+                {regularLinks.map((link) => {
                     return (
                         <button 
                             key={link.id}
@@ -140,3 +117,5 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         </div>
     );
 }
+
+    

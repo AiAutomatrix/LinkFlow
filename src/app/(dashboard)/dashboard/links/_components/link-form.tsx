@@ -37,7 +37,7 @@ const formSchema = z.object({
 type LinkFormProps = {
   onSubmit: (title: string, url: string, startDate?: Date, endDate?: Date) => void;
   onCancel: () => void;
-  initialData?: Link;
+  initialData?: Partial<Link>;
 };
 
 // Helper to convert Timestamp to Date if needed
@@ -147,3 +147,5 @@ export default function LinkForm({ onSubmit, onCancel, initialData }: LinkFormPr
     </Form>
   );
 }
+
+    

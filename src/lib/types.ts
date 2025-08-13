@@ -10,7 +10,7 @@ export interface UserProfile {
   plan: 'free' | 'pro';
   theme?: string;
   animatedBackground?: boolean;
-  socialLinks?: {
+  socialLinks?: { // This is now legacy, social links are stored in the links collection
     email?: string;
     instagram?: string;
     facebook?: string;
@@ -26,8 +26,10 @@ export interface Link {
   order: number;
   active: boolean;
   clicks: number;
-  isSocial?: boolean;
+  isSocial: boolean;
   createdAt?: Timestamp | Date | string;
   startDate?: Timestamp | Date | string;
   endDate?: Timestamp | Date | string;
 }
+
+    

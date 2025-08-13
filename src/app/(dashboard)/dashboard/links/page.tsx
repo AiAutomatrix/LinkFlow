@@ -36,7 +36,7 @@ import LinkForm from "./_components/link-form";
 import { useToast } from "@/hooks/use-toast";
 import PublicProfilePreview from "../appearance/_components/public-profile-preview";
 import { useAuth } from "@/contexts/auth-context";
-import { collection, onSnapshot, query, orderBy, addDoc, updateDoc, doc, writeBatch, deleteDoc } from "firebase/firestore";
+import { collection, onSnapshot, query, orderBy, addDoc, updateDoc, doc, writeBatch, deleteDoc, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Loading from "@/app/loading";
 
@@ -77,10 +77,23 @@ export default function LinksPage() {
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const linksData: Link[] = [];
+        const socialLinksValues: Partial<z.infer<typeof socialLinksSchema>> = {};
+
         querySnapshot.forEach((doc) => {
-            linksData.push({ id: doc.id, ...doc.data() } as Link);
+            const link = { id: doc.id, ...doc.data() } as Link;
+            linksData.push(link);
+
+            if(link.isSocial) {
+                const platform = link.title.toLowerCase() as keyof z.infer<typeof socialLinksSchema>;
+                if (platform === 'email') {
+                    socialLinksValues[platform] = link.url.replace('mailto:', '');
+                } else {
+                    socialLinksValues[platform] = link.url;
+                }
+            }
         });
         setLinks(linksData);
+        socialForm.reset(socialLinksValues);
         setLoading(false);
     }, (error) => {
         console.error("Error fetching links: ", error);
@@ -89,13 +102,8 @@ export default function LinksPage() {
     });
 
     return () => unsubscribe();
-  }, [user, toast]);
+  }, [user, toast, socialForm]);
 
-  useEffect(() => {
-    if (userProfile?.socialLinks) {
-        socialForm.reset(userProfile.socialLinks);
-    }
-  }, [userProfile, socialForm]);
 
   const handleShare = () => {
     if (!userProfile) return;
@@ -110,9 +118,41 @@ export default function LinksPage() {
   const handleSocialSubmit = async (values: z.infer<typeof socialLinksSchema>) => {
     if (!user) return;
     setLoadingSocial(true);
+    const linksCollection = collection(db, `users/${user.uid}/links`);
+
     try {
-        const userRef = doc(db, "users", user.uid);
-        await updateDoc(userRef, { socialLinks: values });
+        const batch = writeBatch(db);
+
+        for (const [platform, url] of Object.entries(values)) {
+            if (!url) continue;
+
+            const q = query(linksCollection, where("title", "==", platform), where("isSocial", "==", true));
+            const existingLinks = await getDocs(q);
+
+            const finalUrl = platform === 'email' ? `mailto:${url}` : url;
+
+            if (existingLinks.empty) {
+                const newLink = {
+                    title: platform,
+                    url: finalUrl,
+                    order: links.filter(l => !l.isSocial).length + Object.keys(values).indexOf(platform), // place after regular links
+                    active: true,
+                    clicks: 0,
+                    createdAt: new Date(),
+                    startDate: null,
+                    endDate: null,
+                    isSocial: true,
+                };
+                const newLinkRef = doc(linksCollection);
+                batch.set(newLinkRef, newLink);
+            } else {
+                existingLinks.forEach(doc => {
+                    batch.update(doc.ref, { url: finalUrl });
+                });
+            }
+        }
+        
+        await batch.commit();
         toast({ title: "Social links updated!" });
     } catch (error: any) {
         toast({ variant: 'destructive', title: "Error", description: error.message });
@@ -123,15 +163,16 @@ export default function LinksPage() {
   
   const handleAddLink = async (title: string, url: string, startDate?: Date, endDate?: Date) => {
     if (!user) return;
-    const newLink = {
+    const newLink: Omit<Link, 'id'> = {
         title,
         url,
-        order: links.length,
+        order: links.filter(l => !l.isSocial).length, // Only count non-social links for order
         active: true,
         clicks: 0,
         createdAt: new Date(),
         startDate: startDate || null,
         endDate: endDate || null,
+        isSocial: false,
     };
     try {
         await addDoc(collection(db, `users/${user.uid}/links`), newLink);
@@ -166,18 +207,20 @@ export default function LinksPage() {
 
   const handleMoveLink = async (linkId: string, direction: 'up' | 'down') => {
     if (!user) return;
-    const currentIndex = links.findIndex(link => link.id === linkId);
+    
+    const regularLinks = links.filter(l => !l.isSocial);
+    const currentIndex = regularLinks.findIndex(link => link.id === linkId);
     if (currentIndex === -1) return;
 
     const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-    if (newIndex < 0 || newIndex >= links.length) return;
+    if (newIndex < 0 || newIndex >= regularLinks.length) return;
 
-    const newLinks = [...links];
-    const [movedLink] = newLinks.splice(currentIndex, 1);
-    newLinks.splice(newIndex, 0, movedLink);
+    const newOrderedLinks = [...regularLinks];
+    const [movedLink] = newOrderedLinks.splice(currentIndex, 1);
+    newOrderedLinks.splice(newIndex, 0, movedLink);
 
     const batch = writeBatch(db);
-    newLinks.forEach((link, index) => {
+    newOrderedLinks.forEach((link, index) => {
         const linkRef = doc(db, `users/${user.uid}/links`, link.id);
         batch.update(linkRef, { order: index });
     });
@@ -193,6 +236,8 @@ export default function LinksPage() {
   if (authLoading || loading) {
       return <Loading />;
   }
+
+  const regularLinks = links.filter(l => !l.isSocial);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
@@ -230,13 +275,13 @@ export default function LinksPage() {
                 <CardDescription>Click the arrows to reorder, or the switch to toggle visibility.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                {links.length > 0 ? (
+                {regularLinks.length > 0 ? (
                     <div className="space-y-4">
-                        {links.map((link, index) => (
+                        {regularLinks.map((link, index) => (
                         <LinkCard 
                             key={link.id} 
                             index={index}
-                            totalLinks={links.length}
+                            totalLinks={regularLinks.length}
                             link={link} 
                             onUpdate={handleUpdateLink}
                             onDelete={handleDeleteLink}
@@ -259,8 +304,8 @@ export default function LinksPage() {
                 <form onSubmit={socialForm.handleSubmit(handleSocialSubmit)}>
                     <Card>
                         <CardHeader>
-                            <CardTitle>Social Links</CardTitle>
-                            <CardDescription>Add links to your social media profiles. These will be tracked in your analytics.</CardDescription>
+                            <CardTitle>Social Icons</CardTitle>
+                            <CardDescription>Add URLs to your social media profiles. These will appear as icons on your page.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <FormField
@@ -331,7 +376,7 @@ export default function LinksPage() {
                     </Card>
                     <Button type="submit" disabled={loadingSocial} className="mt-6">
                         {loadingSocial && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Update Social Links
+                        Update Social Icons
                     </Button>
                 </form>
             </Form>
@@ -340,7 +385,6 @@ export default function LinksPage() {
             <PublicProfilePreview 
                 profile={userProfile || {}}
                 links={links} 
-                socialLinks={watchedSocials}
             />
         </div>
     </div>

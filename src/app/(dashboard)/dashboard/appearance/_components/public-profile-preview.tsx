@@ -11,15 +11,25 @@ import { Mail, Instagram, Facebook, Github } from 'lucide-react';
 type PreviewProps = {
   profile: Partial<UserProfile> & { photoURL?: string };
   links?: LinkType[];
-  socialLinks?: UserProfile['socialLinks']
 };
 
-export default function PublicProfilePreview({ profile, links = [], socialLinks }: PreviewProps) {
+export default function PublicProfilePreview({ profile, links = [] }: PreviewProps) {
     const getInitials = (name: string = "") => {
         return name.split(" ").map((n) => n[0]).join("");
     };
 
-    const currentSocialLinks = socialLinks || profile.socialLinks || {};
+    const socialLinks = links.filter(l => l.isSocial && l.active);
+    const regularLinks = links.filter(l => !l.isSocial && l.active);
+
+    const SocialIcon = ({ platform }: { platform: string }) => {
+        switch (platform.toLowerCase()) {
+            case 'email': return <Mail className="h-6 w-6" />;
+            case 'instagram': return <Instagram className="h-6 w-6" />;
+            case 'facebook': return <Facebook className="h-6 w-6" />;
+            case 'github': return <Github className="h-6 w-6" />;
+            default: return null;
+        }
+    };
 
     const LinkButton = ({ children }: { children: React.ReactNode }) => (
       <div
@@ -48,15 +58,14 @@ export default function PublicProfilePreview({ profile, links = [], socialLinks 
               <p className="text-center mt-2 text-sm text-foreground/80">{profile.bio || "Your bio will appear here."}</p>
               
               <div className="flex gap-4 justify-center mt-4 text-foreground/80">
-                {currentSocialLinks.email && <Mail className="h-6 w-6" />}
-                {currentSocialLinks.instagram && <Instagram className="h-6 w-6" />}
-                {currentSocialLinks.facebook && <Facebook className="h-6 w-6" />}
-                {currentSocialLinks.github && <Github className="h-6 w-6" />}
+                {socialLinks.map(link => (
+                    <SocialIcon key={link.id} platform={link.title} />
+                ))}
               </div>
               
               <div className="mt-8 space-y-4 w-full max-w-xs mx-auto">
-                  {links.filter(l => l.active && !l.isSocial).length > 0 ? (
-                    links.filter(l => l.active && !l.isSocial).slice(0, 3).map((link) => (
+                  {regularLinks.length > 0 ? (
+                    regularLinks.slice(0, 3).map((link) => (
                       <LinkButton key={link.id}>
                         {link.title}
                       </LinkButton>
@@ -65,10 +74,9 @@ export default function PublicProfilePreview({ profile, links = [], socialLinks 
                     <>
                       <LinkButton>Example Link 1</LinkButton>
                       <LinkButton>Example Link 2</LinkButton>
-                      <LinkButton>Example Link 3</LinkButton>
                     </>
                   )}
-                  {links.filter(l => l.active && !l.isSocial).length > 3 && <p className="text-center text-sm text-muted-foreground">...</p>}
+                  {regularLinks.length > 3 && <p className="text-center text-sm text-muted-foreground">...</p>}
               </div>
             </div>
         </div>
@@ -76,3 +84,5 @@ export default function PublicProfilePreview({ profile, links = [], socialLinks 
     </Card>
   );
 }
+
+    
