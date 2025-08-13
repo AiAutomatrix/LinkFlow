@@ -29,16 +29,25 @@ const serializeFirestoreData = (data: any): any => {
 
 
 async function getUserData(username: string): Promise<UserProfile | null> {
+    if (!username) return null;
     const usersRef = collection(db, "users");
     const q = query(usersRef, where("username", "==", username), limit(1));
-    const querySnapshot = await getDocs(q);
+    
+    try {
+        const querySnapshot = await getDocs(q);
 
-    if (querySnapshot.empty) {
+        if (querySnapshot.empty) {
+            console.log(`No user found with username: ${username}`);
+            return null;
+        }
+        const userDoc = querySnapshot.docs[0];
+        const userData = { uid: userDoc.id, ...userDoc.data() } as UserProfile;
+        return userData;
+
+    } catch (error) {
+        console.error(`Error fetching user data for username: ${username}`, error);
         return null;
     }
-    const userDoc = querySnapshot.docs[0];
-    const userData = { uid: userDoc.id, ...userDoc.data() } as UserProfile;
-    return userData;
 }
 
 async function getUserLinks(uid: string): Promise<LinkType[]> {
