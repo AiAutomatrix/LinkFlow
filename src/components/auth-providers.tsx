@@ -1,9 +1,10 @@
+
 "use client";
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import React, { useState, useEffect, useContext } from 'react';
 import { onAuthStateChanged, User as FirebaseUser, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { doc, getDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
-import { auth, firestore } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import type { UserProfile } from '@/lib/types';
 import { AuthContext } from '@/contexts/auth-context';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -33,7 +34,7 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
       displayName: displayName,
     });
 
-    const userDocRef = doc(firestore, 'users', fbUser.uid);
+    const userDocRef = doc(db, 'users', fbUser.uid);
     const username = fbUser.uid; // Default to UID, user can change it later
     const newUserProfile: Omit<UserProfile, 'createdAt'> & { createdAt: any } = {
       uid: fbUser.uid,
@@ -46,9 +47,9 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
       createdAt: serverTimestamp(),
     };
 
-    const usernameDocRef = doc(firestore, 'usernames', username);
+    const usernameDocRef = doc(db, 'usernames', username);
 
-    const batch = writeBatch(firestore);
+    const batch = writeBatch(db);
     batch.set(userDocRef, newUserProfile);
     batch.set(usernameDocRef, { uid: fbUser.uid });
     await batch.commit();
@@ -58,7 +59,7 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       setFirebaseUser(fbUser);
       if (fbUser) {
-        const userDocRef = doc(firestore, 'users', fbUser.uid);
+        const userDocRef = doc(db, 'users', fbUser.uid);
         const userDoc = await getDoc(userDocRef);
         
         if (userDoc.exists()) {
@@ -78,10 +79,10 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
             createdAt: serverTimestamp(),
           };
 
-          const usernameDocRef = doc(firestore, 'usernames', username);
+          const usernameDocRef = doc(db, 'usernames', username);
 
           try {
-            const batch = writeBatch(firestore);
+            const batch = writeBatch(db);
             batch.set(userDocRef, newUserProfile);
             batch.set(usernameDocRef, { uid: fbUser.uid });
             await batch.commit();

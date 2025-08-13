@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useContext } from 'react';
@@ -12,7 +13,7 @@ import {
   updateProfile,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
-import { auth, firestore, storage } from '@/lib/firebase';
+import { auth, db, storage } from '@/lib/firebase';
 import type { UserProfile } from '@/lib/types';
 import { AuthContext } from '@/contexts/auth-context';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -33,7 +34,7 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       setFirebaseUser(fbUser);
       if (fbUser) {
-        const userDocRef = doc(firestore, 'users', fbUser.uid);
+        const userDocRef = doc(db, 'users', fbUser.uid);
         const userDoc = await getDoc(userDocRef);
         
         if (userDoc.exists()) {
@@ -106,7 +107,7 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     const downloadURL = await getDownloadURL(snapshot.ref);
     
     // Update user profile in firestore
-    const userRef = doc(firestore, "users", userId);
+    const userRef = doc(db, "users", userId);
     await updateDoc(userRef, { photoURL: downloadURL });
     
     // Update local user state
@@ -134,6 +135,7 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const value = {
       user,
+      userProfile: user, // Add this for easier access in components
       firebaseUser,
       loading,
       setUser,
