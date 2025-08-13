@@ -29,7 +29,6 @@ const toDate = (date: any): Date | null => {
 }
 
 export default function ProfileClientPage({ user, links: serverLinks }: { user: UserProfile; links: LinkType[] }) {
-    const router = useRouter();
     const [activeLinks, setActiveLinks] = useState<LinkType[]>([]);
 
     useEffect(() => {
@@ -117,5 +116,3 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         </div>
     );
 }
-
-    

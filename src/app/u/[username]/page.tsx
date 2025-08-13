@@ -7,27 +7,24 @@ import { notFound } from 'next/navigation';
 
 // Helper function to safely convert Firestore Timestamps to serializable strings
 // This is necessary because Server Components can't pass complex objects to Client Components.
-const serializeFirestoreData = (data: any) => {
+const serializeFirestoreData = (data: any): any => {
     if (!data) return data;
-    if (typeof data !== 'object') return data;
-    if (Array.isArray(data)) return data.map(serializeFirestoreData);
-
-    const serializedData: { [key: string]: any } = {};
-    for (const key in data) {
-        if (Object.prototype.hasOwnProperty.call(data, key)) {
-            const value = data[key];
-            if (value instanceof Timestamp) {
-                // Convert Timestamp to a plain ISO string
-                serializedData[key] = value.toDate().toISOString();
-            } else if (value && typeof value === 'object' && !Array.isArray(value)) {
-                // Recursively serialize nested objects
-                serializedData[key] = serializeFirestoreData(value);
-            } else {
-                serializedData[key] = value;
+    if (data instanceof Timestamp) {
+        return data.toDate().toISOString();
+    }
+    if (Array.isArray(data)) {
+        return data.map(serializeFirestoreData);
+    }
+    if (typeof data === 'object') {
+        const serializedData: { [key: string]: any } = {};
+        for (const key in data) {
+            if (Object.prototype.hasOwnProperty.call(data, key)) {
+                serializedData[key] = serializeFirestoreData(data[key]);
             }
         }
+        return serializedData;
     }
-    return serializedData;
+    return data;
 };
 
 
@@ -40,9 +37,9 @@ async function getUserData(username: string): Promise<UserProfile | null> {
         return null;
     }
     const userDoc = querySnapshot.docs[0];
-    const userData = userDoc.data();
-    
-    return { uid: userDoc.id, ...userData } as UserProfile;
+    // We already have the user data, just need to add the id.
+    const userData = { uid: userDoc.id, ...userDoc.data() } as UserProfile;
+    return userData;
 }
 
 async function getUserLinks(uid: string): Promise<LinkType[]> {
@@ -60,13 +57,10 @@ export default async function UserProfilePage({ params }: { params: { username: 
         notFound();
     }
 
-    // Fetch all links, active or not. Filtering will now happen on the client-side
-    // to avoid hydration errors related to date comparisons.
     const allLinksData = await getUserLinks(userData.uid);
 
     // Serialize the data before passing it to the client component.
     const user = serializeFirestoreData(userData) as UserProfile;
-    // Pass all links to the client, not just the active ones.
     const links = allLinksData.map(link => serializeFirestoreData(link)) as LinkType[];
 
     return <ProfileClientPage user={user} links={links} />;
