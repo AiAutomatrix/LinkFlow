@@ -1,52 +1,114 @@
-'use client';
-import { 
-    createUserWithEmailAndPassword, 
-    GoogleAuthProvider, 
-    signInWithEmailAndPassword, 
-    signInWithPopup,
-    signOut as firebaseSignOut, 
-    updateProfile 
-} from 'firebase/auth';
-import { doc, getDoc, setDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { auth, db, storage } from '@/lib/firebase';
+
+import { auth, firestore, storage } from "@/lib/firebase";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  signOut as firebaseSignOut,
+  updateProfile,
+  User as FirebaseUser,
+} from "firebase/auth";
+import { doc, getDoc, setDoc, serverTimestamp, getDocs, collection, query, where, limit } from 'firebase/firestore';
 import type { UserProfile } from './types';
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 
-export const signInWithEmail = async (email: string, password: string) => {
-    return signInWithEmailAndPassword(auth, email, password);
-};
+const googleProvider = new GoogleAuthProvider();
 
-export const signInWithGoogle = async () => {
-    const provider = new GoogleAuthProvider();
-    return signInWithPopup(auth, provider);
-};
+/**
+ * Creates a user profile document in Firestore if one doesn't already exist.
+ * This is called after any successful sign-in or sign-up.
+ * @param user The Firebase user object.
+ * @returns The user's profile data.
+ */
+export const getOrCreateUserProfile = async (user: FirebaseUser): Promise<UserProfile> => {
+  const userRef = doc(firestore, `users/${user.uid}`);
+  const userSnap = await getDoc(userRef);
 
-export const signUpWithEmail = async (email: string, password: string, displayName: string) => {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const fbUser = userCredential.user;
+  if (userSnap.exists()) {
+    return { uid: user.uid, ...userSnap.data() } as UserProfile;
+  }
 
-    await updateProfile(fbUser, { displayName });
+  // User is new, create a profile.
+  const { uid, email, displayName, photoURL } = user;
+  const username = email?.split('@')[0] || uid; // Basic username generation
 
-    // The AuthProvider's onAuthStateChanged listener will handle creating the Firestore document
-    // This function just needs to create the auth user.
-    return userCredential;
-};
+  const newUserProfile: UserProfile = {
+    uid,
+    email: email || '',
+    displayName: displayName || 'New User',
+    username,
+    photoURL: photoURL || '',
+    bio: '',
+    plan: 'free',
+    theme: 'light',
+    animatedBackground: false,
+    socialLinks: {},
+    createdAt: serverTimestamp(),
+  };
 
-export const signOut = async () => {
-    return firebaseSignOut(auth);
+  await setDoc(userRef, newUserProfile);
+  
+  // We re-fetch the doc to get the object with the server-generated timestamp
+  const newUserSnap = await getDoc(userRef);
+  return { uid: user.uid, ...newUserSnap.data() } as UserProfile;
 };
 
 
 /**
- * Uploads a profile picture to Firebase Storage and returns the URL.
- * @param uid The user's unique ID.
- * @param file The image file to upload.
+ * Signs a user in with email and password.
+ */
+export const signInWithEmail = async (email: string, password: string): Promise<void> => {
+  await signInWithEmailAndPassword(auth, email, password);
+};
+
+/**
+ * Signs a user up with email and password.
+ */
+export const signUpWithEmail = async (email: string, password: string, displayName: string): Promise<void> => {
+  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+  const user = userCredential.user;
+  await updateProfile(user, { displayName });
+  // The AuthProvider's onAuthStateChanged will handle profile creation
+};
+
+
+/**
+ * Initiates the Google Sign-In flow via a popup.
+ */
+export const signInWithGoogle = async (): Promise<void> => {
+    try {
+        await signInWithPopup(auth, googleProvider);
+        // The AuthProvider's onAuthStateChanged will handle the result and profile creation.
+    } catch (error: any) {
+        // Don't re-throw popup closed errors
+        if (error.code === 'auth/popup-closed-by-user') {
+            return;
+        }
+        throw error;
+    }
+};
+
+/**
+ * Signs the current user out.
+ */
+export const signOut = async (): Promise<void> => {
+  await firebaseSignOut(auth);
+};
+
+/**
+ * Uploads a new profile picture to Firebase Storage.
+ * @param userId The user's UID.
+ * @param file The file to upload.
  * @returns The public URL of the uploaded image.
  */
-export const uploadProfilePicture = async (uid: string, file: File): Promise<string> => {
-    const storageRef = ref(storage, `profile_pictures/${uid}/profile.jpg`);
-    await uploadBytes(storageRef, file);
-    const photoURL = await getDownloadURL(storageRef);
-    return photoURL;
+export const uploadProfilePicture = async (userId: string, file: File): Promise<string> => {
+    if (!file) throw new Error("No file provided for upload.");
+    if (!file.type.startsWith("image/")) throw new Error("File is not an image.");
+
+    const storageRef = ref(storage, `profile_pictures/${userId}/profile.jpg`);
+    const snapshot = await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    return downloadURL;
 };
