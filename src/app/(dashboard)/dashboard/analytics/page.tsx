@@ -61,7 +61,7 @@ export default function AnalyticsPage() {
   const totalRegularLinks = regularLinks.length;
   const avgClicks = totalRegularLinks > 0 ? (totalClicks / totalRegularLinks).toFixed(2) : "0";
   
-  const chartData = links.filter(l => (l.clicks || 0) > 0).sort((a,b) => b.clicks - a.clicks).slice(0, 10).map(link => ({ name: link.title, clicks: link.clicks || 0 }));
+  const chartData = regularLinks.filter(l => (l.clicks || 0) > 0).sort((a,b) => b.clicks - a.clicks).slice(0, 10).map(link => ({ name: link.title, clicks: link.clicks || 0 }));
 
 
   if (loading) {
