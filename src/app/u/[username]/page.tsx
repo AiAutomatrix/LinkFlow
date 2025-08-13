@@ -15,7 +15,7 @@ const serializeFirestoreData = (data: any): any => {
     if (Array.isArray(data)) {
         return data.map(serializeFirestoreData);
     }
-    if (typeof data === 'object') {
+    if (typeof data === 'object' && data !== null) {
         const serializedData: { [key: string]: any } = {};
         for (const key in data) {
             if (Object.prototype.hasOwnProperty.call(data, key)) {
@@ -37,7 +37,6 @@ async function getUserData(username: string): Promise<UserProfile | null> {
         return null;
     }
     const userDoc = querySnapshot.docs[0];
-    // We already have the user data, just need to add the id.
     const userData = { uid: userDoc.id, ...userDoc.data() } as UserProfile;
     return userData;
 }
