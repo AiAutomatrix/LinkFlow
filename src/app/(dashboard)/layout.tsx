@@ -7,9 +7,9 @@ import Logo from "@/components/logo";
 import { UserNav } from "@/components/user-nav";
 import { LayoutDashboard, Link as LinkIcon, BarChart3, Settings, ExternalLink } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import Loading from "@/app/loading";
+import { Button } from "@/components/ui/button";
 
 export default function DashboardLayout({
   children,
@@ -17,28 +17,22 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { user, loading } = useAuth();
-  const router = useRouter();
   const pathname = usePathname();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
-    }
-  }, [user, loading, router]);
-  
-  if (loading) {
-      return <Loading />;
-  }
-  
-  if (!user) {
-      return null;
-  }
 
   const menuItems = [
     { href: "/dashboard/links", label: "Links", icon: LinkIcon },
     { href: "/dashboard/appearance", label: "Appearance", icon: LayoutDashboard },
     { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
   ];
+
+  if (loading) {
+    return <Loading />;
+  }
+
+  if (!user) {
+    return null; // The AuthProvider will handle the redirect
+  }
+
 
   return (
     <SidebarProvider>

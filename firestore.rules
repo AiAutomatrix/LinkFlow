@@ -11,14 +11,11 @@ service cloud.firestore {
 
     // Rules for the 'users' collection
     match /users/{userId} {
-      // Allow public read of user profiles
+      // Allow public read of user profiles and their links.
       allow read: if true;
       
       // Allow authenticated users to create and update their own profile
       allow create, update: if request.auth != null && request.auth.uid == userId;
-
-      // Allow public read of a user's links
-      allow read: if true;
     }
     
     // Rules for a user's 'links' subcollection
@@ -28,9 +25,6 @@ service cloud.firestore {
 
         // Allow authenticated users to manage their own links
         allow create, update, delete: if request.auth != null && request.auth.uid == userId;
-
-        // Allow anyone to update ONLY the 'clicks' field
-        allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['clicks']);
     }
 
     // Rules for the 'usernames' collection

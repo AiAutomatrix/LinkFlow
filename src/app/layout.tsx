@@ -1,6 +1,3 @@
-
-"use client";
-
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
@@ -27,8 +24,8 @@ export default function RootLayout({
             <GoogleAnalytics />
           </Suspense>
           {children}
+          <Toaster />
         </AuthProvider>
-        <Toaster />
       </body>
     </html>
   );

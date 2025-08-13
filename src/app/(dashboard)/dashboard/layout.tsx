@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import AuthProvider from '@/components/auth-provider';
-import { cn } from '@/lib/utils'; // Add missing import
+import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
   title: 'LinkFlow',
@@ -30,4 +30,3 @@ export default function RootLayout({
     </html>
   );
 }
-

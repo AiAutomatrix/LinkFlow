@@ -77,7 +77,7 @@ const themes = [
 
 export default function AppearancePage() {
   const { toast } = useToast();
-  const { user, userProfile, loading: authLoading, updateUserProfilePhoto } = useAuth();
+  const { user, loading: authLoading, setUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [links, setLinks] = useState<Link[]>([]);
@@ -96,17 +96,17 @@ export default function AppearancePage() {
   });
   
   useEffect(() => {
-      if (userProfile) {
+      if (user) {
           form.reset({
-              displayName: userProfile.displayName,
-              username: userProfile.username,
-              bio: userProfile.bio,
-              theme: userProfile.theme || 'light',
-              animatedBackground: userProfile.animatedBackground || false,
+              displayName: user.displayName,
+              username: user.username,
+              bio: user.bio,
+              theme: user.theme || 'light',
+              animatedBackground: user.animatedBackground || false,
           });
-          setPhotoURL(userProfile.photoURL || "");
+          setPhotoURL(user.photoURL || "");
       }
-  }, [userProfile, form]);
+  }, [user, form]);
 
   const watchedValues = form.watch();
 
@@ -126,6 +126,7 @@ export default function AppearancePage() {
     try {
         const userRef = doc(db, "users", user.uid);
         await updateDoc(userRef, values);
+        setUser({...user, ...values });
         toast({ title: "Profile updated successfully!" });
     } catch (error: any) {
         toast({ variant: 'destructive', title: "Error", description: error.message });
@@ -147,7 +148,9 @@ export default function AppearancePage() {
     
     try {
         const newPhotoURL = await uploadProfilePicture(user.uid, file);
-        await updateUserProfilePhoto(user.uid, newPhotoURL);
+        const userRef = doc(db, "users", user.uid);
+        await updateDoc(userRef, { photoURL: newPhotoURL });
+        setUser({ ...user, photoURL: newPhotoURL });
         setPhotoURL(newPhotoURL);
         toast({ title: "Profile picture updated!" });
     } catch (error: any) {
@@ -336,7 +339,7 @@ export default function AppearancePage() {
         </Form>
       </div>
       <div className="lg:col-span-1 order-1 lg:order-2">
-        <PublicProfilePreview profile={{...watchedValues, photoURL}} links={links} socialLinks={userProfile?.socialLinks} />
+        <PublicProfilePreview profile={{...watchedValues, photoURL}} links={links} socialLinks={user?.socialLinks} />
       </div>
     </div>
   );

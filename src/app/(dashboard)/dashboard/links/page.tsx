@@ -19,7 +19,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import type { Link, UserProfile } from "@/lib/types";
+import type { Link } from "@/lib/types";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -181,7 +181,7 @@ export default function LinksPage() {
     }
   };
   
-  if (authLoading) {
+  if (authLoading || loading) {
       return <div>Loading...</div>
   }
 
@@ -216,13 +216,7 @@ export default function LinksPage() {
                 <CardDescription>Click the arrows to reorder, or the switch to toggle visibility.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                {loading ? (
-                    <div className="space-y-4">
-                    <Skeleton className="h-20 w-full" />
-                    <Skeleton className="h-20 w-full" />
-                    <Skeleton className="h-20 w-full" />
-                    </div>
-                ) : links.length > 0 ? (
+                {links.length > 0 ? (
                     <div className="space-y-4">
                         {links.map((link, index) => (
                         <LinkCard 
