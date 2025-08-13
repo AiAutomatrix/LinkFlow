@@ -31,6 +31,7 @@ const serializeFirestoreData = (data: any): any => {
 async function getUserData(username: string): Promise<UserProfile | null> {
     if (!username) return null;
     const usersRef = collection(db, "users");
+    // This query requires a Firestore index on the 'username' field.
     const q = query(usersRef, where("username", "==", username), limit(1));
     
     try {

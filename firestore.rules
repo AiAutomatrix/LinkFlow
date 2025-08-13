@@ -5,16 +5,16 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // Public user profiles:
-    // Anyone can read the list of users or an individual user profile.
-    // This is required for the public profile pages (/u/username) to function.
+    // - Anyone can read the list of users (to query by username).
+    // - Anyone can read a specific user's public profile data.
+    // - Only the authenticated user can write to their own profile.
     match /users/{userId} {
-      allow read: if true;
-      // Only the authenticated user can write to their own profile.
+      allow list, get: if true;
       allow write: if request.auth != null && request.auth.uid == userId;
 
-      // User links:
-      // Read access is public to display links on the profile page.
-      // Write access is restricted to the owner of the links.
+      // Public links:
+      // - Anyone can read the links for a public profile.
+      // - Only the user can write to their own links.
       match /links/{linkId} {
         allow read: if true;
         allow write: if request.auth != null && request.auth.uid == userId;
