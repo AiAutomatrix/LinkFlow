@@ -3,7 +3,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Mail, Instagram, Facebook, Github, Loader2 } from "lucide-react";
+import { Plus, Mail, Instagram, Facebook, Github, Loader2, Share2 } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -97,6 +97,15 @@ export default function LinksPage() {
     }
   }, [userProfile, socialForm]);
 
+  const handleShare = () => {
+    if (!userProfile) return;
+    const publicUrl = `${window.location.origin}/u/${userProfile.username}`;
+    navigator.clipboard.writeText(publicUrl);
+    toast({
+        title: "Link Copied!",
+        description: "Your public profile URL has been copied to your clipboard.",
+    });
+  }
 
   const handleSocialSubmit = async (values: z.infer<typeof socialLinksSchema>) => {
     if (!user) return;
@@ -188,26 +197,31 @@ export default function LinksPage() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-2 order-2 lg:order-1 space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-4">
                 <div>
                 <h1 className="text-2xl font-bold">Links</h1>
                 <p className="text-muted-foreground">
                     Add, edit, and reorder your links.
                 </p>
                 </div>
-                <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
-                <DialogTrigger asChild>
-                    <Button>
-                    <Plus className="mr-2 h-4 w-4" /> Add Link
+                <div className="flex gap-2">
+                    <Button variant="outline" onClick={handleShare}>
+                        <Share2 className="mr-2 h-4 w-4" /> Share
                     </Button>
-                </DialogTrigger>
-                <DialogContent>
-                    <DialogHeader>
-                    <DialogTitle>Add a new link</DialogTitle>
-                    </DialogHeader>
-                    <LinkForm onSubmit={handleAddLink} onCancel={() => setDialogOpen(false)} />
-                </DialogContent>
-                </Dialog>
+                    <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button>
+                        <Plus className="mr-2 h-4 w-4" /> Add Link
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                        <DialogTitle>Add a new link</DialogTitle>
+                        </DialogHeader>
+                        <LinkForm onSubmit={handleAddLink} onCancel={() => setDialogOpen(false)} />
+                    </DialogContent>
+                    </Dialog>
+                </div>
             </div>
 
             <Card>
@@ -332,3 +346,5 @@ export default function LinksPage() {
     </div>
   );
 }
+
+    
