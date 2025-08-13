@@ -26,7 +26,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { signInWithEmail, signInWithGoogle } from "@/lib/auth";
+import { useAuth } from "@/contexts/auth-context";
 import { GoogleIcon } from "@/components/google-icon";
 
 const formSchema = z.object({
@@ -40,6 +40,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const { toast } = useToast();
+  const { signInWithEmail, signInWithGoogle } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

@@ -6,7 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 import GoogleAnalytics from '@/components/google-analytics';
 import { Suspense } from 'react';
-import { AuthProvider } from "@/contexts/auth-context";
+import AuthProvider from "@/components/auth-provider";
 
 export default function RootLayout({
   children,
@@ -22,10 +22,10 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className={cn('font-body antialiased min-h-screen')}>
-        <Suspense>
-          <GoogleAnalytics />
-        </Suspense>
         <AuthProvider>
+          <Suspense>
+            <GoogleAnalytics />
+          </Suspense>
           {children}
         </AuthProvider>
         <Toaster />

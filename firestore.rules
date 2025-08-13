@@ -1,24 +1,48 @@
+
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow anyone to query the users collection to find a user by username,
-    // and to get a user's public profile data.
+    
+    // Default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Rules for the 'users' collection
     match /users/{userId} {
-      allow get: if true;
-      allow list: if true;
+      // Allow public read of user profiles
+      allow read: if true;
       
-      // Only the authenticated user can update their own profile or create one.
+      // Allow authenticated users to create and update their own profile
       allow create, update: if request.auth != null && request.auth.uid == userId;
 
-      // Rules for the 'links' subcollection
-      match /links/{linkId} {
-        // Allow anyone to read the list of links for a public profile.
-        allow get: if true;
-        allow list: if true;
+      // Allow public read of a user's links
+      allow read: if true;
+    }
+    
+    // Rules for a user's 'links' subcollection
+    match /users/{userId}/links/{linkId} {
+        // Anyone can read links
+        allow read: if true;
 
-        // Only the authenticated user can write to their own links.
+        // Allow authenticated users to manage their own links
         allow create, update, delete: if request.auth != null && request.auth.uid == userId;
-      }
+
+        // Allow anyone to update ONLY the 'clicks' field
+        allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['clicks']);
+    }
+
+    // Rules for the 'usernames' collection
+    match /usernames/{username} {
+        // Allow public read to check for username availability
+        allow read: if true;
+
+        // Allow authenticated user to create a username if it contains their uid
+        allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+
+        // Allow authenticated user to delete their own old username
+        allow delete: if request.auth != null && get(/databases/$(database)/documents/usernames/$(username)).data.uid == request.auth.uid;
     }
   }
 }

@@ -35,7 +35,7 @@ import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/auth-context";
 import { doc, updateDoc, collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { uploadProfilePicture, updateUserProfilePhoto } from "@/lib/auth";
+import { uploadProfilePicture } from "@/lib/auth";
 
 const profileSchema = z.object({
   displayName: z.string().min(2, "Name must be at least 2 characters.").max(50),
@@ -77,7 +77,7 @@ const themes = [
 
 export default function AppearancePage() {
   const { toast } = useToast();
-  const { user, userProfile, loading: authLoading } = useAuth();
+  const { user, userProfile, loading: authLoading, updateUserProfilePhoto } = useAuth();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [links, setLinks] = useState<Link[]>([]);
