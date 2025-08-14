@@ -36,6 +36,7 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      setLoading(true);
       if (fbUser) {
         setFirebaseUser(fbUser);
         const userDocRef = doc(db, 'users', fbUser.uid);
@@ -44,8 +45,8 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
         if (userDoc.exists()) {
           setUser({ uid: fbUser.uid, ...userDoc.data() } as UserProfile);
         } else {
-          // New user via Google Sign-In, create their profile.
-          const username = (fbUser.email?.split('@')[0] || fbUser.uid).replace(/[^a-zA-Z0-9_]/g, '');
+          // New user via Google Sign-In or first-time email sign-up, create their profile.
+          const username = (fbUser.email?.split('@')[0] || fbUser.uid).replace(/[^a-zA-Z0-9_]/g, '').slice(0, 20);
           const newUserProfile: UserProfile = {
             uid: fbUser.uid,
             email: fbUser.email!,
@@ -57,11 +58,11 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
             theme: 'light',
             createdAt: serverTimestamp(),
             animatedBackground: false,
-            socialLinks: {},
           };
 
           try {
             await setDoc(userDocRef, newUserProfile);
+            // Fetch the profile we just created to get all fields (like server timestamp)
             const newUserSnap = await getDoc(userDocRef);
             setUser({ uid: fbUser.uid, ...newUserSnap.data() } as UserProfile);
           } catch (error) {
@@ -83,6 +84,10 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     if (loading) return;
 
     const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
+    const isPublicPage = pathname.startsWith('/u/');
+    const isHomePage = pathname === '/';
+
+    if (isPublicPage || isHomePage) return;
 
     if (!user && !isAuthPage) {
       router.push('/login');
@@ -101,10 +106,9 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     const fbUser = userCredential.user;
     await updateProfile(fbUser, { displayName });
 
-    const username = (email.split('@')[0] || fbUser.uid).replace(/[^a-zA-Z0-9_]/g, '');
+    const username = (email.split('@')[0] || fbUser.uid).replace(/[^a-zA-Z0-9_]/g, '').slice(0, 20);
     const userDocRef = doc(db, 'users', fbUser.uid);
-    const newUserProfile: UserProfile = {
-      uid: fbUser.uid,
+    const newUserProfile: Omit<UserProfile, 'uid'> = {
       email: fbUser.email!,
       displayName: displayName,
       bio: '',
@@ -114,8 +118,8 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
       theme: 'light',
       createdAt: serverTimestamp(),
       animatedBackground: false,
-      socialLinks: {},
     };
+    // The onAuthStateChanged listener will handle creating the profile doc
     await setDoc(userDocRef, newUserProfile);
   };
 
@@ -123,15 +127,18 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
         await signInWithPopup(auth, googleProvider);
     } catch (error: any) {
-        if (error.code === 'auth/popup-closed-by-user') {
-            return; // User closed popup, do nothing.
+        if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+            console.log("Google Sign-In popup closed by user.");
+            return; 
         }
-        throw error; // Rethrow other errors.
+        throw error;
     }
   };
 
   const signOut = async (): Promise<void> => {
     await firebaseSignOut(auth);
+    setUser(null);
+    router.push('/login');
   };
   
   const uploadProfilePicture = async (userId: string, file: File): Promise<string> => {
@@ -146,20 +153,23 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     await updateDoc(userRef, { photoURL: downloadURL });
     
     if(user && user.uid === userId) {
-      setUser({...user, photoURL: downloadURL });
+      setUser((prevUser) => prevUser ? {...prevUser, photoURL: downloadURL } : null);
     }
 
     return downloadURL;
   };
 
   const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
-  if (loading || (!user && !isAuthPage) || (user && isAuthPage)) {
+  const isPublicFlow = pathname.startsWith('/u/') || pathname === '/';
+  
+  // Show a full-page loading screen to prevent UI flashes
+  if (loading || (!isPublicFlow && !user && !isAuthPage) || (!isPublicFlow && user && isAuthPage)) {
     return <Loading />;
   }
 
   const value = {
       user,
-      userProfile: user,
+      userProfile: user, // userProfile is an alias for user
       firebaseUser,
       loading,
       setUser,

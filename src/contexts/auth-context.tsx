@@ -7,7 +7,7 @@ import type { UserProfile } from '@/lib/types';
 
 interface AuthContextType {
   user: UserProfile | null;
-  userProfile: UserProfile | null;
+  userProfile: UserProfile | null; // Alias for user for component convenience
   firebaseUser: FirebaseUser | null;
   loading: boolean;
   setUser: Dispatch<SetStateAction<UserProfile | null>>;
@@ -18,6 +18,7 @@ interface AuthContextType {
   uploadProfilePicture: (userId: string, file: File) => Promise<string>;
 }
 
+// The default values are placeholders and will be replaced by the AuthProvider.
 export const AuthContext = createContext<AuthContextType>({
   user: null,
   userProfile: null,
