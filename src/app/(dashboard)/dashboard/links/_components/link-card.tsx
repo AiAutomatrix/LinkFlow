@@ -64,22 +64,23 @@ export default function LinkCard({ link, index, totalLinks, onUpdate, onDelete, 
     }
     
     const truncatedUrl = link.url.length > 35 ? `${link.url.substring(0, 35)}...` : link.url;
+    const isMoveDisabled = link.isSocial;
 
     return (
         <Card className="flex items-center p-3 gap-3 sm:p-4 sm:gap-4">
             <div className="flex flex-col gap-2 items-center justify-center">
-                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove(link.id, 'up')} disabled={index === 0}>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove(link.id, 'up')} disabled={isMoveDisabled || index === 0}>
                     <ArrowUp className="h-4 w-4" />
                 </Button>
                 <span className="text-xs text-muted-foreground">{index + 1}</span>
-                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove(link.id, 'down')} disabled={index === totalLinks - 1}>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove(link.id, 'down')} disabled={isMoveDisabled || index === totalLinks - 1}>
                     <ArrowDown className="h-4 w-4" />
                 </Button>
             </div>
             <div className="flex-grow overflow-hidden min-w-0">
                 <p className="font-semibold truncate">{link.title}</p>
                 <p className="text-sm text-muted-foreground truncate" title={link.url}>{truncatedUrl}</p>
-                {scheduleText && (
+                {scheduleText && !link.isSocial && (
                     <div className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1.5">
                         <CalendarDays className="h-3.5 w-3.5" />
                         <span>{scheduleText}</span>
@@ -108,12 +109,14 @@ export default function LinkCard({ link, index, totalLinks, onUpdate, onDelete, 
                         </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
-                        <DialogTrigger asChild>
-                            <DropdownMenuItem>
-                                <Pencil className="mr-2 h-4 w-4" />
-                                Edit
-                            </DropdownMenuItem>
-                        </DialogTrigger>
+                        {!link.isSocial && 
+                            <DialogTrigger asChild>
+                                <DropdownMenuItem>
+                                    <Pencil className="mr-2 h-4 w-4" />
+                                    Edit
+                                </DropdownMenuItem>
+                            </DialogTrigger>
+                        }
                         <DropdownMenuItem onClick={() => onDelete(link.id)} className="text-destructive">
                             <Trash2 className="mr-2 h-4 w-4" />
                             Delete
@@ -128,6 +131,7 @@ export default function LinkCard({ link, index, totalLinks, onUpdate, onDelete, 
                             onSubmit={handleFormSubmit}
                             onCancel={() => setEditOpen(false)}
                             initialData={link}
+                            isSocial={link.isSocial}
                         />
                     </DialogContent>
                 </Dialog>

@@ -116,36 +116,36 @@ export default function LinksPage() {
     if (!user) return;
     setLoadingSocial(true);
     const linksCollection = collection(db, `users/${user.uid}/links`);
+    const platforms = ['email', 'instagram', 'facebook', 'github'];
 
     try {
         const batch = writeBatch(db);
+        const existingSocialLinks = links.filter(l => l.isSocial);
 
-        for (const [platform, url] of Object.entries(values)) {
-            if (!url) continue;
-
-            const q = query(linksCollection, where("title", "==", platform), where("isSocial", "==", true));
-            const existingLinks = await getDocs(q);
-
-            const finalUrl = platform === 'email' ? `mailto:${url}` : url;
-
-            if (existingLinks.empty) {
-                const newLink = {
-                    title: platform,
-                    url: finalUrl,
-                    order: links.filter(l => !l.isSocial).length + Object.keys(values).indexOf(platform), // place after regular links
-                    active: true,
-                    clicks: 0,
-                    createdAt: new Date(),
-                    startDate: null,
-                    endDate: null,
-                    isSocial: true,
-                };
-                const newLinkRef = doc(linksCollection);
-                batch.set(newLinkRef, newLink);
-            } else {
-                existingLinks.forEach(doc => {
-                    batch.update(doc.ref, { url: finalUrl });
-                });
+        for (const [index, platform] of platforms.entries()) {
+            const url = values[platform as keyof typeof values];
+            const existingLink = existingSocialLinks.find(l => l.title.toLowerCase() === platform);
+            
+            if (url) { // If URL is provided (add or update)
+                const finalUrl = platform === 'email' ? `mailto:${url}` : url;
+                if (existingLink) {
+                    batch.update(doc(db, `users/${user.uid}/links`, existingLink.id), { url: finalUrl, active: true });
+                } else {
+                    const newLinkRef = doc(linksCollection);
+                    batch.set(newLinkRef, {
+                        title: platform.charAt(0).toUpperCase() + platform.slice(1),
+                        url: finalUrl,
+                        order: 1000 + index, // High order to keep them separate
+                        active: true,
+                        clicks: 0,
+                        createdAt: new Date(),
+                        isSocial: true,
+                    });
+                }
+            } else { // If URL is empty (delete)
+                if (existingLink) {
+                    batch.delete(doc(db, `users/${user.uid}/links`, existingLink.id));
+                }
             }
         }
         
@@ -205,7 +205,7 @@ export default function LinksPage() {
   const handleMoveLink = async (linkId: string, direction: 'up' | 'down') => {
     if (!user) return;
     
-    const regularLinks = links.filter(l => !l.isSocial);
+    const regularLinks = links.filter(l => !l.isSocial).sort((a, b) => a.order - b.order);
     const currentIndex = regularLinks.findIndex(link => link.id === linkId);
     if (currentIndex === -1) return;
 
@@ -235,6 +235,7 @@ export default function LinksPage() {
   }
 
   const regularLinks = links.filter(l => !l.isSocial);
+  const socialLinks = links.filter(l => l.isSocial);
 
   return (
     <div className="space-y-6">
@@ -268,7 +269,7 @@ export default function LinksPage() {
       <Card>
           <CardHeader>
           <CardTitle>Your Links</CardTitle>
-          <CardDescription>Click the arrows to reorder, or the switch to toggle visibility.</CardDescription>
+          <CardDescription>Add custom links. Click the arrows to reorder, or the switch to toggle visibility.</CardDescription>
           </CardHeader>
           <CardContent>
           {regularLinks.length > 0 ? (
@@ -287,7 +288,7 @@ export default function LinksPage() {
               </div>
           ) : (
               <div className="text-center py-12">
-              <h3 className="text-lg font-semibold">No links yet</h3>
+              <h3 className="text-lg font-semibold">No custom links yet</h3>
               <p className="text-muted-foreground mt-1">
                   Click "Add Link" to get started.
               </p>
@@ -295,13 +296,46 @@ export default function LinksPage() {
           )}
           </CardContent>
       </Card>
+      
+      <Card>
+          <CardHeader>
+            <CardTitle>Social Links</CardTitle>
+            <CardDescription>
+              These links appear as icons on your profile. Clicks are tracked here.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {socialLinks.length > 0 ? (
+              <div className="space-y-4">
+                {socialLinks.map((link, index) => (
+                  <LinkCard
+                    key={link.id}
+                    index={index}
+                    totalLinks={socialLinks.length}
+                    link={link}
+                    onUpdate={handleUpdateLink}
+                    onDelete={handleDeleteLink}
+                    onMove={() => {}} // Reordering disabled for social links
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <h3 className="text-lg font-semibold">No social links yet</h3>
+                <p className="text-muted-foreground mt-1">
+                  Add a URL below to add a social icon link.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
       <Form {...socialForm}>
           <form onSubmit={socialForm.handleSubmit(handleSocialSubmit)}>
               <Card>
                   <CardHeader>
-                      <CardTitle>Social Icons</CardTitle>
-                      <CardDescription>Add URLs to your social media profiles. These will appear as icons on your page.</CardDescription>
+                      <CardTitle>Edit Social Icons</CardTitle>
+                      <CardDescription>Add or update your social media URLs. Clear an input to remove the icon.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                       <FormField

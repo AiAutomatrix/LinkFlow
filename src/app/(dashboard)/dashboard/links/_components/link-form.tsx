@@ -38,6 +38,7 @@ type LinkFormProps = {
   onSubmit: (title: string, url: string, startDate?: Date, endDate?: Date) => void;
   onCancel: () => void;
   initialData?: Partial<Link>;
+  isSocial?: boolean;
 };
 
 // Helper to convert Timestamp to Date if needed
@@ -50,7 +51,7 @@ const toDate = (date: any): Date | undefined => {
 }
 
 
-export default function LinkForm({ onSubmit, onCancel, initialData }: LinkFormProps) {
+export default function LinkForm({ onSubmit, onCancel, initialData, isSocial = false }: LinkFormProps) {
   const [loading, setLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -79,7 +80,7 @@ export default function LinkForm({ onSubmit, onCancel, initialData }: LinkFormPr
             <FormItem>
               <FormLabel>Title</FormLabel>
               <FormControl>
-                <Input placeholder="My Awesome Website" {...field} />
+                <Input placeholder="My Awesome Website" {...field} disabled={isSocial} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -92,54 +93,56 @@ export default function LinkForm({ onSubmit, onCancel, initialData }: LinkFormPr
             <FormItem>
               <FormLabel>URL</FormLabel>
               <FormControl>
-                <Input placeholder="https://example.com" {...field} />
+                <Input placeholder="https://example.com" {...field} disabled={isSocial} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormField
-            control={form.control}
-            name="startDate"
-            render={({ field }) => (
-                <FormItem className="flex flex-col">
-                    <FormLabel>Start Date (Optional)</FormLabel>
-                    <DatePicker 
-                        date={field.value} 
-                        setDate={field.onChange}
-                        placeholder="Link is active immediately"
-                    />
-                    <FormMessage />
-                </FormItem>
-            )}
-            />
-            <FormField
-            control={form.control}
-            name="endDate"
-            render={({ field }) => (
-                <FormItem className="flex flex-col">
-                    <FormLabel>End Date (Optional)</FormLabel>
-                    <DatePicker 
-                        date={field.value}
-                        setDate={field.onChange}
-                        placeholder="Link never expires"
-                        disabled={(date) => {
-                            const startDate = form.getValues("startDate");
-                            return startDate ? date < startDate : false;
-                        }}
-                    />
-                    <FormMessage />
-                </FormItem>
-            )}
-            />
-        </div>
+        
+        {!isSocial && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField
+                control={form.control}
+                name="startDate"
+                render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                        <FormLabel>Start Date (Optional)</FormLabel>
+                        <DatePicker 
+                            date={field.value} 
+                            setDate={field.onChange}
+                            placeholder="Link is active immediately"
+                        />
+                        <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <FormField
+                control={form.control}
+                name="endDate"
+                render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                        <FormLabel>End Date (Optional)</FormLabel>
+                        <DatePicker 
+                            date={field.value}
+                            setDate={field.onChange}
+                            placeholder="Link never expires"
+                            disabled={(date) => {
+                                const startDate = form.getValues("startDate");
+                                return startDate ? date < startDate : false;
+                            }}
+                        />
+                        <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </div>
+        )}
 
 
         <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading || isSocial}>
             {loading ? "Saving..." : "Save"}
             </Button>
         </div>
@@ -147,5 +150,3 @@ export default function LinkForm({ onSubmit, onCancel, initialData }: LinkFormPr
     </Form>
   );
 }
-
-    

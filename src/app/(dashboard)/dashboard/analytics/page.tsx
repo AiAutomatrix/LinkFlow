@@ -35,9 +35,6 @@ export default function AnalyticsPage() {
     
     setLoading(true);
     const linksCollection = collection(db, `users/${user.uid}/links`);
-    // Order by clicks descending to easily get top links.
-    // Note: Firestore requires a composite index for this query.
-    // The client-side sort is a fallback.
     const q = query(linksCollection, orderBy("clicks", "desc"));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -61,10 +58,8 @@ export default function AnalyticsPage() {
   const totalLinks = links.length;
   const avgClicks = totalLinks > 0 ? (totalClicks / totalLinks).toFixed(2) : "0";
   
-  // Chart data now includes ALL links with clicks.
   const chartData = links
     .filter(l => (l.clicks || 0) > 0)
-    // The data is already sorted by Firestore, but we can sort again client-side as a fallback.
     .sort((a,b) => (b.clicks || 0) - (a.clicks || 0))
     .slice(0, 10)
     .map(link => ({ name: link.title, clicks: link.clicks || 0 }));
@@ -164,6 +159,7 @@ export default function AnalyticsPage() {
         <Card>
             <CardHeader>
                 <CardTitle>Top 10 Links by Clicks</CardTitle>
+                <CardDescription>This chart includes both custom and social links.</CardDescription>
             </CardHeader>
             <CardContent>
             <ResponsiveContainer width="100%" height={350}>
