@@ -246,7 +246,7 @@ export default function LinksPage() {
   const sortedLinks = [...links].sort((a, b) => a.order - b.order);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+    <>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
           <h1 className="text-2xl font-bold">Links</h1>
@@ -273,120 +273,125 @@ export default function LinksPage() {
               </Dialog>
           </div>
       </div>
-
-      <Card className="lg:col-span-2 order-2 lg:order-1">
-          <CardHeader>
-          <CardTitle>Your Links</CardTitle>
-          <CardDescription>Manage your custom links and social icons. Click the arrows on custom links to reorder them.</CardDescription>
-          </CardHeader>
-          <CardContent>
-          {sortedLinks.length > 0 ? (
-              <div className="space-y-4">
-                  {sortedLinks.map((link) => (
-                  <LinkCard 
-                      key={link.id} 
-                      index={link.isSocial ? -1 : links.filter(l => !l.isSocial).findIndex(l => l.id === link.id)}
-                      totalLinks={links.filter(l => !l.isSocial).length}
-                      link={link} 
-                      onUpdate={handleUpdateLink}
-                      onDelete={handleDeleteLink}
-                      onMove={handleMoveLink}
-                  />
-                  ))}
-              </div>
-          ) : (
-              <div className="text-center py-12">
-              <h3 className="text-lg font-semibold">No links yet</h3>
-              <p className="text-muted-foreground mt-1">
-                  Click "Add Link" to get started.
-              </p>
-              </div>
-          )}
-          </CardContent>
-      </Card>
       
-      <Form {...socialForm}>
-          <form onSubmit={socialForm.handleSubmit(handleSocialSubmit)}>
-              <Card>
-                  <CardHeader>
-                      <CardTitle>Edit Social Icons</CardTitle>
-                      <CardDescription>Add or update your social media URLs. Clear an input to remove the icon.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                      <FormField
-                      control={socialForm.control}
-                      name="email"
-                      render={({ field }) => (
-                          <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <div className="relative flex items-center">
-                              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                              <FormControl>
-                                  <Input placeholder="your@email.com" className="pl-10" {...field} />
-                              </FormControl>
-                          </div>
-                          <FormMessage />
-                          </FormItem>
-                      )}
-                      />
-                      <FormField
-                      control={socialForm.control}
-                      name="instagram"
-                      render={({ field }) => (
-                          <FormItem>
-                          <FormLabel>Instagram</FormLabel>
-                          <div className="relative flex items-center">
-                              <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                              <FormControl>
-                                  <Input placeholder="https://instagram.com/..." className="pl-10" {...field} />
-                              </FormControl>
-                          </div>
-                          <FormMessage />
-                          </FormItem>
-                      )}
-                      />
-                      <FormField
-                      control={socialForm.control}
-                      name="facebook"
-                      render={({ field }) => (
-                          <FormItem>
-                          <FormLabel>Facebook</FormLabel>
-                          <div className="relative flex items-center">
-                              <Facebook className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                              <FormControl>
-                                  <Input placeholder="https://facebook.com/..." className="pl-10" {...field} />
-                              </FormControl>
-                          </div>
-                          <FormMessage />
-                          </FormItem>
-                      )}
-                      />
-                      <FormField
-                      control={socialForm.control}
-                      name="github"
-                      render={({ field }) => (
-                          <FormItem>
-                          <FormLabel>GitHub</FormLabel>
-                          <div className="relative flex items-center">
-                              <Github className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                              <FormControl>
-                                  <Input placeholder="https://github.com/..." className="pl-10" {...field} />
-                              </FormControl>
-                          </div>
-                          <FormMessage />
-                          </FormItem>
-                      )}
-                      />
-                  </CardContent>
-              </Card>
-              <Button type="submit" disabled={loadingSocial} className="mt-6">
-                  {loadingSocial && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Update Social Icons
-              </Button>
-          </form>
-      </Form>
-    </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div className="lg:col-span-2 order-2 lg:order-1">
+            <Card>
+            <CardHeader>
+            <CardTitle>Your Links</CardTitle>
+            <CardDescription>Manage your custom links and social icons. Click the arrows on custom links to reorder them.</CardDescription>
+            </CardHeader>
+            <CardContent>
+            {sortedLinks.length > 0 ? (
+                <div className="space-y-4">
+                    {sortedLinks.map((link) => (
+                    <LinkCard 
+                        key={link.id} 
+                        index={link.isSocial ? -1 : links.filter(l => !l.isSocial).findIndex(l => l.id === link.id)}
+                        totalLinks={links.filter(l => !l.isSocial).length}
+                        link={link} 
+                        onUpdate={handleUpdateLink}
+                        onDelete={handleDeleteLink}
+                        onMove={handleMoveLink}
+                    />
+                    ))}
+                </div>
+            ) : (
+                <div className="text-center py-12">
+                <h3 className="text-lg font-semibold">No links yet</h3>
+                <p className="text-muted-foreground mt-1">
+                    Click "Add Link" to get started.
+                </p>
+                </div>
+            )}
+            </CardContent>
+        </Card>
+        </div>
+        
+        <div className="lg:col-span-1 order-1 lg:order-2">
+            <Form {...socialForm}>
+                <form onSubmit={socialForm.handleSubmit(handleSocialSubmit)}>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Edit Social Icons</CardTitle>
+                            <CardDescription>Add or update your social media URLs. Clear an input to remove the icon.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <FormField
+                            control={socialForm.control}
+                            name="email"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Email</FormLabel>
+                                <div className="relative flex items-center">
+                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                                    <FormControl>
+                                        <Input placeholder="your@email.com" className="pl-10" {...field} />
+                                    </FormControl>
+                                </div>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                            <FormField
+                            control={socialForm.control}
+                            name="instagram"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Instagram</FormLabel>
+                                <div className="relative flex items-center">
+                                    <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                                    <FormControl>
+                                        <Input placeholder="https://instagram.com/..." className="pl-10" {...field} />
+                                    </FormControl>
+                                </div>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                            <FormField
+                            control={socialForm.control}
+                            name="facebook"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Facebook</FormLabel>
+                                <div className="relative flex items-center">
+                                    <Facebook className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                                    <FormControl>
+                                        <Input placeholder="https://facebook.com/..." className="pl-10" {...field} />
+                                    </FormControl>
+                                </div>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                            <FormField
+                            control={socialForm.control}
+                            name="github"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>GitHub</FormLabel>
+                                <div className="relative flex items-center">
+                                    <Github className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                                    <FormControl>
+                                        <Input placeholder="https://github.com/..." className="pl-10" {...field} />
+                                    </FormControl>
+                                </div>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                        </CardContent>
+                    </Card>
+                    <Button type="submit" disabled={loadingSocial} className="mt-6">
+                        {loadingSocial && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Update Social Icons
+                    </Button>
+                </form>
+            </Form>
+        </div>
+      </div>
+    </>
   );
 }
-
     
