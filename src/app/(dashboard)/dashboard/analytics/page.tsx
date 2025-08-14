@@ -54,14 +54,15 @@ export default function AnalyticsPage() {
     return () => unsubscribe();
   }, [user, toast]);
 
-  const regularLinks = links.filter(l => !l.isSocial);
-  const socialLinks = links.filter(l => l.isSocial);
-
   const totalClicks = links.reduce((acc, link) => acc + (link.clicks || 0), 0);
-  const totalRegularLinks = regularLinks.length;
-  const avgClicks = totalRegularLinks > 0 ? (totalClicks / totalRegularLinks).toFixed(2) : "0";
+  const totalLinks = links.length;
+  const avgClicks = totalLinks > 0 ? (totalClicks / totalLinks).toFixed(2) : "0";
   
-  const chartData = regularLinks.filter(l => (l.clicks || 0) > 0).sort((a,b) => b.clicks - a.clicks).slice(0, 10).map(link => ({ name: link.title, clicks: link.clicks || 0 }));
+  const chartData = links
+    .filter(l => (l.clicks || 0) > 0)
+    .sort((a,b) => (b.clicks || 0) - (a.clicks || 0))
+    .slice(0, 10)
+    .map(link => ({ name: link.title, clicks: link.clicks || 0 }));
 
 
   if (loading) {
@@ -76,7 +77,7 @@ export default function AnalyticsPage() {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Clicks (All Links)</CardTitle>
+                    <CardTitle className="text-sm font-medium">Total Clicks</CardTitle>
                     <Eye className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -85,7 +86,7 @@ export default function AnalyticsPage() {
             </Card>
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Custom Links</CardTitle>
+                    <CardTitle className="text-sm font-medium">Total Links</CardTitle>
                     <LinkIcon className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -127,7 +128,7 @@ export default function AnalyticsPage() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Clicks (All Links)</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Clicks</CardTitle>
             <Eye className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -136,11 +137,11 @@ export default function AnalyticsPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Custom Links</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Links</CardTitle>
             <LinkIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalRegularLinks}</div>
+            <div className="text-2xl font-bold">{totalLinks}</div>
           </CardContent>
         </Card>
         <Card>
@@ -154,10 +155,10 @@ export default function AnalyticsPage() {
         </Card>
       </div>
       
-      <div className="grid gap-6 grid-cols-1 lg:grid-cols-5">
-        <Card className="lg:col-span-3">
+      <div className="grid gap-6 grid-cols-1">
+        <Card>
             <CardHeader>
-                <CardTitle>Top Links by Clicks</CardTitle>
+                <CardTitle>Top 10 Links by Clicks</CardTitle>
             </CardHeader>
             <CardContent>
             <ResponsiveContainer width="100%" height={350}>
@@ -173,7 +174,7 @@ export default function AnalyticsPage() {
                         }}
                     />
                     <Legend />
-                    <Bar dataKey="clicks" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="clicks" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Clicks" />
                     </RechartsBarChart>
                 ) : (
                     <div className="flex h-full w-full flex-col items-center justify-center">
@@ -184,23 +185,6 @@ export default function AnalyticsPage() {
             </ResponsiveContainer>
             </CardContent>
         </Card>
-
-        {socialLinks.length > 0 && (
-            <Card className="lg:col-span-2">
-                <CardHeader>
-                    <CardTitle>Social Links</CardTitle>
-                    <p className="text-sm text-muted-foreground pt-1">Click counts for your social media icons.</p>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    {socialLinks.sort((a, b) => (b.clicks || 0) - (a.clicks || 0)).map(link => (
-                        <div key={link.id} className="flex items-center justify-between">
-                            <span className="font-medium capitalize">{link.title}</span>
-                            <span className="text-muted-foreground font-bold">{link.clicks || 0} Clicks</span>
-                        </div>
-                    ))}
-                </CardContent>
-            </Card>
-        )}
       </div>
 
     </>

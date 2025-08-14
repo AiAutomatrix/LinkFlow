@@ -53,17 +53,18 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     }
     
     const handleLinkClick = async (link: LinkType) => {
-        try {
-            await fetch('/api/clicks', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: user.uid, linkId: link.id }),
-            });
-            window.open(link.url, '_blank');
-        } catch (error) {
+        // Fire and forget the click tracking
+        fetch('/api/clicks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.uid, linkId: link.id }),
+        }).catch(error => {
+            // Log if tracking fails, but don't block the user.
             console.error('Failed to track click:', error);
-            window.open(link.url, '_blank');
-        }
+        });
+
+        // Open the link immediately
+        window.open(link.url, '_blank');
     };
     
     const socialLinks = activeLinks.filter(l => l.isSocial);
