@@ -89,8 +89,18 @@ export default function LinksPage() {
                 }
             }
         });
+        
         setLinks(linksData);
-        socialForm.reset(socialLinksValues);
+
+        // Ensure all possible social fields have a default value to prevent uncontrolled -> controlled error
+        const completeSocialValues = {
+            email: socialLinksValues.email || '',
+            instagram: socialLinksValues.instagram || '',
+            facebook: socialLinksValues.facebook || '',
+            github: socialLinksValues.github || '',
+        };
+        
+        socialForm.reset(completeSocialValues);
         setLoading(false);
     }, (error) => {
         console.error("Error fetching links: ", error);
