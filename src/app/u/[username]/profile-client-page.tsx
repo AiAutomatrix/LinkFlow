@@ -53,18 +53,22 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     }
     
     const handleLinkClick = async (link: LinkType) => {
-        // Fire and forget the click tracking
-        fetch('/api/clicks', {
+        // This is a "fire and forget" request. We don't need to wait for it.
+        // The user is navigated immediately, and the click is tracked in the background.
+        try {
+          fetch('/api/clicks', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            // We must pass the userId so the unauthenticated API route knows which user's link to update.
             body: JSON.stringify({ userId: user.uid, linkId: link.id }),
-        }).catch(error => {
-            // Log if tracking fails, but don't block the user.
-            console.error('Failed to track click:', error);
-        });
+          });
+        } catch (error) {
+          // Log if tracking fails, but don't block the user.
+          console.error('Failed to track click:', error);
+        }
 
-        // Open the link immediately
-        window.open(link.url, '_blank');
+        // Open the link immediately in a new tab.
+        window.open(link.url, '_blank', 'noopener,noreferrer');
     };
     
     const socialLinks = activeLinks.filter(l => l.isSocial);
