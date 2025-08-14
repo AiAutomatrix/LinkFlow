@@ -282,7 +282,7 @@ export default function LinksPage() {
           <CardContent>
           {sortedLinks.length > 0 ? (
               <div className="space-y-4">
-                  {sortedLinks.map((link, index) => (
+                  {sortedLinks.map((link) => (
                   <LinkCard 
                       key={link.id} 
                       index={link.isSocial ? -1 : links.filter(l => !l.isSocial).findIndex(l => l.id === link.id)}
