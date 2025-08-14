@@ -27,13 +27,13 @@ export default function Home() {
       <div className="relative z-10 flex flex-col min-h-screen">
         <header className="container mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <Logo className="text-white" />
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" className="text-white hover:text-white hover:bg-white/10" asChild>
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Button variant="ghost" className="text-white hover:text-white hover:bg-white/10 hidden sm:inline-flex" asChild>
               <Link href="/login">Login</Link>
             </Button>
             <Button asChild className="bg-white text-gray-900 hover:bg-gray-200">
               <Link href="/signup">
-                Get Started Free <ArrowRight className="ml-2 h-4 w-4" />
+                Signup
               </Link>
             </Button>
           </div>
