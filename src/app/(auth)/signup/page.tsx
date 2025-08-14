@@ -27,7 +27,6 @@ import * as z from "zod";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
-import { GoogleIcon } from "@/components/google-icon";
 
 const formSchema = z.object({
   displayName: z.string().min(2, "Name must be at least 2 characters."),
@@ -42,7 +41,7 @@ const formSchema = z.object({
 export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-  const { signUpWithEmail, signInWithGoogle } = useAuth();
+  const { signUpWithEmail } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -68,25 +67,6 @@ export default function SignupPage() {
       setLoading(false);
     }
   }
-
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    try {
-        await signInWithGoogle();
-        // The AuthProvider will handle the redirect
-    } catch (error: any) {
-        if (error.code !== 'auth/popup-closed-by-user') {
-             toast({
-                variant: "destructive",
-                title: "Sign Up Failed",
-                description: "Could not sign up with Google. Please try again.",
-            });
-        }
-    } finally {
-        setLoading(false);
-    }
-  };
-
 
   return (
     <Card className="w-full max-w-sm">
@@ -147,20 +127,6 @@ export default function SignupPage() {
             </Button>
           </form>
         </Form>
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
-              Or continue with
-            </span>
-          </div>
-        </div>
-        <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={loading}>
-          {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="mr-2 h-4 w-4" />}
-          Google
-        </Button>
       </CardContent>
       <CardFooter>
         <div className="text-center text-sm w-full">

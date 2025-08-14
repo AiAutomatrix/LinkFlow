@@ -13,7 +13,6 @@ interface AuthContextType {
   setUser: Dispatch<SetStateAction<UserProfile | null>>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string, displayName: string) => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   uploadProfilePicture: (userId: string, file: File) => Promise<string>;
 }
@@ -27,7 +26,6 @@ export const AuthContext = createContext<AuthContextType>({
   setUser: () => {},
   signInWithEmail: async () => {},
   signUpWithEmail: async () => {},
-  signInWithGoogle: async () => {},
   signOut: async () => {},
   uploadProfilePicture: async () => '',
 });

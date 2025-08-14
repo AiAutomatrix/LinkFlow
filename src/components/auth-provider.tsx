@@ -7,8 +7,6 @@ import {
   User as FirebaseUser,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signInWithPopup,
-  GoogleAuthProvider,
   signOut as firebaseSignOut,
   updateProfile,
 } from 'firebase/auth';
@@ -23,8 +21,6 @@ import { usePathname, useRouter } from 'next/navigation';
 type AuthProviderProps = {
   children: React.ReactNode;
 };
-
-const googleProvider = new GoogleAuthProvider();
 
 const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -123,18 +119,6 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     await setDoc(userDocRef, newUserProfile);
   };
 
-  const signInWithGoogle = async (): Promise<void> => {
-    try {
-        await signInWithPopup(auth, googleProvider);
-    } catch (error: any) {
-        if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
-            console.log("Google Sign-In popup closed by user.");
-            return; 
-        }
-        throw error;
-    }
-  };
-
   const signOut = async (): Promise<void> => {
     await firebaseSignOut(auth);
     setUser(null);
@@ -175,7 +159,6 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
       setUser,
       signInWithEmail,
       signUpWithEmail,
-      signInWithGoogle,
       signOut,
       uploadProfilePicture,
   };

@@ -27,7 +27,6 @@ import * as z from "zod";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
-import { GoogleIcon } from "@/components/google-icon";
 
 const formSchema = z.object({
   email: z.string().email({
@@ -39,7 +38,7 @@ const formSchema = z.object({
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-  const { signInWithEmail, signInWithGoogle } = useAuth();
+  const { signInWithEmail } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -64,24 +63,6 @@ export default function LoginPage() {
       setLoading(false);
     }
   }
-
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    try {
-        await signInWithGoogle();
-        // The AuthProvider will handle the redirect
-    } catch (error: any) {
-        if (error.code !== 'auth/popup-closed-by-user') {
-             toast({
-                variant: "destructive",
-                title: "Login Failed",
-                description: "Could not sign in with Google. Please try again.",
-            });
-        }
-    } finally {
-        setLoading(false);
-    }
-  };
 
   return (
     <Card className="w-full max-w-sm">
@@ -129,20 +110,6 @@ export default function LoginPage() {
             </Button>
           </form>
         </Form>
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
-              Or continue with
-            </span>
-          </div>
-        </div>
-        <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={loading}>
-          {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="mr-2 h-4 w-4" />}
-          Google
-        </Button>
       </CardContent>
       <CardFooter>
         <div className="text-center text-sm w-full">
