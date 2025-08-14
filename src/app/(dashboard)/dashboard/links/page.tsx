@@ -246,7 +246,7 @@ export default function LinksPage() {
   const sortedLinks = [...links].sort((a, b) => a.order - b.order);
 
   return (
-    <div className="space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
           <h1 className="text-2xl font-bold">Links</h1>
@@ -274,7 +274,7 @@ export default function LinksPage() {
           </div>
       </div>
 
-      <Card>
+      <Card className="lg:col-span-2 order-2 lg:order-1">
           <CardHeader>
           <CardTitle>Your Links</CardTitle>
           <CardDescription>Manage your custom links and social icons. Click the arrows on custom links to reorder them.</CardDescription>
