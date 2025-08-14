@@ -35,7 +35,7 @@ import {
 import LinkForm from "./_components/link-form";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
-import { collection, onSnapshot, query, orderBy, addDoc, updateDoc, doc, writeBatch, deleteDoc, where, getDocs } from "firebase/firestore";
+import { collection, onSnapshot, query, orderBy, addDoc, updateDoc, doc, writeBatch, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Loading from "@/app/loading";
 
@@ -92,7 +92,6 @@ export default function LinksPage() {
         
         setLinks(linksData);
 
-        // Ensure all possible social fields have a default value to prevent uncontrolled -> controlled error
         const completeSocialValues = {
             email: socialLinksValues.email || '',
             instagram: socialLinksValues.instagram || '',
@@ -136,7 +135,7 @@ export default function LinksPage() {
             const url = values[platform as keyof typeof values];
             const existingLink = existingSocialLinks.find(l => l.title.toLowerCase() === platform);
             
-            if (url) { // If URL is provided (add or update)
+            if (url) {
                 const finalUrl = platform === 'email' ? `mailto:${url}` : url;
                 if (existingLink) {
                     batch.update(doc(db, `users/${user.uid}/links`, existingLink.id), { url: finalUrl, active: true });
@@ -145,14 +144,14 @@ export default function LinksPage() {
                     batch.set(newLinkRef, {
                         title: platform.charAt(0).toUpperCase() + platform.slice(1),
                         url: finalUrl,
-                        order: 1000 + index, // High order to keep them separate
+                        order: 1000 + index, 
                         active: true,
                         clicks: 0,
                         createdAt: new Date(),
                         isSocial: true,
                     });
                 }
-            } else { // If URL is empty (delete)
+            } else { 
                 if (existingLink) {
                     batch.delete(doc(db, `users/${user.uid}/links`, existingLink.id));
                 }
@@ -173,7 +172,7 @@ export default function LinksPage() {
     const newLink: Omit<Link, 'id'> = {
         title,
         url,
-        order: links.filter(l => !l.isSocial).length, // Only count non-social links for order
+        order: links.filter(l => !l.isSocial).length,
         active: true,
         clicks: 0,
         createdAt: new Date(),
@@ -244,8 +243,7 @@ export default function LinksPage() {
       return <Loading />;
   }
 
-  const regularLinks = links.filter(l => !l.isSocial);
-  const socialLinks = links.filter(l => l.isSocial);
+  const sortedLinks = [...links].sort((a, b) => a.order - b.order);
 
   return (
     <div className="space-y-6">
@@ -253,7 +251,7 @@ export default function LinksPage() {
           <div>
           <h1 className="text-2xl font-bold">Links</h1>
           <p className="text-muted-foreground">
-              Add, edit, and reorder your links.
+              Add, edit, and reorder all of your links.
           </p>
           </div>
           <div className="flex gap-2">
@@ -279,16 +277,16 @@ export default function LinksPage() {
       <Card>
           <CardHeader>
           <CardTitle>Your Links</CardTitle>
-          <CardDescription>Add custom links. Click the arrows to reorder, or the switch to toggle visibility.</CardDescription>
+          <CardDescription>Manage your custom links and social icons. Click the arrows on custom links to reorder them.</CardDescription>
           </CardHeader>
           <CardContent>
-          {regularLinks.length > 0 ? (
+          {sortedLinks.length > 0 ? (
               <div className="space-y-4">
-                  {regularLinks.map((link, index) => (
+                  {sortedLinks.map((link, index) => (
                   <LinkCard 
                       key={link.id} 
                       index={index}
-                      totalLinks={regularLinks.length}
+                      totalLinks={sortedLinks.filter(l => !l.isSocial).length}
                       link={link} 
                       onUpdate={handleUpdateLink}
                       onDelete={handleDeleteLink}
@@ -298,7 +296,7 @@ export default function LinksPage() {
               </div>
           ) : (
               <div className="text-center py-12">
-              <h3 className="text-lg font-semibold">No custom links yet</h3>
+              <h3 className="text-lg font-semibold">No links yet</h3>
               <p className="text-muted-foreground mt-1">
                   Click "Add Link" to get started.
               </p>
@@ -307,39 +305,6 @@ export default function LinksPage() {
           </CardContent>
       </Card>
       
-      <Card>
-          <CardHeader>
-            <CardTitle>Social Links</CardTitle>
-            <CardDescription>
-              These links appear as icons on your profile. Clicks are tracked here.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {socialLinks.length > 0 ? (
-              <div className="space-y-4">
-                {socialLinks.map((link, index) => (
-                  <LinkCard
-                    key={link.id}
-                    index={index}
-                    totalLinks={socialLinks.length}
-                    link={link}
-                    onUpdate={handleUpdateLink}
-                    onDelete={handleDeleteLink}
-                    onMove={() => {}} // Reordering disabled for social links
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <h3 className="text-lg font-semibold">No social links yet</h3>
-                <p className="text-muted-foreground mt-1">
-                  Add a URL below to add a social icon link.
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
       <Form {...socialForm}>
           <form onSubmit={socialForm.handleSubmit(handleSocialSubmit)}>
               <Card>
@@ -423,3 +388,5 @@ export default function LinksPage() {
     </div>
   );
 }
+
+    
