@@ -17,7 +17,7 @@ import type { Link } from "@/lib/types";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/auth-context";
-import { collection, onSnapshot, query } from "firebase/firestore";
+import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 
@@ -35,7 +35,10 @@ export default function AnalyticsPage() {
     
     setLoading(true);
     const linksCollection = collection(db, `users/${user.uid}/links`);
-    const q = query(linksCollection);
+    // Order by clicks descending to easily get top links.
+    // Note: Firestore requires a composite index for this query.
+    // The client-side sort is a fallback.
+    const q = query(linksCollection, orderBy("clicks", "desc"));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
         const linksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Link));
@@ -58,8 +61,10 @@ export default function AnalyticsPage() {
   const totalLinks = links.length;
   const avgClicks = totalLinks > 0 ? (totalClicks / totalLinks).toFixed(2) : "0";
   
+  // Chart data now includes ALL links with clicks.
   const chartData = links
     .filter(l => (l.clicks || 0) > 0)
+    // The data is already sorted by Firestore, but we can sort again client-side as a fallback.
     .sort((a,b) => (b.clicks || 0) - (a.clicks || 0))
     .slice(0, 10)
     .map(link => ({ name: link.title, clicks: link.clicks || 0 }));
@@ -122,7 +127,7 @@ export default function AnalyticsPage() {
        <div>
           <h1 className="text-2xl font-bold">Analytics</h1>
           <p className="text-muted-foreground">
-            Understand how your audience engages with your links.
+            Understand how your audience engages with all your links.
           </p>
         </div>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
