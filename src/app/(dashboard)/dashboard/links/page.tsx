@@ -285,8 +285,8 @@ export default function LinksPage() {
                   {sortedLinks.map((link, index) => (
                   <LinkCard 
                       key={link.id} 
-                      index={index}
-                      totalLinks={sortedLinks.filter(l => !l.isSocial).length}
+                      index={link.isSocial ? -1 : links.filter(l => !l.isSocial).findIndex(l => l.id === link.id)}
+                      totalLinks={links.filter(l => !l.isSocial).length}
                       link={link} 
                       onUpdate={handleUpdateLink}
                       onDelete={handleDeleteLink}

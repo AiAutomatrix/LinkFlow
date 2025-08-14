@@ -72,7 +72,7 @@ export default function LinkCard({ link, index, totalLinks, onUpdate, onDelete, 
                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove(link.id, 'up')} disabled={isMoveDisabled || index === 0}>
                     <ArrowUp className="h-4 w-4" />
                 </Button>
-                <span className="text-xs text-muted-foreground">{index + 1}</span>
+                <span className="text-xs text-muted-foreground">{isMoveDisabled ? '-' : (index + 1)}</span>
                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove(link.id, 'down')} disabled={isMoveDisabled || index === totalLinks - 1}>
                     <ArrowDown className="h-4 w-4" />
                 </Button>
