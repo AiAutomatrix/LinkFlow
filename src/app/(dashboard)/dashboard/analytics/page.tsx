@@ -14,7 +14,7 @@ import {
   BarChart as RechartsBarChart,
 } from "recharts";
 import type { Link } from "@/lib/types";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/auth-context";
 import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
@@ -54,15 +54,35 @@ export default function AnalyticsPage() {
     return () => unsubscribe();
   }, [user, toast]);
 
-  const totalClicks = links.reduce((acc, link) => acc + (link.clicks || 0), 0);
-  const totalLinks = links.length;
-  const avgClicks = totalLinks > 0 ? (totalClicks / totalLinks).toFixed(2) : "0";
-  
-  const chartData = links
-    .filter(l => (l.clicks || 0) > 0)
-    .sort((a,b) => (b.clicks || 0) - (a.clicks || 0))
-    .slice(0, 10)
-    .map(link => ({ name: link.title, clicks: link.clicks || 0 }));
+  const {
+    totalClicks,
+    totalLinks,
+    avgClicks,
+    top10ChartData,
+    customLinksChartData,
+    socialLinksChartData
+  } = useMemo(() => {
+    const totalClicks = links.reduce((acc, link) => acc + (link.clicks || 0), 0);
+    const totalLinks = links.length;
+    const avgClicks = totalLinks > 0 ? (totalClicks / totalLinks).toFixed(2) : "0";
+
+    const allLinksWithClicks = links.filter(l => (l.clicks || 0) > 0);
+
+    const top10ChartData = allLinksWithClicks
+        .sort((a,b) => (b.clicks || 0) - (a.clicks || 0))
+        .slice(0, 10)
+        .map(link => ({ name: link.title, clicks: link.clicks || 0 }));
+    
+    const customLinksChartData = allLinksWithClicks
+        .filter(l => !l.isSocial)
+        .map(link => ({ name: link.title, clicks: link.clicks || 0 }));
+    
+    const socialLinksChartData = allLinksWithClicks
+        .filter(l => l.isSocial)
+        .map(link => ({ name: link.title, clicks: link.clicks || 0 }));
+
+    return { totalClicks, totalLinks, avgClicks, top10ChartData, customLinksChartData, socialLinksChartData };
+  }, [links]);
 
 
   if (loading) {
@@ -117,6 +137,39 @@ export default function AnalyticsPage() {
     );
   }
 
+  const Chart = ({ data, title, description }: { data: {name: string, clicks: number}[], title: string, description: string }) => (
+    <Card>
+        <CardHeader>
+            <CardTitle>{title}</CardTitle>
+            <CardDescription>{description}</CardDescription>
+        </CardHeader>
+        <CardContent>
+        <ResponsiveContainer width="100%" height={350}>
+            {data.length > 0 ? (
+                <RechartsBarChart data={data}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
+                <Tooltip
+                    contentStyle={{
+                    backgroundColor: "hsl(var(--background))",
+                    borderColor: "hsl(var(--border))",
+                    }}
+                />
+                <Legend />
+                <Bar dataKey="clicks" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Clicks" />
+                </RechartsBarChart>
+            ) : (
+                <div className="flex h-full w-full flex-col items-center justify-center">
+                    <p className="text-muted-foreground">No link data to display.</p>
+                    <p className="text-sm text-muted-foreground">Click your links on the public page to see data here.</p>
+                </div>
+            )}
+        </ResponsiveContainer>
+        </CardContent>
+    </Card>
+  )
+
   return (
     <>
        <div>
@@ -156,36 +209,12 @@ export default function AnalyticsPage() {
       </div>
       
       <div className="grid gap-6 grid-cols-1">
-        <Card>
-            <CardHeader>
-                <CardTitle>Top 10 Links by Clicks</CardTitle>
-                <CardDescription>This chart includes both custom and social links.</CardDescription>
-            </CardHeader>
-            <CardContent>
-            <ResponsiveContainer width="100%" height={350}>
-                {chartData.length > 0 ? (
-                    <RechartsBarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
-                    <Tooltip
-                        contentStyle={{
-                        backgroundColor: "hsl(var(--background))",
-                        borderColor: "hsl(var(--border))",
-                        }}
-                    />
-                    <Legend />
-                    <Bar dataKey="clicks" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Clicks" />
-                    </RechartsBarChart>
-                ) : (
-                    <div className="flex h-full w-full flex-col items-center justify-center">
-                        <p className="text-muted-foreground">No link data to display.</p>
-                        <p className="text-sm text-muted-foreground">Click your links on the public page to see data here.</p>
-                    </div>
-                )}
-            </ResponsiveContainer>
-            </CardContent>
-        </Card>
+        <Chart data={top10ChartData} title="Top 10 Links by Clicks" description="This chart shows your most popular links, including both custom and social links." />
+      </div>
+
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+        <Chart data={customLinksChartData} title="Custom Link Clicks" description="Performance of your custom-added links." />
+        <Chart data={socialLinksChartData} title="Social Link Clicks" description="Performance of your social media icon links." />
       </div>
 
     </>
