@@ -28,7 +28,7 @@ export default function Home() {
         <header className="container mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <Logo className="text-white" />
           <div className="flex items-center gap-2 sm:gap-4">
-            <Button variant="ghost" className="text-white hover:text-white hover:bg-white/10 hidden sm:inline-flex" asChild>
+            <Button variant="ghost" className="text-white hover:text-white hover:bg-white/10" asChild>
               <Link href="/login">Login</Link>
             </Button>
             <Button asChild className="bg-white text-gray-900 hover:bg-gray-200">
