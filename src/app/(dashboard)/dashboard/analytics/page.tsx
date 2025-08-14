@@ -192,9 +192,9 @@ export default function AnalyticsPage() {
                     <p className="text-sm text-muted-foreground pt-1">Click counts for your social media icons.</p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    {socialLinks.map(link => (
+                    {socialLinks.sort((a, b) => (b.clicks || 0) - (a.clicks || 0)).map(link => (
                         <div key={link.id} className="flex items-center justify-between">
-                            <span className="font-medium">{link.title}</span>
+                            <span className="font-medium capitalize">{link.title}</span>
                             <span className="text-muted-foreground font-bold">{link.clicks || 0} Clicks</span>
                         </div>
                     ))}
