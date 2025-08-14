@@ -21,7 +21,15 @@ import { Timestamp } from "firebase/firestore";
 
 const formSchema = z.object({
   title: z.string().min(1, { message: "Title is required." }),
-  url: z.string().url({ message: "Please enter a valid URL." }),
+  url: z.preprocess(
+      (arg) => {
+        if (typeof arg === "string" && arg.trim().length > 0 && !/^(https?):\/\//i.test(arg)) {
+          return `https://${arg}`;
+        }
+        return arg;
+      },
+      z.string().url({ message: "Please enter a valid URL." })
+  ),
   startDate: z.date().optional(),
   endDate: z.date().optional(),
 }).refine(data => {
