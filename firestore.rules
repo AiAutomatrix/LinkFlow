@@ -4,20 +4,38 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Public user profiles:
-    // - Anyone can read the list of users (to query by username).
-    // - Anyone can read a specific user's public profile data.
-    // - Only the authenticated user can write to their own profile.
-    match /users/{userId} {
-      allow list, get: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+    // Helper function to check if the user is the owner of the document.
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Helper function to check if only the 'clicks' field is being updated.
+    function isClickUpdate() {
+      // The update is valid if the request is trying to change a write-only 'clicks' field.
+      // We check that the size of the affected keys is 1, and that key is 'clicks'.
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['clicks']);
+    }
 
-      // Public links:
-      // - Anyone can read the links for a public profile.
-      // - Only the user can write to their own links.
+    // Rules for the 'users' collection.
+    match /users/{userId} {
+      // Anyone can read user profile data (for public profile pages).
+      allow read: if true;
+      
+      // Only the authenticated owner can create, update, or delete their profile.
+      allow write: if isOwner(userId);
+
+      // Rules for the 'links' subcollection within each user document.
       match /links/{linkId} {
+        // Anyone can read the links for a public profile.
         allow read: if true;
-        allow write: if request.auth != null && request.auth.uid == userId;
+        
+        // The owner can create and delete their own links.
+        allow create, delete: if isOwner(userId);
+        
+        // Allow updates under two conditions:
+        // 1. The user is the owner (can change anything).
+        // 2. It's an unauthenticated click update (can only change the 'clicks' field).
+        allow update: if isOwner(userId) || isClickUpdate();
       }
     }
   }
