@@ -2,43 +2,36 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Helper function to check if a user is the owner of a document
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
     // Rules for the 'users' collection
     match /users/{userId} {
-      // Allow anyone to read a limited set of public-facing fields.
-      // This is necessary for the public profile page (/u/[username]) to work.
-      allow get: if true;
-      allow list: if false; // Disallow listing all users for security.
-
-      // Allow the authenticated owner to read their full profile, create it,
-      // and update any fields.
-      allow read, create, update: if isOwner(userId);
       
-      // Disallow anyone from deleting a user profile document for now.
-      allow delete: if false;
+      // Allow anyone to read a user's public profile data.
+      // This is necessary for the /u/[username] pages to work.
+      // We are not allowing `list` to prevent enumeration of all users.
+      allow get: if true;
+      
+      // Allow an authenticated user to update their own document.
+      allow update: if request.auth != null && request.auth.uid == userId;
+      
+      // Prevent users from being created or deleted directly via these rules.
+      // Creation happens via server-side logic in AuthProvider. Deletion is a future feature.
+      allow create, delete: if false;
 
-      // Rules for the 'links' subcollection within each user document
+      // Rules for the 'links' subcollection
       match /links/{linkId} {
-        // Allow anyone to read the links for the public profile page.
+        // Allow anyone to read the list of links for a user.
         allow get, list: if true;
-        
-        // Allow the owner to create, update, and delete their own links.
-        allow create, update, delete: if isOwner(userId);
+        // Allow an authenticated user to manage their own links.
+        allow write: if request.auth != null && request.auth.uid == userId;
       }
       
-      // Rules for the 'clicks' subcollection
-      match /clicks/{docId} {
-        // Only the owner can read their click data.
-        allow read: if isOwner(userId);
-        
-        // Clicks are updated via a server-side API route, so client-side writes are disallowed.
-        // The API should use Admin privileges to bypass these rules.
-        allow write: if false; 
+      // Rules for the support clicks document
+      match /clicks/support {
+        // Allow only the authenticated user to read their own support clicks.
+        allow get: if request.auth != null && request.auth.uid == userId;
+        // Writes to this document happen via the API, which uses server-side logic,
+        // so direct client writes can be denied.
+        allow write: if false;
       }
     }
   }
