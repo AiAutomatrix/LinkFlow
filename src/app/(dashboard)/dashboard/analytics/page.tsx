@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Link as LinkIcon, Eye } from "lucide-react";
+import { BarChart, Link as LinkIcon, Eye, HandCoins } from "lucide-react";
 import {
   Bar,
   XAxis,
@@ -17,14 +17,19 @@ import type { Link } from "@/lib/types";
 import { useEffect, useState, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/auth-context";
-import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
+import { collection, onSnapshot, query, orderBy, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
+
+type SupportClickData = {
+    [key: string]: number;
+};
 
 export default function AnalyticsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [links, setLinks] = useState<Link[]>([]);
+  const [supportClicks, setSupportClicks] = useState<SupportClickData>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -50,8 +55,18 @@ export default function AnalyticsPage() {
         });
         setLoading(false);
     });
+
+    const supportClicksDocRef = doc(db, `users/${user.uid}/clicks/support`);
+    const unsubscribeSupport = onSnapshot(supportClicksDocRef, (doc) => {
+        if(doc.exists()){
+            setSupportClicks(doc.data() as SupportClickData);
+        }
+    });
     
-    return () => unsubscribe();
+    return () => {
+        unsubscribe();
+        unsubscribeSupport();
+    }
   }, [user, toast]);
 
   const {
@@ -60,7 +75,9 @@ export default function AnalyticsPage() {
     avgClicks,
     top10ChartData,
     customLinksChartData,
-    socialLinksChartData
+    socialLinksChartData,
+    supportLinksChartData,
+    totalSupportClicks
   } = useMemo(() => {
     const totalClicks = links.reduce((acc, link) => acc + (link.clicks || 0), 0);
     const totalLinks = links.length;
@@ -80,9 +97,15 @@ export default function AnalyticsPage() {
     const socialLinksChartData = allLinksWithClicks
         .filter(l => l.isSocial)
         .map(link => ({ name: link.title, clicks: link.clicks || 0 }));
+    
+    const supportLinksChartData = Object.entries(supportClicks)
+        .map(([platform, clicks]) => ({ name: platform.charAt(0).toUpperCase() + platform.slice(1).replace('buyMeACoffee', 'Buy Me A Coffee'), clicks }))
+        .filter(item => item.clicks > 0);
+        
+    const totalSupportClicks = Object.values(supportClicks).reduce((acc, val) => acc + val, 0);
 
-    return { totalClicks, totalLinks, avgClicks, top10ChartData, customLinksChartData, socialLinksChartData };
-  }, [links]);
+    return { totalClicks, totalLinks, avgClicks, top10ChartData, customLinksChartData, socialLinksChartData, supportLinksChartData, totalSupportClicks };
+  }, [links, supportClicks]);
 
 
   if (loading) {
@@ -94,34 +117,17 @@ export default function AnalyticsPage() {
               Understand how your audience engages with your links.
             </p>
           </div>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Clicks</CardTitle>
-                    <Eye className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <Skeleton className="h-8 w-1/4" />
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Links</CardTitle>
-                    <LinkIcon className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <Skeleton className="h-8 w-1/4" />
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Avg. Clicks/Link</CardTitle>
-                    <BarChart className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <Skeleton className="h-8 w-1/4" />
-                </CardContent>
-            </Card>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {[...Array(4)].map((_, i) => (
+                <Card key={i}>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <Skeleton className="h-4 w-1/2" />
+                    </CardHeader>
+                    <CardContent>
+                        <Skeleton className="h-8 w-1/4" />
+                    </CardContent>
+                </Card>
+            ))}
         </div>
         <Card>
             <CardHeader>
@@ -162,7 +168,7 @@ export default function AnalyticsPage() {
             ) : (
                 <div className="flex h-full w-full flex-col items-center justify-center">
                     <p className="text-muted-foreground">No link data to display.</p>
-                    <p className="text-sm text-muted-foreground">Click your links on the public page to see data here.</p>
+                    <p className="text-sm text-muted-foreground">Clicks will appear here once you get some.</p>
                 </div>
             )}
         </ResponsiveContainer>
@@ -178,7 +184,7 @@ export default function AnalyticsPage() {
             Understand how your audience engages with all your links.
           </p>
         </div>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Clicks</CardTitle>
@@ -206,15 +212,25 @@ export default function AnalyticsPage() {
             <div className="text-2xl font-bold">{avgClicks}</div>
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Support Clicks</CardTitle>
+            <HandCoins className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalSupportClicks}</div>
+          </CardContent>
+        </Card>
       </div>
       
       <div className="grid gap-6 grid-cols-1">
         <Chart data={top10ChartData} title="Top 10 Links by Clicks" description="This chart shows your most popular links, including both custom and social links." />
       </div>
 
-      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
         <Chart data={customLinksChartData} title="Custom Link Clicks" description="Performance of your custom-added links." />
         <Chart data={socialLinksChartData} title="Social Link Clicks" description="Performance of your social media icon links." />
+        <Chart data={supportLinksChartData} title="Support Link Clicks" description="Performance of your donation and support links." />
       </div>
 
     </>

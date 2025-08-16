@@ -5,10 +5,11 @@ import type { Link as LinkType, UserProfile } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Logo from '@/components/logo';
 import AnimatedBackground from '@/components/animated-background';
-import { Mail, Instagram, Facebook, Github } from 'lucide-react';
+import { Mail, Instagram, Facebook, Github, Coffee, Banknote, Bitcoin } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Timestamp } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 const SocialIcon = ({ platform }: { platform: string }) => {
     switch (platform.toLowerCase()) {
@@ -27,6 +28,56 @@ const toDate = (date: any): Date | null => {
     if (typeof date === 'string') return new Date(date);
     return null;
 }
+
+const SupportLinks = ({ user }: { user: UserProfile }) => {
+    const { toast } = useToast();
+    const { supportLinks } = user;
+
+    if (!supportLinks || Object.values(supportLinks).every(v => !v)) {
+        return null;
+    }
+    
+    const trackSupportClick = (platform: string) => {
+        try {
+          fetch('/api/clicks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.uid, linkId: `support_${platform}` }),
+          });
+        } catch (error) {
+          console.error('Failed to track support click:', error);
+        }
+    };
+    
+    const copyToClipboard = (text: string, platform: string) => {
+        navigator.clipboard.writeText(text);
+        trackSupportClick(platform);
+        toast({ title: "Copied to clipboard!"});
+    }
+
+    return (
+        <div className="mt-8 w-full max-w-md mx-auto">
+            <h3 className="text-xs font-semibold uppercase text-muted-foreground text-center mb-3">Support Me</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {supportLinks.buyMeACoffee && (
+                    <a href={supportLinks.buyMeACoffee} target="_blank" rel="noopener noreferrer" onClick={() => trackSupportClick('buyMeACoffee')} className="w-full text-center bg-secondary text-secondary-foreground font-semibold p-3 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:scale-105 transition-transform">
+                        <Coffee className="h-5 w-5" /> Buy Me a Coffee
+                    </a>
+                )}
+                {supportLinks.email && (
+                     <button onClick={() => copyToClipboard(supportLinks.email!, 'email')} className="w-full text-center bg-secondary text-secondary-foreground font-semibold p-3 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:scale-105 transition-transform">
+                        <Banknote className="h-5 w-5" /> E-Transfer
+                    </button>
+                )}
+                 {supportLinks.btc && (
+                     <button onClick={() => copyToClipboard(supportLinks.btc!, 'btc')} className="w-full text-center bg-secondary text-secondary-foreground font-semibold p-3 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:scale-105 transition-transform">
+                        <Bitcoin className="h-5 w-5" /> Bitcoin
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+};
 
 export default function ProfileClientPage({ user, links: serverLinks }: { user: UserProfile; links: LinkType[] }) {
     const [activeLinks, setActiveLinks] = useState<LinkType[]>([]);
@@ -53,21 +104,15 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     }
     
     const handleLinkClick = async (link: LinkType) => {
-        // This is a "fire and forget" request. We don't need to wait for it.
-        // The user is navigated immediately, and the click is tracked in the background.
         try {
           fetch('/api/clicks', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            // We must pass the userId so the unauthenticated API route knows which user's link to update.
             body: JSON.stringify({ userId: user.uid, linkId: link.id }),
           });
         } catch (error) {
-          // Log if tracking fails, but don't block the user.
           console.error('Failed to track click:', error);
         }
-
-        // Open the link immediately in a new tab.
         window.open(link.url, '_blank', 'noopener,noreferrer');
     };
     
@@ -114,6 +159,8 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
                     )
                 })}
                 </div>
+
+                <SupportLinks user={user} />
             </div>
             <footer className="mt-auto py-8 z-10">
                 <Logo />

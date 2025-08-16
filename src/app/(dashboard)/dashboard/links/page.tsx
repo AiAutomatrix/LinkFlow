@@ -3,7 +3,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Mail, Instagram, Facebook, Github, Loader2, Share2 } from "lucide-react";
+import { Plus, Mail, Instagram, Facebook, Github, Loader2, Share2, Coffee, Bitcoin, Banknote } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -39,7 +39,6 @@ import { useAuth } from "@/contexts/auth-context";
 import { collection, onSnapshot, query, orderBy, addDoc, updateDoc, doc, writeBatch, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Loading from "@/app/loading";
-import SupportMeCard from "@/components/support-me-card";
 
 
 const socialLinksSchema = z.object({
@@ -49,28 +48,37 @@ const socialLinksSchema = z.object({
     github: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
 });
 
+const supportLinksSchema = z.object({
+    buyMeACoffee: z.string().url({ message: "Please enter a valid 'Buy Me a Coffee' URL."}).optional().or(z.literal('')),
+    email: z.string().email({ message: "Please enter a valid E-Transfer email." }).optional().or(z.literal('')),
+    btc: z.string().optional(),
+    eth: z.string().optional(),
+    sol: z.string().optional(),
+});
+
 
 export default function LinksPage() {
   const { toast } = useToast();
-  const { user, userProfile, loading: authLoading } = useAuth();
+  const { user, userProfile, loading: authLoading, setUser } = useAuth();
   const [links, setLinks] = useState<Link[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingSocial, setLoadingSocial] = useState(false);
+  const [loadingSupport, setLoadingSupport] = useState(false);
   const [isDialogOpen, setDialogOpen] = useState(false);
 
   const socialForm = useForm<z.infer<typeof socialLinksSchema>>({
     resolver: zodResolver(socialLinksSchema),
-    defaultValues: {
-      email: "",
-      instagram: "",
-      facebook: "",
-      github: ""
-    },
+    defaultValues: { email: "", instagram: "", facebook: "", github: "" },
+  });
+
+  const supportForm = useForm<z.infer<typeof supportLinksSchema>>({
+    resolver: zodResolver(supportLinksSchema),
+    defaultValues: { buyMeACoffee: "", email: "", btc: "", eth: "", sol: "" }
   });
 
   useEffect(() => {
     if (!user) return;
-
+    
     const linksCollection = collection(db, `users/${user.uid}/links`);
     const q = query(linksCollection, orderBy("order"));
 
@@ -93,24 +101,25 @@ export default function LinksPage() {
         });
         
         setLinks(linksData);
-
-        const completeSocialValues = {
+        socialForm.reset({
             email: socialLinksValues.email || '',
             instagram: socialLinksValues.instagram || '',
             facebook: socialLinksValues.facebook || '',
             github: socialLinksValues.github || '',
-        };
-        
-        socialForm.reset(completeSocialValues);
+        });
         setLoading(false);
     }, (error) => {
         console.error("Error fetching links: ", error);
         toast({ variant: 'destructive', title: "Error", description: "Could not fetch links." });
         setLoading(false);
     });
+    
+    if (userProfile?.supportLinks) {
+        supportForm.reset(userProfile.supportLinks);
+    }
 
     return () => unsubscribe();
-  }, [user, toast, socialForm]);
+  }, [user, toast, socialForm, supportForm, userProfile]);
 
 
   const handleShare = () => {
@@ -121,6 +130,10 @@ export default function LinksPage() {
         title: "Link Copied!",
         description: "Your public profile URL has been copied to your clipboard.",
     });
+  }
+
+  const handlePrimaryFormSubmit = async (data: any) => {
+    await socialForm.handleSubmit(handleSocialSubmit)(data);
   }
 
   const handleSocialSubmit = async (values: z.infer<typeof socialLinksSchema>) => {
@@ -167,6 +180,21 @@ export default function LinksPage() {
     } finally {
         setLoadingSocial(false);
     }
+  }
+
+  const handleSupportSubmit = async (values: z.infer<typeof supportLinksSchema>) => {
+      if (!user) return;
+      setLoadingSupport(true);
+      try {
+          const userRef = doc(db, 'users', user.uid);
+          await updateDoc(userRef, { supportLinks: values });
+          setUser(prevUser => prevUser ? { ...prevUser, supportLinks: values } : null);
+          toast({ title: "Support links updated!" });
+      } catch (error: any) {
+          toast({ variant: 'destructive', title: 'Error', description: 'Failed to update support links.' });
+      } finally {
+          setLoadingSupport(false);
+      }
   }
   
   const handleAddLink = async (title: string, url: string, startDate?: Date, endDate?: Date) => {
@@ -276,12 +304,12 @@ export default function LinksPage() {
           </div>
       </div>
       
-      <Form {...socialForm}>
-        <form
-          onSubmit={socialForm.handleSubmit(handleSocialSubmit)}
-          className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start"
-        >
-          <div className="lg:col-span-2 order-2 lg:order-1">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <Form {...socialForm}>
+          <form
+            onSubmit={handlePrimaryFormSubmit}
+            className="lg:col-span-2 order-2 lg:order-1"
+          >
             <Card>
               <CardHeader>
                 <CardTitle>Your Links</CardTitle>
@@ -318,16 +346,17 @@ export default function LinksPage() {
                   </div>
                 )}
               </CardContent>
-               <CardFooter>
+              <CardFooter>
                  <Button type="submit" disabled={loadingSocial}>
                     {loadingSocial && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Update Social Icons
                 </Button>
               </CardFooter>
             </Card>
-          </div>
+          </form>
+        </Form>
 
-          <div className="lg:col-span-1 order-1 lg:order-2 space-y-6">
+        <div className="lg:col-span-1 order-1 lg:order-2 space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Edit Social Icons</CardTitle>
@@ -419,11 +448,88 @@ export default function LinksPage() {
                 />
               </CardContent>
             </Card>
-            <SupportMeCard />
+            
+            <Form {...supportForm}>
+                <form onSubmit={supportForm.handleSubmit(handleSupportSubmit)}>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Support Links</CardTitle>
+                            <CardDescription>Add donation and support links to your public page.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                             <FormField
+                                control={supportForm.control}
+                                name="buyMeACoffee"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Buy Me a Coffee</FormLabel>
+                                    <div className="relative flex items-center">
+                                        <Coffee className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                                        <FormControl>
+                                        <Input
+                                            placeholder="https://www.buymeacoffee.com/..."
+                                            className="pl-10"
+                                            {...field}
+                                        />
+                                        </FormControl>
+                                    </div>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                                />
+                             <FormField
+                                control={supportForm.control}
+                                name="email"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>E-Transfer Email</FormLabel>
+                                    <div className="relative flex items-center">
+                                        <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                                        <FormControl>
+                                        <Input
+                                            placeholder="your.email@example.com"
+                                            className="pl-10"
+                                            {...field}
+                                        />
+                                        </FormControl>
+                                    </div>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                                />
+                            <FormField
+                                control={supportForm.control}
+                                name="btc"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Bitcoin Address</FormLabel>
+                                    <div className="relative flex items-center">
+                                        <Bitcoin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                                        <FormControl>
+                                        <Input
+                                            placeholder="bc1q..."
+                                            className="pl-10"
+                                            {...field}
+                                        />
+                                        </FormControl>
+                                    </div>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                                />
+                        </CardContent>
+                        <CardFooter>
+                            <Button type="submit" disabled={loadingSupport}>
+                                {loadingSupport && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Update Support Links
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                </form>
+            </Form>
+
           </div>
-        </form>
-      </Form>
+        </div>
     </>
   );
 }
-    

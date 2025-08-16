@@ -10,11 +10,18 @@ export interface UserProfile {
   plan: 'free' | 'pro';
   theme?: string;
   animatedBackground?: boolean;
-  socialLinks?: { // This is now legacy, social links are stored in the links collection
+  socialLinks?: { 
     email?: string;
     instagram?: string;
     facebook?: string;
     github?: string;
+  };
+  supportLinks?: {
+    buyMeACoffee?: string;
+    email?: string;
+    btc?: string;
+    eth?: string;
+    sol?: string;
   };
   createdAt: Timestamp | FieldValue; 
 }
@@ -31,5 +38,3 @@ export interface Link {
   startDate?: Timestamp | Date | string;
   endDate?: Timestamp | Date | string;
 }
-
-    

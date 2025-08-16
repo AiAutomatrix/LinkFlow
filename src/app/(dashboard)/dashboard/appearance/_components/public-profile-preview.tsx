@@ -5,13 +5,29 @@ import AnimatedBackground from "@/components/animated-background";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import type { Link as LinkType, UserProfile } from "@/lib/types";
-import { Mail, Instagram, Facebook, Github } from 'lucide-react';
+import { Mail, Instagram, Facebook, Github, Coffee, Banknote, Bitcoin } from 'lucide-react';
 
 
 type PreviewProps = {
   profile: Partial<UserProfile> & { photoURL?: string };
   links?: LinkType[];
 };
+
+const SupportLinks = ({ links }: { links: UserProfile['supportLinks'] }) => {
+    if (!links || Object.values(links).every(v => !v)) return null;
+    
+    return (
+        <div className="mt-6 w-full max-w-xs mx-auto">
+            <h3 className="text-xs font-semibold uppercase text-muted-foreground text-center mb-2">Support Me</h3>
+            <div className="flex justify-center flex-wrap gap-4 text-foreground/80">
+                {links.buyMeACoffee && <a href={links.buyMeACoffee} target="_blank" rel="noopener noreferrer" className="hover:text-primary"><Coffee className="h-5 w-5" /></a>}
+                {links.email && <a href={`mailto:${links.email}`} className="hover:text-primary"><Banknote className="h-5 w-5" /></a>}
+                {links.btc && <button onClick={() => navigator.clipboard.writeText(links.btc!)} className="hover:text-primary"><Bitcoin className="h-5 w-5" /></button>}
+            </div>
+        </div>
+    );
+};
+
 
 export default function PublicProfilePreview({ profile, links = [] }: PreviewProps) {
     const getInitials = (name: string = "") => {
@@ -65,7 +81,7 @@ export default function PublicProfilePreview({ profile, links = [] }: PreviewPro
               
               <div className="mt-8 space-y-4 w-full max-w-xs mx-auto">
                   {regularLinks.length > 0 ? (
-                    regularLinks.slice(0, 3).map((link) => (
+                    regularLinks.slice(0, 2).map((link) => (
                       <LinkButton key={link.id}>
                         {link.title}
                       </LinkButton>
@@ -76,13 +92,13 @@ export default function PublicProfilePreview({ profile, links = [] }: PreviewPro
                       <LinkButton>Example Link 2</LinkButton>
                     </>
                   )}
-                  {regularLinks.length > 3 && <p className="text-center text-sm text-muted-foreground">...</p>}
+                  {regularLinks.length > 2 && <p className="text-center text-sm text-muted-foreground">...</p>}
               </div>
+
+              <SupportLinks links={profile.supportLinks} />
             </div>
         </div>
       </CardContent>
     </Card>
   );
 }
-
-    
