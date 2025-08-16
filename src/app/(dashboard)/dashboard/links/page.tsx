@@ -40,6 +40,13 @@ import { collection, onSnapshot, query, orderBy, addDoc, updateDoc, doc, writeBa
 import { db } from "@/lib/firebase";
 import Loading from "@/app/loading";
 
+const EthIcon = () => (
+    <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-muted-foreground"><title>Ethereum</title><path d="M11.944 17.97L4.58 13.62 11.943 24l7.365-10.38-7.364 4.35zM12.056 0L4.69 12.223l7.366-4.354 7.365 4.354L12.056 0z"/></svg>
+);
+const SolIcon = () => (
+    <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-muted-foreground"><title>Solana</title><path d="M4.236.427a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533V-.001a.6.6 0 00-.128-.532.6.6 0 00-.49-.28L4.236.427zm10.02 6.046a.6.6 0 00-.532.127.6.6 0 00-.28.491v4.54a.6.6 0 00.28.49.6.6 0 00.532.128l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.532V5.76a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12zm-4.383 6.64a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533v-4.54a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12z"/></svg>
+);
+
 
 const socialLinksSchema = z.object({
     email: z.string().email({ message: "Please enter a valid email." }).optional().or(z.literal('')),
@@ -448,8 +455,8 @@ export default function LinksPage() {
                 <form onSubmit={supportForm.handleSubmit(handleSupportSubmit)}>
                     <Card>
                         <CardHeader>
-                            <CardTitle>Support Links</CardTitle>
-                            <CardDescription>Add donation and support links to your public page.</CardDescription>
+                            <CardTitle>Support & Donation Links</CardTitle>
+                            <CardDescription>Add links for your supporters to send you tips and donations.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                              <FormField
@@ -503,6 +510,46 @@ export default function LinksPage() {
                                         <FormControl>
                                         <Input
                                             placeholder="bc1q..."
+                                            className="pl-10"
+                                            {...field}
+                                        />
+                                        </FormControl>
+                                    </div>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                                />
+                             <FormField
+                                control={supportForm.control}
+                                name="eth"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Ethereum Address</FormLabel>
+                                    <div className="relative flex items-center">
+                                        <EthIcon />
+                                        <FormControl>
+                                        <Input
+                                            placeholder="0x..."
+                                            className="pl-10"
+                                            {...field}
+                                        />
+                                        </FormControl>
+                                    </div>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                                />
+                             <FormField
+                                control={supportForm.control}
+                                name="sol"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Solana Address</FormLabel>
+                                    <div className="relative flex items-center">
+                                        <SolIcon />
+                                        <FormControl>
+                                        <Input
+                                            placeholder="SoL..."
                                             className="pl-10"
                                             {...field}
                                         />
