@@ -39,14 +39,18 @@ export default function AnalyticsPage() {
     };
     
     setLoading(true);
+    let isMounted = true;
+
     const linksCollection = collection(db, `users/${user.uid}/links`);
     const q = query(linksCollection, orderBy("clicks", "desc"));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
+        if (!isMounted) return;
         const linksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Link));
         setLinks(linksData);
         setLoading(false);
     }, (error) => {
+        if (!isMounted) return;
         console.error("Error fetching analytics data: ", error);
         toast({
             variant: "destructive",
@@ -56,16 +60,24 @@ export default function AnalyticsPage() {
         setLoading(false);
     });
 
-    const supportClicksDocRef = doc(db, `users/${user.uid}/clicks/support`);
-    const unsubscribeSupport = onSnapshot(supportClicksDocRef, (doc) => {
-        if(doc.exists()){
-            setSupportClicks(doc.data() as SupportClickData);
+    const fetchSupportClicks = async () => {
+        const supportClicksDocRef = doc(db, `users/${user.uid}/clicks/support`);
+        try {
+            const docSnap = await getDoc(supportClicksDocRef);
+            if (docSnap.exists() && isMounted) {
+                setSupportClicks(docSnap.data() as SupportClickData);
+            }
+        } catch (error) {
+            console.error("Error fetching support clicks: ", error);
+            // Don't show a toast for this, as it might not be critical
         }
-    });
+    };
+    
+    fetchSupportClicks();
     
     return () => {
+        isMounted = false;
         unsubscribe();
-        unsubscribeSupport();
     }
   }, [user, toast]);
 
