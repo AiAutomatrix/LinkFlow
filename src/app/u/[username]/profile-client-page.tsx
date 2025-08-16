@@ -60,7 +60,7 @@ const SupportLinks = ({ user }: { user: UserProfile }) => {
             <h3 className="text-xs font-semibold uppercase text-muted-foreground text-center mb-3">Support Me</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {supportLinks.buyMeACoffee && (
-                    <a href={supportLinks.buyMeACoffee} target="_blank" rel="noopener noreferrer" onClick={() => trackSupportClick('buyMeACoffee')} className="w-full text-center bg-secondary text-secondary-foreground font-semibold p-3 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:scale-105 transition-transform">
+                    <a href={supportLinks.buyMeACoffee} target="_blank" rel="noopener noreferrer" onClick={() => trackSupportClick('buyMeACoffee')} className="w-full text-center bg-yellow-400 text-black font-semibold p-3 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:scale-105 transition-transform">
                         <Coffee className="h-5 w-5" /> Buy Me a Coffee
                     </a>
                 )}

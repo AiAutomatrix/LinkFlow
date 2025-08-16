@@ -18,21 +18,21 @@ const SupportLinks = ({ links }: { links?: UserProfile['supportLinks'] }) => {
     if (!links || Object.values(links).every(v => !v)) return null;
     
     return (
-        <div className="mt-8 w-full max-w-xs mx-auto">
+        <div className="mt-8 w-full max-w-md mx-auto">
             <h3 className="text-xs font-semibold uppercase text-muted-foreground text-center mb-3">Support Me</h3>
-            <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {links.buyMeACoffee && (
-                    <div className="w-full text-center bg-yellow-400 text-black font-semibold p-3 rounded-lg shadow-sm flex items-center justify-center gap-2">
+                    <div className="w-full text-center bg-yellow-400 text-black font-semibold p-3 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:scale-105 transition-transform cursor-pointer">
                         <Coffee className="h-5 w-5" /> Buy Me a Coffee
                     </div>
                 )}
                 {links.email && (
-                     <div className="w-full text-center bg-secondary text-secondary-foreground font-semibold p-3 rounded-lg shadow-sm flex items-center justify-center gap-2">
+                     <div className="w-full text-center bg-secondary text-secondary-foreground font-semibold p-3 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:scale-105 transition-transform cursor-pointer">
                         <Banknote className="h-5 w-5" /> E-Transfer
                     </div>
                 )}
                  {links.btc && (
-                     <div className="w-full text-center bg-secondary text-secondary-foreground font-semibold p-3 rounded-lg shadow-sm flex items-center justify-center gap-2">
+                     <div className="w-full text-center bg-secondary text-secondary-foreground font-semibold p-3 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:scale-105 transition-transform cursor-pointer">
                         <Bitcoin className="h-5 w-5" /> Bitcoin
                     </div>
                 )}
