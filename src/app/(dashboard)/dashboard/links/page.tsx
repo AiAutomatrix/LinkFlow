@@ -132,10 +132,6 @@ export default function LinksPage() {
     });
   }
 
-  const handlePrimaryFormSubmit = async (data: any) => {
-    await socialForm.handleSubmit(handleSocialSubmit)(data);
-  }
-
   const handleSocialSubmit = async (values: z.infer<typeof socialLinksSchema>) => {
     if (!user) return;
     setLoadingSocial(true);
@@ -305,56 +301,55 @@ export default function LinksPage() {
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        <Form {...socialForm}>
-          <form
-            onSubmit={handlePrimaryFormSubmit}
-            className="lg:col-span-2 order-2 lg:order-1"
-          >
-            <Card>
-              <CardHeader>
-                <CardTitle>Your Links</CardTitle>
-                <CardDescription>
-                  Manage your custom links and social icons. Click the arrows on
-                  custom links to reorder them.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {sortedLinks.length > 0 ? (
-                  <div className="space-y-4">
-                    {sortedLinks.map((link) => (
-                      <LinkCard
-                        key={link.id}
-                        index={
-                          link.isSocial
-                            ? -1
-                            : links.filter((l) => !l.isSocial).findIndex((l) => l.id === link.id)
-                        }
-                        totalLinks={links.filter((l) => !l.isSocial).length}
-                        link={link}
-                        onUpdate={handleUpdateLink}
-                        onDelete={handleDeleteLink}
-                        onMove={handleMoveLink}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <h3 className="text-lg font-semibold">No links yet</h3>
-                    <p className="text-muted-foreground mt-1">
-                      Click "Add Link" to get started.
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-              <CardFooter>
-                 <Button type="submit" disabled={loadingSocial}>
-                    {loadingSocial && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Update Social Icons
-                </Button>
-              </CardFooter>
-            </Card>
-          </form>
-        </Form>
+        <div className="lg:col-span-2 order-2 lg:order-1">
+          <Form {...socialForm}>
+            <form onSubmit={socialForm.handleSubmit(handleSocialSubmit)}>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Your Links</CardTitle>
+                  <CardDescription>
+                    Manage your custom links and social icons. Click the arrows on
+                    custom links to reorder them.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {sortedLinks.length > 0 ? (
+                    <div className="space-y-4">
+                      {sortedLinks.map((link) => (
+                        <LinkCard
+                          key={link.id}
+                          index={
+                            link.isSocial
+                              ? -1
+                              : links.filter((l) => !l.isSocial).findIndex((l) => l.id === link.id)
+                          }
+                          totalLinks={links.filter((l) => !l.isSocial).length}
+                          link={link}
+                          onUpdate={handleUpdateLink}
+                          onDelete={handleDeleteLink}
+                          onMove={handleMoveLink}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <h3 className="text-lg font-semibold">No links yet</h3>
+                      <p className="text-muted-foreground mt-1">
+                        Click "Add Link" to get started.
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+                <CardFooter>
+                  <Button type="submit" disabled={loadingSocial}>
+                      {loadingSocial && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Update Social Icons
+                  </Button>
+                </CardFooter>
+              </Card>
+            </form>
+          </Form>
+        </div>
 
         <div className="lg:col-span-1 order-1 lg:order-2 space-y-6">
             <Card>
@@ -533,3 +528,5 @@ export default function LinksPage() {
     </>
   );
 }
+
+    
