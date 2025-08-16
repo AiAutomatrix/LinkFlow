@@ -1,41 +1,44 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper function to check if the user is the owner of the document.
+    // Helper function to check if a user is the owner of a document
     function isOwner(userId) {
-      return request.auth != null && request.auth.uid == userId;
-    }
-    
-    // Helper function to check if only the 'clicks' field is being updated.
-    function isClickUpdate() {
-      // The update is valid if the request is trying to change a write-only 'clicks' field.
-      // We check that the size of the affected keys is 1, and that key is 'clicks'.
-      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['clicks']);
+      return request.auth.uid == userId;
     }
 
-    // Rules for the 'users' collection.
+    // Rules for the 'users' collection
     match /users/{userId} {
-      // Anyone can read user profile data (for public profile pages).
-      allow read: if true;
-      
-      // Only the authenticated owner can create, update, or delete their profile.
-      allow write: if isOwner(userId);
+      // Allow anyone to read a limited set of public-facing fields.
+      // This is necessary for the public profile page (/u/[username]) to work.
+      allow get: if true;
+      allow list: if false; // Disallow listing all users for security.
 
-      // Rules for the 'links' subcollection within each user document.
+      // Allow the authenticated owner to read their full profile, create it,
+      // and update any fields.
+      allow read, create, update: if isOwner(userId);
+      
+      // Disallow anyone from deleting a user profile document for now.
+      allow delete: if false;
+
+      // Rules for the 'links' subcollection within each user document
       match /links/{linkId} {
-        // Anyone can read the links for a public profile.
-        allow read: if true;
+        // Allow anyone to read the links for the public profile page.
+        allow get, list: if true;
         
-        // The owner can create and delete their own links.
-        allow create, delete: if isOwner(userId);
+        // Allow the owner to create, update, and delete their own links.
+        allow create, update, delete: if isOwner(userId);
+      }
+      
+      // Rules for the 'clicks' subcollection
+      match /clicks/{docId} {
+        // Only the owner can read their click data.
+        allow read: if isOwner(userId);
         
-        // Allow updates under two conditions:
-        // 1. The user is the owner (can change anything).
-        // 2. It's an unauthenticated click update (can only change the 'clicks' field).
-        allow update: if isOwner(userId) || isClickUpdate();
+        // Clicks are updated via a server-side API route, so client-side writes are disallowed.
+        // The API should use Admin privileges to bypass these rules.
+        allow write: if false; 
       }
     }
   }
