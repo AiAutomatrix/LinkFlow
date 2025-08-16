@@ -27,6 +27,7 @@ import { useState } from "react";
 import { Loader2, Star } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
+import SupportMeCard from "@/components/support-me-card";
 
 
 export default function SettingsPage() {
@@ -85,6 +86,8 @@ export default function SettingsPage() {
         )}
       </Card>
 
+      <SupportMeCard />
+
       <Card>
         <CardHeader>
           <CardTitle>Shareable URL</CardTitle>
@@ -124,7 +127,7 @@ export default function SettingsPage() {
                     <AlertDialogDescription>
                         This action cannot be undone. This will permanently delete your
                         account and remove your data from our servers.
-                    </AlertDialogDescription>
+                    </AdversaryDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
