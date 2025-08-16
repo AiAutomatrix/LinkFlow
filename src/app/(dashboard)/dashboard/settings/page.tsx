@@ -27,8 +27,6 @@ import { useState } from "react";
 import { Loader2, Star } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
-import SupportMeCard from "@/components/support-me-card";
-
 
 export default function SettingsPage() {
   const { userProfile } = useAuth();
@@ -85,8 +83,6 @@ export default function SettingsPage() {
           </CardFooter>
         )}
       </Card>
-
-      <SupportMeCard />
 
       <Card>
         <CardHeader>

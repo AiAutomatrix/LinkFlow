@@ -39,6 +39,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { collection, onSnapshot, query, orderBy, addDoc, updateDoc, doc, writeBatch, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Loading from "@/app/loading";
+import SupportMeCard from "@/components/support-me-card";
 
 
 const socialLinksSchema = z.object({
@@ -317,8 +318,8 @@ export default function LinksPage() {
                   </div>
                 )}
               </CardContent>
-              <CardFooter>
-                 <Button type="submit" disabled={loadingSocial} className="mt-6">
+               <CardFooter>
+                 <Button type="submit" disabled={loadingSocial}>
                     {loadingSocial && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Update Social Icons
                 </Button>
@@ -326,7 +327,7 @@ export default function LinksPage() {
             </Card>
           </div>
 
-          <div className="lg:col-span-1 order-1 lg:order-2">
+          <div className="lg:col-span-1 order-1 lg:order-2 space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Edit Social Icons</CardTitle>
@@ -418,6 +419,7 @@ export default function LinksPage() {
                 />
               </CardContent>
             </Card>
+            <SupportMeCard />
           </div>
         </form>
       </Form>
