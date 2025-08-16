@@ -11,25 +11,38 @@ import { Mail, Instagram, Facebook, Github, Coffee, Banknote, Bitcoin } from 'lu
 type PreviewProps = {
   profile: Partial<UserProfile> & { photoURL?: string };
   links?: LinkType[];
+  socialLinks?: UserProfile['socialLinks'];
 };
 
-const SupportLinks = ({ links }: { links: UserProfile['supportLinks'] }) => {
+const SupportLinks = ({ links }: { links?: UserProfile['supportLinks'] }) => {
     if (!links || Object.values(links).every(v => !v)) return null;
     
     return (
-        <div className="mt-6 w-full max-w-xs mx-auto">
-            <h3 className="text-xs font-semibold uppercase text-muted-foreground text-center mb-2">Support Me</h3>
-            <div className="flex justify-center flex-wrap gap-4 text-foreground/80">
-                {links.buyMeACoffee && <a href={links.buyMeACoffee} target="_blank" rel="noopener noreferrer" className="hover:text-primary"><Coffee className="h-5 w-5" /></a>}
-                {links.email && <a href={`mailto:${links.email}`} className="hover:text-primary"><Banknote className="h-5 w-5" /></a>}
-                {links.btc && <button onClick={() => navigator.clipboard.writeText(links.btc!)} className="hover:text-primary"><Bitcoin className="h-5 w-5" /></button>}
+        <div className="mt-8 w-full max-w-xs mx-auto">
+            <h3 className="text-xs font-semibold uppercase text-muted-foreground text-center mb-3">Support Me</h3>
+            <div className="flex flex-col gap-3">
+                {links.buyMeACoffee && (
+                    <div className="w-full text-center bg-yellow-400 text-black font-semibold p-3 rounded-lg shadow-sm flex items-center justify-center gap-2">
+                        <Coffee className="h-5 w-5" /> Buy Me a Coffee
+                    </div>
+                )}
+                {links.email && (
+                     <div className="w-full text-center bg-secondary text-secondary-foreground font-semibold p-3 rounded-lg shadow-sm flex items-center justify-center gap-2">
+                        <Banknote className="h-5 w-5" /> E-Transfer
+                    </div>
+                )}
+                 {links.btc && (
+                     <div className="w-full text-center bg-secondary text-secondary-foreground font-semibold p-3 rounded-lg shadow-sm flex items-center justify-center gap-2">
+                        <Bitcoin className="h-5 w-5" /> Bitcoin
+                    </div>
+                )}
             </div>
         </div>
     );
 };
 
 
-export default function PublicProfilePreview({ profile, links = [] }: PreviewProps) {
+export default function PublicProfilePreview({ profile, links = [], socialLinks: propSocialLinks }: PreviewProps) {
     const getInitials = (name: string = "") => {
         return name.split(" ").map((n) => n[0]).join("");
     };
@@ -61,10 +74,10 @@ export default function PublicProfilePreview({ profile, links = [] }: PreviewPro
       <CardContent className="p-4">
         <div 
           data-theme={profile.theme || 'light'}
-          className="h-[500px] w-full rounded-md border bg-background p-4 flex flex-col items-center relative overflow-hidden"
+          className="h-[600px] w-full rounded-md border bg-background p-4 flex flex-col items-center relative overflow-hidden"
         >
             {profile.animatedBackground && <AnimatedBackground />}
-            <div className="flex-1 w-full flex flex-col items-center pt-8 text-center z-10">
+            <div className="flex-1 w-full flex flex-col items-center pt-8 text-center z-10 overflow-y-auto">
               <Avatar className="h-24 w-24">
                 <AvatarImage src={profile.photoURL || undefined} />
                 <AvatarFallback>{getInitials(profile.displayName)}</AvatarFallback>

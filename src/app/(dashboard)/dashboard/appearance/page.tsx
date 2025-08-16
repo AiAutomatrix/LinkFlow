@@ -336,7 +336,7 @@ export default function AppearancePage() {
         </Form>
       </div>
       <div className="lg:col-span-1 order-1 lg:order-2">
-        <PublicProfilePreview profile={{...watchedValues, photoURL}} links={links} socialLinks={user?.socialLinks} />
+        <PublicProfilePreview profile={{...user, ...watchedValues, photoURL}} links={links} />
       </div>
     </div>
   );
