@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import type { UserProfile, Link as LinkType } from "@/lib/types";
 import { Mail, Instagram, Facebook, Github, Coffee, Banknote, Bitcoin, ClipboardCopy, ClipboardCheck } from 'lucide-react';
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 
@@ -89,6 +89,39 @@ const SupportLinks = ({ links }: { links: LinkType[] }) => {
 };
 
 export default function PublicProfilePreview({ profile, links = [], isPreview = false }: { profile: Partial<UserProfile>; links?: LinkType[], isPreview?: boolean }) {
+    const botContainerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!profile.bot?.embedScript || typeof window === 'undefined') return;
+
+        const container = botContainerRef.current;
+        if (!container) return;
+
+        // Clear previous scripts to avoid duplicates
+        container.innerHTML = '';
+
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = profile.bot.embedScript;
+
+        const scripts = wrapper.querySelectorAll('script');
+        scripts.forEach(oldScript => {
+            const newScript = document.createElement('script');
+            
+            // Copy all attributes
+            Array.from(oldScript.attributes).forEach(attr => {
+                newScript.setAttribute(attr.name, attr.value);
+            });
+
+            // Copy inline script content
+            if (oldScript.text) {
+                newScript.text = oldScript.text;
+            }
+            
+            container.appendChild(newScript);
+        });
+
+    }, [profile.bot?.embedScript]);
+
 
     const getInitials = (name: string = "") => {
         return name.split(" ").map((n) => n[0]).join("");
@@ -159,6 +192,7 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
 
               <SupportLinks links={supportLinks} />
             </div>
+            <div id="bot-container-preview" ref={botContainerRef}></div>
         </div>
       </CardContent>
     </Card>

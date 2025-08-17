@@ -26,9 +26,11 @@ import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Loading from "@/app/loading";
+import PublicProfilePreview from "../appearance/_components/public-profile-preview";
+import type { Link, UserProfile } from "@/lib/types";
 
 const botSchema = z.object({
   embedScript: z.string().refine((val) => val.trim() === '' || (val.includes("<script") && (val.includes("botpress.cloud") || val.includes("bpcdn.cloud"))), {
@@ -41,6 +43,7 @@ export default function BotPage() {
   const { toast } = useToast();
   const { user, loading: authLoading, setUser } = useAuth();
   const [formLoading, setFormLoading] = useState(false);
+  const [links, setLinks] = useState<Link[]>([]);
   
   const form = useForm<z.infer<typeof botSchema>>({
     resolver: zodResolver(botSchema),
@@ -48,6 +51,14 @@ export default function BotPage() {
       embedScript: "",
     },
   });
+  
+  const watchedEmbedScript = form.watch("embedScript");
+  
+  const previewProfile: Partial<UserProfile> = {
+    ...user,
+    bot: { embedScript: watchedEmbedScript || "" },
+  };
+
 
   useEffect(() => {
     if (user) {
@@ -57,6 +68,16 @@ export default function BotPage() {
     }
   }, [user, form]);
   
+  useEffect(() => {
+    if (!user) return;
+    const linksCollection = collection(db, `users/${user.uid}/links`);
+    const q = query(linksCollection, orderBy("order"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        setLinks(snapshot.docs.map(doc => ({id: doc.id, ...doc.data()} as Link)))
+    });
+    return () => unsubscribe();
+  }, [user]);
+
   async function onSubmit(values: z.infer<typeof botSchema>) {
     if (!user) return;
     setFormLoading(true);
@@ -78,7 +99,8 @@ export default function BotPage() {
   }
   
   return (
-    <div className="space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      <div className="lg:col-span-1 space-y-6">
         <div>
             <h1 className="text-2xl font-bold">Chatbot Integration</h1>
             <p className="text-muted-foreground">
@@ -124,6 +146,10 @@ export default function BotPage() {
             </Button>
         </form>
         </Form>
+    </div>
+     <div className="lg:col-span-2">
+        <PublicProfilePreview profile={previewProfile} links={links} isPreview />
+      </div>
     </div>
   );
 }
