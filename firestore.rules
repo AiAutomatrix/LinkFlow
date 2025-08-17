@@ -2,9 +2,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /users/{userId} {
-      // Allow public read of user profiles and querying by username
-      allow read: if true; 
-      
+      // Allow the owner to read their own document, and allow anyone to get a document (for public profiles)
+      allow get: if true;
+      allow list: if request.auth != null && request.auth.uid == userId;
+
       // Only the authenticated owner can write to their profile
       allow write: if request.auth != null && request.auth.uid == userId;
 
