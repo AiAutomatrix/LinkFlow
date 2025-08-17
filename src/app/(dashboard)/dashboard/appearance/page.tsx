@@ -122,8 +122,8 @@ export default function AppearancePage() {
   }
   
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-      <div className="lg:col-span-2 order-2 lg:order-1 space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+      <div className="lg:col-span-1 order-2 lg:order-1 space-y-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Card>
@@ -147,7 +147,7 @@ export default function AppearancePage() {
                       >
                         <CarouselContent>
                           {themes.map((theme) => (
-                            <CarouselItem key={theme.id} className="basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/6">
+                            <CarouselItem key={theme.id} className="basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/4">
                               <div className="p-1">
                                   <div 
                                       className={cn(
@@ -203,7 +203,7 @@ export default function AppearancePage() {
         </Form>
       </div>
       <div className="lg:col-span-1 order-1 lg:order-2">
-        <PublicProfilePreview profile={previewProfile} links={links} />
+        <PublicProfilePreview profile={previewProfile} links={links} isPreview />
       </div>
     </div>
   );
