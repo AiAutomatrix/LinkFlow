@@ -1,25 +1,33 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /users/{userId} {
-      // Allow anyone to get a user's public profile.
-      allow get: if true;
-
-      // Allow authenticated users to list/query their own data (for dashboard, analytics).
-      // This rule is what secures the dashboard pages.
-      allow list: if request.auth != null && request.auth.uid == userId;
+      // Allow anyone to query the users collection to find a profile by username (for /u/[username] pages)
+      // and allow an authenticated user to list their own data for the dashboard.
+      allow list: if true;
       
-      // Allow only the authenticated owner to write to their profile.
+      // Allow anyone to get a specific user's profile data for public display.
+      allow get: if true;
+      
+      // Only the authenticated owner can write to their own profile.
       allow write: if request.auth != null && request.auth.uid == userId;
 
       match /links/{linkId} {
         // Allow public read of all links for a user.
-        // `read` covers `get` and `list`.
         allow read: if true;
 
-        // Allow only the authenticated owner to write to their links.
+        // Only the authenticated owner can write to their links.
         allow write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // Rules for the 'clicks' subcollection (for analytics)
+      match /clicks/{docId} {
+        // Only the owner can read their own click data.
+        allow read: if request.auth != null && request.auth.uid == userId;
+        
+        // Clicks can be written by the API route, so we don't add write rules here.
+        // Access is controlled by the API endpoint's logic, not direct client writes.
+        allow write: if false; 
       }
     }
   }
