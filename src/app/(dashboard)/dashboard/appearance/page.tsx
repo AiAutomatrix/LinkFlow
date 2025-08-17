@@ -39,27 +39,27 @@ const appearanceSchema = z.object({
   animatedBackground: z.boolean().optional(),
 });
 
-const themes = [
-    { id: 'light', name: 'Light', colors: ['#FFFFFF', '#E2E8F0'] },
-    { id: 'dark', name: 'Dark', colors: ['#1A202C', '#4A5568'] },
-    { id: 'neon-green', name: 'Neon Green', colors: ['#0F172A', '#34D399'] },
-    { id: 'neon-pink', name: 'Neon Pink', colors: ['#1E1B4B', '#F472B6'] },
-    { id: 'gradient-sunset', name: 'Sunset', colors: ['#FECACA', '#F9A8D4'] },
-    { id: 'ocean-blue', name: 'Ocean Blue', colors: ['#E0F2FE', '#38BDF8'] },
-    { id: 'forest-green', name: 'Forest Green', colors: ['#F0FDF4', '#4ADE80'] },
-    { id: 'royal-purple', name: 'Royal Purple', colors: ['#F5F3FF', '#A78BFA'] },
-    { id: 'crimson-red', name: 'Crimson Red', colors: ['#FEF2F2', '#F87171'] },
-    { id: 'goldenrod', name: 'Goldenrod', colors: ['#FEFCE8', '#FACC15'] },
-    { id: 'minty-fresh', name: 'Minty Fresh', colors: ['#F0FDF4', '#6EE7B7'] },
-    { id: 'charcoal', name: 'Charcoal', colors: ['#334155', '#94A3B8'] },
-    { id: 'lavender', name: 'Lavender', colors: ['#F5F3FF', '#C4B5FD'] },
-    { id: 'mocha', name: 'Mocha', colors: ['#FDF4E6', '#D4A574'] },
-    { id: 'teal', name: 'Teal', colors: ['#F0FDFA', '#2DD4BF'] },
-    { id: 'coral', name: 'Coral', colors: ['#FFF1F2', '#FB7185'] },
-    { id: 'indigo', name: 'Indigo', colors: ['#283593', '#818CF8'] },
-    { id: 'olive', name: 'Olive', colors: ['#F4FCE8', '#A3CC4A'] },
-    { id: 'rose-gold', name: 'Rose Gold', colors: ['#FFF1F2', '#F4C4C4'] },
-    { id: 'slate', name: 'Slate', colors: ['#475569', '#E2E8F0'] },
+export const themes = [
+    { id: 'light', name: 'Light', colors: ['#FFFFFF', '#E2E8F0'], cssVars: { background: '220 40% 98%', foreground: '220 15% 20%', primary: '220 90% 60%', primaryForeground: '220 15% 20%', secondary: '220 15% 90%', secondaryForeground: '220 15% 20%' } },
+    { id: 'dark', name: 'Dark', colors: ['#1A202C', '#4A5568'], cssVars: { background: '220 20% 10%', foreground: '220 20% 95%', primary: '210 90% 65%', primaryForeground: '220 20% 95%', secondary: '220 20% 20%', secondaryForeground: '220 20% 95%' } },
+    { id: 'neon-green', name: 'Neon Green', colors: ['#0F172A', '#34D399'], cssVars: { background: '300 5% 8%', foreground: '120 100% 80%', primary: '120 100% 50%', primaryForeground: '120 100% 80%', secondary: '120 95% 15%', secondaryForeground: '120 100% 80%' } },
+    { id: 'neon-pink', name: 'Neon Pink', colors: ['#1E1B4B', '#F472B6'], cssVars: { background: '300 10% 10%', foreground: '320 100% 85%', primary: '320 100% 60%', primaryForeground: '320 100% 85%', secondary: '320 100% 18%', secondaryForeground: '320 100% 85%' } },
+    { id: 'gradient-sunset', name: 'Sunset', colors: ['#FECACA', '#F9A8D4'], cssVars: { background: '20 100% 98%', foreground: '20 80% 20%', primary: '340 90% 60%', primaryForeground: '20 80% 20%', secondary: '20 90% 92%', secondaryForeground: '20 80% 20%' } },
+    { id: 'ocean-blue', name: 'Ocean Blue', colors: ['#E0F2FE', '#38BDF8'], cssVars: { background: '210 100% 98%', foreground: '215 80% 25%', primary: '210 90% 55%', primaryForeground: '215 80% 25%', secondary: '210 95% 90%', secondaryForeground: '215 80% 25%' } },
+    { id: 'forest-green', name: 'Forest Green', colors: ['#F0FDF4', '#4ADE80'], cssVars: { background: '120 20% 98%', foreground: '120 60% 20%', primary: '120 50% 40%', primaryForeground: '120 60% 20%', secondary: '120 40% 90%', secondaryForeground: '120 60% 20%' } },
+    { id: 'royal-purple', name: 'Royal Purple', colors: ['#F5F3FF', '#A78BFA'], cssVars: { background: '270 50% 98%', foreground: '270 50% 20%', primary: '270 60% 60%', primaryForeground: '270 50% 20%', secondary: '270 50% 92%', secondaryForeground: '270 50% 20%' } },
+    { id: 'crimson-red', name: 'Crimson Red', colors: ['#FEF2F2', '#F87171'], cssVars: { background: '0 50% 98%', foreground: '0 60% 25%', primary: '0 70% 55%', primaryForeground: '0 60% 25%', secondary: '0 60% 94%', secondaryForeground: '0 60% 25%' } },
+    { id: 'goldenrod', name: 'Goldenrod', colors: ['#FEFCE8', '#FACC15'], cssVars: { background: '45 100% 97%', foreground: '40 80% 20%', primary: '45 100% 50%', primaryForeground: '40 80% 10%', secondary: '45 90% 90%', secondaryForeground: '40 80% 20%' } },
+    { id: 'minty-fresh', name: 'Minty Fresh', colors: ['#F0FDF4', '#6EE7B7'], cssVars: { background: '150 70% 97%', foreground: '150 50% 25%', primary: '150 55% 50%', primaryForeground: '150 50% 25%', secondary: '150 60% 92%', secondaryForeground: '150 50% 25%' } },
+    { id: 'charcoal', name: 'Charcoal', colors: ['#334155', '#94A3B8'], cssVars: { background: '220 10% 20%', foreground: '220 10% 90%', primary: '220 15% 70%', primaryForeground: '220 10% 90%', secondary: '220 10% 30%', secondaryForeground: '220 10% 90%' } },
+    { id: 'lavender', name: 'Lavender', colors: ['#F5F3FF', '#C4B5FD'], cssVars: { background: '250 80% 98%', foreground: '250 40% 30%', primary: '250 60% 70%', primaryForeground: '250 40% 30%', secondary: '250 70% 95%', secondaryForeground: '250 40% 30%' } },
+    { id: 'mocha', name: 'Mocha', colors: ['#FDF4E6', '#D4A574'], cssVars: { background: '30 25% 95%', foreground: '30 40% 20%', primary: '30 40% 50%', primaryForeground: '30 40% 20%', secondary: '30 30% 90%', secondaryForeground: '30 40% 20%' } },
+    { id: 'teal', name: 'Teal', colors: ['#F0FDFA', '#2DD4BF'], cssVars: { background: '180 50% 96%', foreground: '180 70% 20%', primary: '180 60% 40%', primaryForeground: '180 70% 20%', secondary: '180 50% 90%', secondaryForeground: '180 70% 20%' } },
+    { id: 'coral', name: 'Coral', colors: ['#FFF1F2', '#FB7185'], cssVars: { background: '10 100% 97%', foreground: '10 80% 30%', primary: '10 90% 65%', primaryForeground: '10 80% 30%', secondary: '10 90% 94%', secondaryForeground: '10 80% 30%' } },
+    { id: 'indigo', name: 'Indigo', colors: ['#283593', '#818CF8'], cssVars: { background: '240 60% 15%', foreground: '240 50% 90%', primary: '240 70% 75%', primaryForeground: '240 50% 90%', secondary: '240 50% 30%', secondaryForeground: '240 50% 90%' } },
+    { id: 'olive', name: 'Olive', colors: ['#F4FCE8', '#A3CC4A'], cssVars: { background: '80 20% 96%', foreground: '80 40% 20%', primary: '80 30% 45%', primaryForeground: '80 40% 20%', secondary: '80 25% 90%', secondaryForeground: '80 40% 20%' } },
+    { id: 'rose-gold', name: 'Rose Gold', colors: ['#FFF1F2', '#F4C4C4'], cssVars: { background: '25 80% 96%', foreground: '25 50% 30%', primary: '350 70% 75%', primaryForeground: '25 50% 15%', secondary: '25 70% 92%', secondaryForeground: '25 50% 30%' } },
+    { id: 'slate', name: 'Slate', colors: ['#475569', '#E2E8F0'], cssVars: { background: '220 30% 25%', foreground: '220 20% 95%', primary: '210 40% 75%', primaryForeground: '220 20% 95%', secondary: '220 30% 40%', secondaryForeground: '220 20% 95%' } },
   ];
 
 export default function AppearancePage() {
@@ -123,7 +123,7 @@ export default function AppearancePage() {
   
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-      <div className="lg:col-span-1 order-2 lg:order-1 space-y-6">
+      <div className="lg:col-span-1 space-y-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Card>
@@ -202,7 +202,7 @@ export default function AppearancePage() {
           </form>
         </Form>
       </div>
-      <div className="lg:col-span-1 order-1 lg:order-2">
+      <div className="lg:col-span-1">
         <PublicProfilePreview profile={previewProfile} links={links} isPreview />
       </div>
     </div>

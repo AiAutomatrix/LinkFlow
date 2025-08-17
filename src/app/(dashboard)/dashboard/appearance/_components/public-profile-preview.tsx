@@ -88,7 +88,7 @@ const SupportLinks = ({ links }: { links: LinkType[] }) => {
     );
 };
 
-export default function PublicProfilePreview({ profile, links = [], isPreview = false, embedScript }: { profile: Partial<UserProfile>; links?: LinkType[], isPreview?: boolean, embedScript?: string }) {
+export default function PublicProfilePreview({ profile, links = [], isPreview = false }: { profile: Partial<UserProfile>; links?: LinkType[], isPreview?: boolean }) {
 
     const getInitials = (name: string = "") => {
         return name.split(" ").map((n) => n[0]).join("");
@@ -159,13 +159,6 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
 
               <SupportLinks links={supportLinks} />
             </div>
-            {embedScript && (
-                 <iframe
-                    srcDoc={embedScript}
-                    className="absolute inset-0 w-full h-full border-0 z-20"
-                    title="Bot Preview"
-                />
-            )}
         </div>
       </CardContent>
     </Card>

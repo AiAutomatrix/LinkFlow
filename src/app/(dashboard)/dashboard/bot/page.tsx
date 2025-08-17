@@ -29,8 +29,8 @@ import { useAuth } from "@/contexts/auth-context";
 import { doc, updateDoc, collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Loading from "@/app/loading";
-import PublicProfilePreview from "../appearance/_components/public-profile-preview";
 import type { Link, UserProfile } from "@/lib/types";
+import PreviewIframe from "./_components/preview-iframe";
 
 const botSchema = z.object({
   embedScript: z.string().refine((val) => val.trim() === '' || (val.includes("<script") && (val.includes("botpress.cloud") || val.includes("bpcdn.cloud"))), {
@@ -53,12 +53,6 @@ export default function BotPage() {
   });
   
   const watchedEmbedScript = form.watch("embedScript");
-  
-  const previewProfile: Partial<UserProfile> = {
-    ...user,
-    bot: { embedScript: watchedEmbedScript || "" },
-  };
-
 
   useEffect(() => {
     if (user) {
@@ -147,8 +141,8 @@ export default function BotPage() {
         </form>
         </Form>
     </div>
-     <div className="lg:col-span-1">
-        <PublicProfilePreview profile={previewProfile} links={links} isPreview embedScript={watchedEmbedScript} />
+     <div className="lg:col-span-1 h-[700px]">
+        <PreviewIframe profile={user} links={links} embedScript={watchedEmbedScript} />
       </div>
     </div>
   );
