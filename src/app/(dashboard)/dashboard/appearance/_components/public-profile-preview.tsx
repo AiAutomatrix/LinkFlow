@@ -89,7 +89,7 @@ const SupportLinks = ({ links }: { links: LinkType[] }) => {
 };
 
 
-export default function PublicProfilePreview({ profile, links = [] }: { profile: Partial<UserProfile> & { photoURL?: string }; links?: LinkType[] }) {
+export default function PublicProfilePreview({ profile, links = [] }: { profile: Partial<UserProfile>; links?: LinkType[] }) {
     const getInitials = (name: string = "") => {
         return name.split(" ").map((n) => n[0]).join("");
     };
