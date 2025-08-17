@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { Link as LinkType, UserProfile } from '@/lib/types';
@@ -54,9 +53,11 @@ const CryptoLog = ({ icon, name, address, onCopy }: { icon: React.ReactNode, nam
 const trackClick = (userId: string, linkId: string) => {
     const data = { userId, linkId };
     try {
+        // Use sendBeacon for reliable background sending
         if (navigator.sendBeacon) {
             navigator.sendBeacon('/api/clicks', JSON.stringify(data));
         } else {
+            // Fallback for older browsers
             fetch('/api/clicks', {
                 method: 'POST',
                 body: JSON.stringify(data),
@@ -127,7 +128,9 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     const [activeLinks, setActiveLinks] = useState<LinkType[]>([]);
     const botContainerRef = useRef<HTMLDivElement>(null);
 
+
     useEffect(() => {
+        // This effect handles filtering for active links based on date
         const now = new Date();
         const filteredLinks = serverLinks.filter(link => {
             if (!link.active) return false;
@@ -144,35 +147,36 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     }, [serverLinks]);
 
     useEffect(() => {
-        // Use the prop first, but fall back to a hardcoded script for guaranteed execution.
-        const embedScript = user?.bot?.embedScript || `
-            <script src="https://cdn.botpress.cloud/webchat/v3.2/inject.js"></script>
-            <script src="https://files.bpcontent.cloud/2025/06/24/23/20250624233433-30VR2IP1.js" defer></script>
-        `;
-
-        if (!embedScript || typeof window === 'undefined') return;
+        if (!user?.bot?.embedScript || typeof window === 'undefined') return;
 
         const container = botContainerRef.current;
         if (!container) return;
 
+        // Clear previous scripts to avoid duplicates
         container.innerHTML = '';
 
+        // Parse embedScript into DOM elements
         const parser = new DOMParser();
-        const doc = parser.parseFromString(embedScript, 'text/html');
-        const scripts = Array.from(doc.querySelectorAll('script'));
+        const doc = parser.parseFromString(user.bot.embedScript, 'text/html');
+        const scripts = doc.querySelectorAll('script');
 
+        // Append all scripts to the container
         scripts.forEach((oldScript) => {
             const newScript = document.createElement('script');
+
+            // Copy attributes
             Array.from(oldScript.attributes).forEach((attr) => {
                 newScript.setAttribute(attr.name, attr.value);
             });
+
+            // Inline script content
             if (oldScript.textContent) {
                 newScript.textContent = oldScript.textContent;
             }
+
             container.appendChild(newScript);
         });
-    }, [user?.bot?.embedScript]);
-
+  }, [user?.bot?.embedScript]);
 
     const getInitials = (name: string = '') => {
         return name.split(' ').map(n => n[0]).join('')
@@ -236,9 +240,8 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
                 <Logo />
             </footer>
             
+            {/* Container where the bot embed will render */}
             <div ref={botContainerRef} id="public-bot-container" />
         </div>
     );
 }
-
-    
