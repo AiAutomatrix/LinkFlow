@@ -89,40 +89,34 @@ const SupportLinks = ({ links }: { links: LinkType[] }) => {
 };
 
 const BotPreview = ({ embedScript }: { embedScript?: string }) => {
-    const iframeRef = useRef<HTMLIFrameElement>(null);
+    const botContainerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        if (!embedScript || !iframeRef.current) return;
+        const container = botContainerRef.current;
+        if (!container || !embedScript) return;
         
-        const doc = iframeRef.current.contentDocument;
-        if (doc) {
-            doc.open();
-            doc.write(`
-                <html>
-                    <head>
-                        <style>body { margin: 0; padding: 0; }</style>
-                    </head>
-                    <body>
-                        ${embedScript}
-                    </body>
-                </html>
-            `);
-            doc.close();
-        }
+        container.innerHTML = ''; // Clear previous scripts
+        
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = embedScript;
+
+        Array.from(tempDiv.querySelectorAll('script')).forEach(oldScript => {
+            const newScript = document.createElement('script');
+            if (oldScript.src) {
+                newScript.src = oldScript.src;
+            } else {
+                newScript.textContent = oldScript.textContent;
+            }
+            container.appendChild(newScript);
+        });
+
     }, [embedScript]);
 
     if (!embedScript) return null;
-
-    return (
-        <div className="absolute bottom-4 right-4 z-20">
-            <iframe 
-                ref={iframeRef} 
-                className="w-96 h-[500px] border-0 rounded-lg shadow-xl"
-                sandbox="allow-scripts allow-same-origin"
-                title="Bot Preview"
-            ></iframe>
-        </div>
-    );
+    
+    // The ref is attached here, and the container is positioned absolutely
+    // within the parent (the profile preview card).
+    return <div ref={botContainerRef} className="absolute inset-0 z-20"></div>;
 };
 
 
@@ -156,14 +150,14 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
 
 
   return (
-    <Card className="md:sticky top-20">
-      <CardContent className="p-4">
+    <Card className={cn(isPreview ? "border-none shadow-none" : "")}>
+      <CardContent className={cn(isPreview ? "p-0" : "p-4")}>
         <div 
           data-theme={profile.theme || 'light'}
-          className="h-[600px] w-full rounded-md border bg-background p-4 flex flex-col items-center relative overflow-hidden"
+          className="h-[700px] w-full rounded-md border bg-background flex flex-col items-center relative overflow-hidden"
         >
             {profile.animatedBackground && <AnimatedBackground />}
-            <div className="flex-1 w-full flex flex-col items-center pt-8 text-center z-10 overflow-y-auto">
+            <div className="flex-1 w-full flex flex-col items-center pt-8 text-center z-10 overflow-y-auto p-4">
               <Avatar className="h-24 w-24">
                 <AvatarImage src={profile.photoURL || undefined} />
                 <AvatarFallback>{getInitials(profile.displayName)}</AvatarFallback>

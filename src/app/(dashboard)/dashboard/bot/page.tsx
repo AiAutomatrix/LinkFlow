@@ -101,8 +101,8 @@ export default function BotPage() {
   }
   
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        <div className="lg:col-span-2 space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        <div className="space-y-6">
             <div>
                 <h1 className="text-2xl font-bold">Chatbot Integration</h1>
                 <p className="text-muted-foreground">
@@ -150,7 +150,7 @@ export default function BotPage() {
             </Form>
         </div>
 
-        <div className="lg:col-span-1 lg:sticky top-20">
+        <div className="lg:sticky top-20">
             <Card>
                 <CardHeader>
                     <CardTitle>Live Preview</CardTitle>
