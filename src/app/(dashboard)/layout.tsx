@@ -21,8 +21,8 @@ function DashboardMobileLayout({
   const { setOpenMobile } = useSidebar();
 
   const menuItems = [
-    { href: "/dashboard/links", label: "Links", icon: LinkIcon },
     { href: "/dashboard/profile", label: "Profile", icon: User },
+    { href: "/dashboard/links", label: "Links", icon: LinkIcon },
     { href: "/dashboard/appearance", label: "Appearance", icon: Palette },
     { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
   ];
