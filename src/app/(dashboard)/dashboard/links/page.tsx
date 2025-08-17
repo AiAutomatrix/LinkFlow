@@ -56,7 +56,7 @@ const socialLinksSchema = z.object({
 
 const supportLinksSchema = z.object({
     buyMeACoffee: z.string().url({ message: "Please enter a valid 'Buy Me a Coffee' URL."}).optional().or(z.literal('')),
-    email: z.string().email({ message: "Please enter a valid E-Transfer email." }).optional().or(z.literal('')),
+    etransfer: z.string().email({ message: "Please enter a valid E-Transfer email." }).optional().or(z.literal('')),
     btc: z.string().optional(),
     eth: z.string().optional(),
     sol: z.string().optional(),
@@ -79,7 +79,7 @@ export default function LinksPage() {
 
   const supportForm = useForm<z.infer<typeof supportLinksSchema>>({
     resolver: zodResolver(supportLinksSchema),
-    defaultValues: { buyMeACoffee: "", email: "", btc: "", eth: "", sol: "" }
+    defaultValues: { buyMeACoffee: "", etransfer: "", btc: "", eth: "", sol: "" }
   });
 
   useEffect(() => {
@@ -108,7 +108,7 @@ export default function LinksPage() {
             if (link.isSupport) {
                 const platformMap: { [key: string]: keyof z.infer<typeof supportLinksSchema> } = {
                     'buy me a coffee': 'buyMeACoffee',
-                    'etransfer': 'email',
+                    'e-transfer': 'etransfer',
                     'btc': 'btc',
                     'eth': 'eth',
                     'sol': 'sol'
@@ -116,7 +116,7 @@ export default function LinksPage() {
                 const platformKey = platformMap[link.title.toLowerCase()];
 
                 if(platformKey) {
-                    if (platformKey === 'email') { // E-Transfer
+                    if (platformKey === 'etransfer') { // E-Transfer
                         (supportLinksValues as any)[platformKey] = link.url.replace('mailto:', '');
                     } else {
                         (supportLinksValues as any)[platformKey] = link.url;
@@ -134,9 +134,9 @@ export default function LinksPage() {
         });
         supportForm.reset({
             buyMeACoffee: supportLinksValues.buyMeACoffee || '',
-            email: supportLinksValues.email || '',
+            etransfer: supportLinksValues.etransfer || '',
             btc: supportLinksValues.btc || '',
-eth: supportLinksValues.eth || '',
+            eth: supportLinksValues.eth || '',
             sol: supportLinksValues.sol || '',
         });
 
@@ -172,7 +172,7 @@ eth: supportLinksValues.eth || '',
         (l) => (type === 'social' && l.isSocial) || (type === 'support' && l.isSupport)
     );
 
-    const platformConfig: { [key: string]: { title: string; order: number; urlPrefix?: string; isSocial: boolean; isSupport: boolean } } = {
+     const platformConfig: { [key: string]: { title: string; order: number; urlPrefix?: string; isSocial: boolean; isSupport: boolean } } = {
         // Social
         email: { title: 'Email', order: 1000, urlPrefix: 'mailto:', isSocial: true, isSupport: false },
         instagram: { title: 'Instagram', order: 1001, isSocial: true, isSupport: false },
@@ -180,7 +180,7 @@ eth: supportLinksValues.eth || '',
         github: { title: 'Github', order: 1003, isSocial: true, isSupport: false },
         // Support
         buyMeACoffee: { title: 'Buy Me A Coffee', order: 2000, isSocial: false, isSupport: true },
-        'e-transfer': { title: 'E-Transfer', order: 2001, urlPrefix: 'mailto:', isSocial: false, isSupport: true },
+        etransfer: { title: 'E-Transfer', order: 2001, urlPrefix: 'mailto:', isSocial: false, isSupport: true },
         btc: { title: 'BTC', order: 2002, isSocial: false, isSupport: true },
         eth: { title: 'ETH', order: 2003, isSocial: false, isSupport: true },
         sol: { title: 'SOL', order: 2004, isSocial: false, isSupport: true },
@@ -188,13 +188,14 @@ eth: supportLinksValues.eth || '',
 
     const isUpdatingSocial = type === 'social';
 
-    for (const [key, config] of Object.entries(platformConfig)) {
-        if ((isUpdatingSocial && !config.isSocial) || (!isUpdatingSocial && !config.isSupport)) {
+    for (const [key, url] of Object.entries(values)) {
+        const config = platformConfig[key];
+        if (!config) continue;
+
+         if ((isUpdatingSocial && !config.isSocial) || (!isUpdatingSocial && !config.isSupport)) {
             continue;
         }
 
-        const formKey = key === 'e-transfer' ? 'email' : key;
-        const url = values[formKey];
         const existingLink = existingLinks.find((l) => l.title === config.title);
 
         if (url && url.trim() !== '') {
@@ -239,23 +240,8 @@ eth: supportLinksValues.eth || '',
 
   const handleSupportSubmit = async (values: z.infer<typeof supportLinksSchema>) => {
     setLoadingSupport(true);
-    const supportValues = {
-        buyMeACoffee: values.buyMeACoffee,
-        email: values.email, // Corresponds to E-Transfer
-        btc: values.btc,
-        eth: values.eth,
-        sol: values.sol,
-    };
-
     try {
-        const mappedValues: Record<string, string | undefined> = {
-            buyMeACoffee: supportValues.buyMeACoffee,
-            'e-transfer': supportValues.email, // map form 'email' to 'e-transfer' key
-            btc: supportValues.btc,
-            eth: supportValues.eth,
-            sol: supportValues.sol,
-        };
-        await handleBatchUpdate(mappedValues, 'support');
+        await handleBatchUpdate(values, 'support');
         toast({ title: "Support links updated!" });
     } catch (error: any) {
         toast({ variant: 'destructive', title: 'Error', description: 'Failed to update support links.' });
@@ -267,9 +253,8 @@ eth: supportLinksValues.eth || '',
   const handleAddLink = async (title: string, url: string, startDate?: Date, endDate?: Date) => {
     if (!user) return;
     
-    // Correctly calculate the next order number for custom links
-    const customLinks = links.filter(l => !l.isSocial && !l.isSupport);
-    const maxOrder = customLinks.reduce((max, link) => Math.max(max, link.order), -1);
+    const maxOrder = links.filter(l => !l.isSocial && !l.isSupport)
+                           .reduce((max, link) => Math.max(max, link.order), -1);
 
     const newLink: Omit<Link, 'id'> = {
         title,
@@ -551,7 +536,7 @@ eth: supportLinksValues.eth || '',
                                 />
                              <FormField
                                 control={supportForm.control}
-                                name="email"
+                                name="etransfer"
                                 render={({ field }) => (
                                     <FormItem>
                                     <FormLabel>E-Transfer Email</FormLabel>
