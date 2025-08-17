@@ -1,65 +1,31 @@
 
 import type { Link as LinkType, UserProfile } from '@/lib/types';
 import ProfileClientPage from './profile-client-page';
-import { collection, query, where, getDocs, limit, Timestamp, orderBy } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { notFound } from 'next/navigation';
+import { getFirestoreUser, getUserLinks } from '@/lib/firebase-utils';
 import { serializeFirestoreData } from '@/lib/utils';
+
 
 export const revalidate = 0; // Forces fresh data on every request
 
-async function getUserData(username: string): Promise<UserProfile | null> {
-    if (!username) return null;
-    const usersRef = collection(db, "users");
-    // This query requires a Firestore index on the 'username' field.
-    const q = query(usersRef, where("username", "==", username), limit(1));
-    
-    try {
-        const querySnapshot = await getDocs(q);
-
-        if (querySnapshot.empty) {
-            console.log(`No user found with username: ${username}`);
-            return null;
-        }
-        const userDoc = querySnapshot.docs[0];
-        const userData = { uid: userDoc.id, ...userDoc.data() } as UserProfile;
-        
-        // Ensure bot field exists to prevent client-side errors
-        if (!userData.bot) {
-            userData.bot = { embedScript: '' };
-        }
-        
-        return userData;
-
-    } catch (error) {
-        console.error(`Error fetching user data for username: ${username}`, error);
-        return null;
-    }
-}
-
-async function getUserLinks(uid: string): Promise<LinkType[]> {
-    const linksRef = collection(db, `users/${uid}/links`);
-    const q = query(linksRef, orderBy('order'));
-    const querySnapshot = await getDocs(q);
-    
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LinkType));
-}
-
 export default async function UserProfilePage({ params }: { params: { username: string } }) {
-    const userData = await getUserData(params.username);
+    // 1. Fetch user data using the new, robust utility function.
+    const userData = await getFirestoreUser(params.username);
     
     if (!userData) {
         notFound();
     }
-    console.log("Raw Firestore userData:", JSON.stringify(userData));
 
+    // 2. Fetch the user's links using the new utility function.
+    const linksData = await getUserLinks(userData.uid);
 
-    // Serialize the data before passing it to the client component.
+    // 3. Serialize both user and links data to safely pass to the client component.
     const user = serializeFirestoreData(userData) as UserProfile;
-    const links = await getUserLinks(userData.uid).then(links => links.map(link => serializeFirestoreData(link) as LinkType));
-
+    const links = linksData.map(link => serializeFirestoreData(link) as LinkType);
+    
+    console.log("Raw Firestore userData:", JSON.stringify(userData));
     console.log("Serialized user data being passed to client:", JSON.stringify(user, null, 2));
 
-
+    // 4. Pass the prepared data to the client component for rendering.
     return <ProfileClientPage user={user} links={links} />;
 }
