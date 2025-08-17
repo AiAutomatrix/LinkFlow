@@ -19,7 +19,7 @@ const serializeFirestoreData = (data: any): any => {
         return data.map(serializeFirestoreData);
     }
     // This handles nested objects (like the 'bot' field) recursively.
-    if (typeof data === 'object') {
+    if (typeof data === 'object' && !data.nanoseconds) { // Added check to exclude Timestamps which are also objects
         const serializedData: { [key: string]: any } = {};
         for (const key in data) {
             if (Object.prototype.hasOwnProperty.call(data, key)) {

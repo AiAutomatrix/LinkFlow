@@ -88,7 +88,7 @@ const SupportLinks = ({ links }: { links: LinkType[] }) => {
     );
 };
 
-export default function PublicProfilePreview({ profile, links = [], isPreview = false }: { profile: Partial<UserProfile>; links?: LinkType[], isPreview?: boolean }) {
+export default function PublicProfilePreview({ profile, links = [], isPreview = false, embedScript }: { profile: Partial<UserProfile>; links?: LinkType[], isPreview?: boolean, embedScript?: string }) {
 
     const getInitials = (name: string = "") => {
         return name.split(" ").map((n) => n[0]).join("");
@@ -117,8 +117,21 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
       </div>
     );
 
+    const srcDoc = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <style>body { margin: 0; padding: 0; }</style>
+      </head>
+      <body>
+        ${embedScript || ''}
+      </body>
+    </html>
+  `;
+
 
   return (
+    <>
     <Card className={cn(isPreview ? "border-none shadow-none" : "")}>
       <CardContent className={cn(isPreview ? "p-0" : "p-4")}>
         <div 
@@ -162,5 +175,14 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
         </div>
       </CardContent>
     </Card>
+     {embedScript && isPreview && (
+        <iframe
+        srcDoc={srcDoc}
+        className="absolute inset-0 w-full h-full border-0"
+        title="Chatbot Preview"
+        sandbox="allow-scripts allow-same-origin"
+        />
+    )}
+    </>
   );
 }

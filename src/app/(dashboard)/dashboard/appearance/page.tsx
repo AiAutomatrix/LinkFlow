@@ -81,6 +81,7 @@ export default function AppearancePage() {
   const previewProfile: Partial<UserProfile> & { photoURL?: string } = {
     ...user,
     ...watchedValues,
+    bot: user?.bot, // Ensure bot data is passed to the preview
   };
 
   useEffect(() => {
@@ -202,7 +203,7 @@ export default function AppearancePage() {
           </form>
         </Form>
       </div>
-      <div className="lg:col-span-1">
+      <div className="relative lg:col-span-1 h-[700px]">
         <PublicProfilePreview 
             profile={previewProfile} 
             links={links} 
