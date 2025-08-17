@@ -156,27 +156,28 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         // Clear previous scripts to avoid duplicates
         container.innerHTML = '';
 
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = user.bot.embedScript;
+        // Parse embedScript into DOM elements
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(user.bot.embedScript, 'text/html');
+        const scripts = doc.querySelectorAll('script');
 
-        const scripts = wrapper.querySelectorAll('script');
-        scripts.forEach(oldScript => {
+        // Append all scripts to the container
+        scripts.forEach((oldScript) => {
             const newScript = document.createElement('script');
-            
-            // Copy all attributes
-            Array.from(oldScript.attributes).forEach(attr => {
+
+            // Copy attributes
+            Array.from(oldScript.attributes).forEach((attr) => {
                 newScript.setAttribute(attr.name, attr.value);
             });
 
-            // Copy inline script content
-            if (oldScript.text) {
-                newScript.text = oldScript.text;
+            // Inline script content
+            if (oldScript.textContent) {
+                newScript.textContent = oldScript.textContent;
             }
-            
+
             container.appendChild(newScript);
         });
-
-    }, [user?.bot?.embedScript]);
+  }, [user?.bot?.embedScript]);
 
     const getInitials = (name: string = '') => {
         return name.split(' ').map(n => n[0]).join('')
@@ -240,8 +241,8 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
                 <Logo />
             </footer>
             
-            {/* This container will hold the bot embed script */}
-            <div id="bot-container" ref={botContainerRef}></div>
+            {/* Container where the bot embed will render */}
+            <div ref={botContainerRef} id="public-bot-container" />
         </div>
     );
 }
