@@ -1,19 +1,25 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /users/{userId} {
-      // Allow public GET for profile pages
-      allow get: if true; 
+      // Allow anyone to get a user's public profile.
+      allow get: if true;
+
+      // Allow authenticated users to list/query their own data (for dashboard, analytics).
+      // This rule is what secures the dashboard pages.
+      allow list: if request.auth != null && request.auth.uid == userId;
       
-      // Allow authenticated user to read their own data (for dashboard/analytics)
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      // Allow only the authenticated owner to write to their profile.
+      allow write: if request.auth != null && request.auth.uid == userId;
 
       match /links/{linkId} {
-        // Allow public LIST for profile pages
-        allow list: if true;
+        // Allow public read of all links for a user.
+        // `read` covers `get` and `list`.
+        allow read: if true;
 
-        // Allow authenticated user to read/write their own links
-        allow get, write: if request.auth != null && request.auth.uid == userId;
+        // Allow only the authenticated owner to write to their links.
+        allow write: if request.auth != null && request.auth.uid == userId;
       }
     }
   }
