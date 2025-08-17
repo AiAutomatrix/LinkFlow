@@ -129,7 +129,6 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     const [activeLinks, setActiveLinks] = useState<LinkType[]>([]);
     const botContainerRef = useRef<HTMLDivElement>(null);
 
-
     useEffect(() => {
         // This effect handles filtering for active links based on date
         const now = new Date();
@@ -148,34 +147,33 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     }, [serverLinks]);
 
     useEffect(() => {
-        console.log("Embed script received on client:", user?.bot?.embedScript);
         if (!user?.bot?.embedScript || typeof window === 'undefined') return;
 
         const container = botContainerRef.current;
         if (!container) return;
 
-        // Clear previous scripts to avoid duplicates
+        // Clear previous scripts to avoid duplicates on re-render
         container.innerHTML = '';
 
-        // Parse embedScript into DOM elements
+        // Parse the embedScript string into a document fragment
         const parser = new DOMParser();
         const doc = parser.parseFromString(user.bot.embedScript, 'text/html');
-        const scripts = doc.querySelectorAll('script');
+        const scripts = Array.from(doc.querySelectorAll('script'));
 
-        // Append all scripts to the container
-        scripts.forEach((oldScript) => {
+        // Re-create and append each script to make it executable
+        scripts.forEach(oldScript => {
             const newScript = document.createElement('script');
-
-            // Copy attributes
-            Array.from(oldScript.attributes).forEach((attr) => {
+            
+            // Copy all attributes from the old script to the new one
+            Array.from(oldScript.attributes).forEach(attr => {
                 newScript.setAttribute(attr.name, attr.value);
             });
 
-            // Inline script content
+            // Copy the script content
             if (oldScript.textContent) {
                 newScript.textContent = oldScript.textContent;
             }
-
+            
             container.appendChild(newScript);
         });
   }, [user?.bot?.embedScript]);
@@ -242,7 +240,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
                 <Logo />
             </footer>
             
-            {/* Container where the bot embed will render */}
+            {/* This container is where the bot script will be safely injected and executed */}
             <div ref={botContainerRef} id="public-bot-container" />
         </div>
     );
