@@ -127,6 +127,8 @@ const SupportLinks = ({ user, links }: { user: UserProfile, links: LinkType[] })
 
 export default function ProfileClientPage({ user, links: serverLinks }: { user: UserProfile; links: LinkType[] }) {
     const [activeLinks, setActiveLinks] = useState<LinkType[]>([]);
+    const botContainerRef = useRef<HTMLDivElement>(null);
+
 
     useEffect(() => {
         // This effect handles filtering for active links based on date
@@ -144,6 +146,37 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         });
         setActiveLinks(filteredLinks);
     }, [serverLinks]);
+
+    useEffect(() => {
+        if (!user?.bot?.embedScript || typeof window === 'undefined') return;
+
+        const container = botContainerRef.current;
+        if (!container) return;
+
+        // Clear previous scripts to avoid duplicates
+        container.innerHTML = '';
+
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = user.bot.embedScript;
+
+        const scripts = wrapper.querySelectorAll('script');
+        scripts.forEach(oldScript => {
+            const newScript = document.createElement('script');
+            
+            // Copy all attributes
+            Array.from(oldScript.attributes).forEach(attr => {
+                newScript.setAttribute(attr.name, attr.value);
+            });
+
+            // Copy inline script content
+            if (oldScript.text) {
+                newScript.text = oldScript.text;
+            }
+            
+            container.appendChild(newScript);
+        });
+
+    }, [user?.bot?.embedScript]);
 
     const getInitials = (name: string = '') => {
         return name.split(' ').map(n => n[0]).join('')
@@ -206,6 +239,9 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
             <footer className="mt-auto py-8 z-10">
                 <Logo />
             </footer>
+            
+            {/* This container will hold the bot embed script */}
+            <div id="bot-container" ref={botContainerRef}></div>
         </div>
     );
 }
