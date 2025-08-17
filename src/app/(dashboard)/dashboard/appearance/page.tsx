@@ -203,8 +203,15 @@ export default function AppearancePage() {
         </Form>
       </div>
       <div className="lg:col-span-1">
-        <PublicProfilePreview profile={previewProfile} links={links} isPreview />
+        <PublicProfilePreview 
+            profile={previewProfile} 
+            links={links} 
+            isPreview 
+            embedScript={user?.bot?.embedScript}
+        />
       </div>
     </div>
   );
 }
+
+    
