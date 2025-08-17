@@ -26,9 +26,11 @@ import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Loading from "@/app/loading";
+import PublicProfilePreview from "../appearance/_components/public-profile-preview";
+import type { Link } from "@/lib/types";
 
 const botSchema = z.object({
   embedScript: z.string().refine((val) => val.trim() === '' || (val.includes("<script") && (val.includes("botpress.cloud") || val.includes("bpcdn.cloud"))), {
@@ -41,6 +43,7 @@ export default function BotPage() {
   const { toast } = useToast();
   const { user, loading: authLoading, setUser } = useAuth();
   const [formLoading, setFormLoading] = useState(false);
+  const [links, setLinks] = useState<Link[]>([]);
   
   const form = useForm<z.infer<typeof botSchema>>({
     resolver: zodResolver(botSchema),
@@ -58,6 +61,16 @@ export default function BotPage() {
         });
     }
   }, [user, form]);
+
+  useEffect(() => {
+    if (!user) return;
+    const linksCollection = collection(db, `users/${user.uid}/links`);
+    const q = query(linksCollection, orderBy("order"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        setLinks(snapshot.docs.map(doc => ({id: doc.id, ...doc.data()} as Link)))
+    });
+    return () => unsubscribe();
+  }, [user]);
   
   async function onSubmit(values: z.infer<typeof botSchema>) {
     if (!user) return;
@@ -75,13 +88,13 @@ export default function BotPage() {
     }
   }
 
-  if (authLoading) {
+  if (authLoading || !user) {
       return <Loading />;
   }
   
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-        <div className="space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        <div className="lg:col-span-1 space-y-6">
             <div>
                 <h1 className="text-2xl font-bold">Chatbot Integration</h1>
                 <p className="text-muted-foreground">
@@ -129,33 +142,23 @@ export default function BotPage() {
             </Form>
         </div>
 
-        <div className="lg:sticky top-20">
-            <Card>
+        <div className="lg:col-span-2 lg:sticky top-20">
+             <Card>
                 <CardHeader>
                     <CardTitle>Live Preview</CardTitle>
                      <CardDescription>
-                        This is how your chatbot will appear to visitors.
+                        This is how your chatbot will appear to visitors on your public profile.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="relative w-full h-[700px] border rounded-md overflow-hidden bg-gray-100">
-                        {embedScriptValue ? (
-                           <iframe
-                                srcDoc={embedScriptValue}
-                                className="w-full h-full"
-                                title="Bot Preview"
-                                sandbox="allow-scripts allow-same-origin"
-                           />
-                        ) : (
-                            <div className="flex items-center justify-center h-full text-muted-foreground">
-                                <p>Paste your embed code to see a preview.</p>
-                            </div>
-                        )}
-                    </div>
+                   <PublicProfilePreview 
+                        profile={{...user, bot: { embedScript: embedScriptValue || "" }}} 
+                        links={links}
+                        isPreview={true}
+                    />
                 </CardContent>
             </Card>
         </div>
     </div>
   );
 }
-

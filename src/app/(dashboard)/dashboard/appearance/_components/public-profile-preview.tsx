@@ -93,7 +93,8 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
     const embedScript = profile.bot?.embedScript;
 
     useEffect(() => {
-        if (!embedScript || !botContainerRef.current) return;
+        // This ensures we're on the client and the script exists
+        if (typeof window === 'undefined' || !embedScript || !botContainerRef.current) return;
         
         const container = botContainerRef.current;
         // Clear previous scripts to prevent duplicates when script changes
@@ -113,9 +114,12 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
             
             // Copy inline script content
             if (oldScript.text) {
-                newScript.text = oldScript.text;
+                try {
+                    newScript.appendChild(document.createTextNode(oldScript.text));
+                } catch(e) {
+                    newScript.text = oldScript.text;
+                }
             }
-
             container.appendChild(newScript);
         });
 
@@ -191,7 +195,7 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
               <SupportLinks links={supportLinks} />
             </div>
             {/* The container where the bot script will be injected */}
-            <div ref={botContainerRef} className="absolute inset-0 z-20"></div>
+            <div ref={botContainerRef} className="absolute inset-0 z-20 pointer-events-none [&>*]:pointer-events-auto"></div>
         </div>
       </CardContent>
     </Card>
