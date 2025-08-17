@@ -152,19 +152,22 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     useEffect(() => {
         const embedCode = user?.bot?.embedScript;
         if (isClient && embedCode) {
-            // The container is used to parse the script, but we append to the body
-            // to ensure it executes correctly.
+            const container = document.getElementById('public-bot-container');
+            if (!container) return;
+
+            container.innerHTML = '';
+
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = embedCode;
 
             Array.from(tempDiv.querySelectorAll('script')).forEach(oldScript => {
                 const newScript = document.createElement('script');
-                // Copy all attributes from the old script to the new one
                 for (let i = 0; i < oldScript.attributes.length; i++) {
                     const attr = oldScript.attributes[i];
                     newScript.setAttribute(attr.name, attr.value);
                 }
                 newScript.textContent = oldScript.textContent;
+                // Append to body to ensure global execution context
                 document.body.appendChild(newScript);
             });
         }

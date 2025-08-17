@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import type { UserProfile, Link as LinkType } from "@/lib/types";
 import { Mail, Instagram, Facebook, Github, Coffee, Banknote, Bitcoin, ClipboardCopy, ClipboardCheck } from 'lucide-react';
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 
@@ -100,27 +100,33 @@ const BotPreview = ({ embedScript }: { embedScript?: string }) => {
         const container = document.getElementById('live-preview-bot-container');
         if (!container) return;
 
-        container.innerHTML = ''; // Clear previous content
+        // Clear previous content to avoid script duplication
+        container.innerHTML = ''; 
 
+        // Use a temporary div to parse the script string
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = embedScript;
 
+        // Manually create and append script tags to ensure execution
         Array.from(tempDiv.querySelectorAll('script')).forEach(oldScript => {
             const newScript = document.createElement('script');
+            
             // Copy all attributes from the old script to the new one
             for (let i = 0; i < oldScript.attributes.length; i++) {
                 const attr = oldScript.attributes[i];
                 newScript.setAttribute(attr.name, attr.value);
             }
             newScript.textContent = oldScript.textContent;
-            document.body.appendChild(newScript);
+            
+            // Append to the container to execute it in the correct scope
+            container.appendChild(newScript);
         });
 
     }, [isClient, embedScript]);
-
+    
     if (!embedScript) return null;
     
-    // This div is just a placeholder; the script is appended to the body
+    // This div is the container where the script will be injected.
     return <div id="live-preview-bot-container" className="fixed bottom-4 right-4 z-20"></div>;
 };
 
