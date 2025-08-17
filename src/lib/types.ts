@@ -10,19 +10,6 @@ export interface UserProfile {
   plan: 'free' | 'pro';
   theme?: string;
   animatedBackground?: boolean;
-  socialLinks?: { 
-    email?: string;
-    instagram?: string;
-    facebook?: string;
-    github?: string;
-  };
-  supportLinks?: {
-    buyMeACoffee?: string;
-    email?: string;
-    btc?: string;
-    eth?: string;
-    sol?: string;
-  };
   createdAt: Timestamp | FieldValue; 
 }
 
@@ -34,7 +21,10 @@ export interface Link {
   active: boolean;
   clicks: number;
   isSocial: boolean;
+  isSupport?: boolean;
   createdAt?: Timestamp | Date | string;
   startDate?: Timestamp | Date | string;
   endDate?: Timestamp | Date | string;
 }
+
+    

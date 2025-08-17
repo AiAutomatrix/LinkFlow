@@ -50,60 +50,65 @@ const CryptoLog = ({ icon, name, address, onCopy }: { icon: React.ReactNode, nam
     )
 }
 
-const SupportLinks = ({ user }: { user: UserProfile }) => {
+const SupportLinks = ({ user, links }: { user: UserProfile, links: LinkType[] }) => {
     const { toast } = useToast();
-    const { supportLinks } = user;
     const [copiedStates, setCopiedStates] = useState<{[key: string]: boolean}>({});
 
-    if (!supportLinks || Object.values(supportLinks).every(v => !v)) {
-        return null;
-    }
-    
-    const trackSupportClick = (platform: string) => {
+    const handleLinkClick = async (link: LinkType) => {
         try {
           fetch('/api/clicks', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: user.uid, linkId: `support_${platform}` }),
+            body: JSON.stringify({ userId: user.uid, linkId: link.id }),
           });
         } catch (error) {
-          console.error('Failed to track support click:', error);
+          console.error('Failed to track click:', error);
         }
     };
     
-    const handleCopy = (text: string, platform: string) => {
-        navigator.clipboard.writeText(text);
-        trackSupportClick(platform);
-        setCopiedStates(prev => ({ ...Object.fromEntries(Object.keys(prev).map(k => [k, false])), [platform]: true }));
+    const handleCopy = (link: LinkType) => {
+        navigator.clipboard.writeText(link.url);
+        handleLinkClick(link);
+        setCopiedStates(prev => ({ ...Object.fromEntries(Object.keys(prev).map(k => [k, false])), [link.id]: true }));
         toast({ title: "Copied to clipboard!"});
         setTimeout(() => {
-            setCopiedStates(prev => ({ ...prev, [platform]: false }));
+            setCopiedStates(prev => ({ ...prev, [link.id]: false }));
         }, 2000);
     }
     
-    const hasCrypto = supportLinks.btc || supportLinks.eth || supportLinks.sol;
+    const buyMeACoffeeLink = links.find(l => l.title === 'Buy Me A Coffee');
+    const eTransferLink = links.find(l => l.title === 'E-Transfer');
+    const btcLink = links.find(l => l.title === 'BTC');
+    const ethLink = links.find(l => l.title === 'ETH');
+    const solLink = links.find(l => l.title === 'SOL');
+
+    const hasCrypto = btcLink || ethLink || solLink;
+
+    if (!buyMeACoffeeLink && !eTransferLink && !hasCrypto) {
+        return null;
+    }
 
     return (
         <div className="mt-8 w-full max-w-md mx-auto">
             <h3 className="text-xs font-semibold uppercase text-muted-foreground text-center mb-4">Support Me</h3>
             <div className="grid grid-cols-1 gap-3">
-                {supportLinks.buyMeACoffee && (
-                    <a href={supportLinks.buyMeACoffee} target="_blank" rel="noopener noreferrer" onClick={() => trackSupportClick('buyMeACoffee')} className="w-full text-center bg-yellow-400 text-black font-semibold p-3 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:scale-105 transition-transform">
+                {buyMeACoffeeLink && (
+                    <a href={buyMeACoffeeLink.url} target="_blank" rel="noopener noreferrer" onClick={() => handleLinkClick(buyMeACoffeeLink)} className="w-full text-center bg-yellow-400 text-black font-semibold p-3 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:scale-105 transition-transform">
                         <Coffee className="h-5 w-5" /> Buy Me a Coffee
                     </a>
                 )}
-                {supportLinks.email && (
-                     <button onClick={() => handleCopy(supportLinks.email!, 'email')} className="w-full text-center bg-secondary text-secondary-foreground font-semibold p-3 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:scale-105 transition-transform">
-                        {copiedStates['email'] ? <ClipboardCheck className="h-5 w-5" /> : <Banknote className="h-5 w-5" />}
-                        {copiedStates['email'] ? "Copied E-Transfer Email" : "E-Transfer"}
+                {eTransferLink && (
+                     <button onClick={() => handleCopy(eTransferLink)} className="w-full text-center bg-secondary text-secondary-foreground font-semibold p-3 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:scale-105 transition-transform">
+                        {copiedStates[eTransferLink.id] ? <ClipboardCheck className="h-5 w-5" /> : <Banknote className="h-5 w-5" />}
+                        {copiedStates[eTransferLink.id] ? "Copied E-Transfer Email" : "E-Transfer"}
                     </button>
                 )}
                 {hasCrypto && (
                     <div className="bg-muted/50 rounded-lg p-3 space-y-3 font-mono text-sm">
                         <p className="text-xs text-muted-foreground font-sans text-center">CRYPTO LOGS</p>
-                        {supportLinks.btc && <CryptoLog icon={<Bitcoin className="h-5 w-5 shrink-0" />} name="BTC" address={supportLinks.btc} onCopy={(text) => handleCopy(text, 'btc')} />}
-                        {supportLinks.eth && <CryptoLog icon={<EthIcon />} name="ETH" address={supportLinks.eth} onCopy={(text) => handleCopy(text, 'eth')} />}
-                        {supportLinks.sol && <CryptoLog icon={<SolIcon />} name="SOL" address={supportLinks.sol} onCopy={(text) => handleCopy(text, 'sol')} />}
+                        {btcLink && <CryptoLog icon={<Bitcoin className="h-5 w-5 shrink-0" />} name="BTC" address={btcLink.url} onCopy={() => handleCopy(btcLink)} />}
+                        {ethLink && <CryptoLog icon={<EthIcon />} name="ETH" address={ethLink.url} onCopy={() => handleCopy(ethLink)} />}
+                        {solLink && <CryptoLog icon={<SolIcon />} name="SOL" address={solLink.url} onCopy={() => handleCopy(solLink)} />}
                     </div>
                 )}
             </div>
@@ -149,7 +154,9 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     };
     
     const socialLinks = activeLinks.filter(l => l.isSocial);
-    const regularLinks = activeLinks.filter(l => !l.isSocial);
+    const regularLinks = activeLinks.filter(l => !l.isSocial && !l.isSupport);
+    const supportLinks = activeLinks.filter(l => l.isSupport);
+
 
     return (
         <div data-theme={user.theme || 'light'} className="relative flex flex-col items-center min-h-screen pt-12 px-4 bg-background text-foreground overflow-hidden">
@@ -192,7 +199,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
                 })}
                 </div>
 
-                <SupportLinks user={user} />
+                <SupportLinks user={user} links={supportLinks} />
             </div>
             <footer className="mt-auto py-8 z-10">
                 <Logo />
@@ -200,3 +207,5 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         </div>
     );
 }
+
+    

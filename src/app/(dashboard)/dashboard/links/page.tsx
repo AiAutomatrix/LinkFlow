@@ -47,7 +47,6 @@ const SolIcon = () => (
     <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-muted-foreground"><title>Solana</title><path d="M4.236.427a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533V-.001a.6.6 0 00-.128-.532.6.6 0 00-.49-.28L4.236.427zm10.02 6.046a.6.6 0 00-.532.127.6.6 0 00-.28.491v4.54a.6.6 0 00.28.49.6.6 0 00.532.128l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.532V5.76a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12zm-4.383 6.64a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533v-4.54a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12z"/></svg>
 );
 
-
 const socialLinksSchema = z.object({
     email: z.string().email({ message: "Please enter a valid email." }).optional().or(z.literal('')),
     instagram: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
@@ -66,7 +65,7 @@ const supportLinksSchema = z.object({
 
 export default function LinksPage() {
   const { toast } = useToast();
-  const { user, userProfile, loading: authLoading, setUser } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [links, setLinks] = useState<Link[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingSocial, setLoadingSocial] = useState(false);
@@ -92,6 +91,7 @@ export default function LinksPage() {
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const linksData: Link[] = [];
         const socialLinksValues: Partial<z.infer<typeof socialLinksSchema>> = {};
+        const supportLinksValues: Partial<z.infer<typeof supportLinksSchema>> = {};
 
         querySnapshot.forEach((doc) => {
             const link = { id: doc.id, ...doc.data() } as Link;
@@ -99,11 +99,15 @@ export default function LinksPage() {
 
             if(link.isSocial) {
                 const platform = link.title.toLowerCase() as keyof z.infer<typeof socialLinksSchema>;
-                if (platform === 'email') {
+                 if (platform === 'email') {
                     socialLinksValues[platform] = link.url.replace('mailto:', '');
                 } else {
                     socialLinksValues[platform] = link.url;
                 }
+            }
+            if (link.isSupport) {
+                const platform = link.title.toLowerCase().replace(/\s/g, '') as keyof z.infer<typeof supportLinksSchema>;
+                supportLinksValues[platform] = link.url;
             }
         });
         
@@ -114,24 +118,28 @@ export default function LinksPage() {
             facebook: socialLinksValues.facebook || '',
             github: socialLinksValues.github || '',
         });
+        supportForm.reset({
+            buyMeACoffee: supportLinksValues.buyMeACoffee || '',
+            email: supportLinksValues.email?.replace('mailto:', '') || '',
+            btc: supportLinksValues.btc || '',
+            eth: supportLinksValues.eth || '',
+            sol: supportLinksValues.sol || '',
+        });
+
         setLoading(false);
     }, (error) => {
         console.error("Error fetching links: ", error);
         toast({ variant: 'destructive', title: "Error", description: "Could not fetch links." });
         setLoading(false);
     });
-    
-    if (userProfile?.supportLinks) {
-        supportForm.reset(userProfile.supportLinks);
-    }
 
     return () => unsubscribe();
-  }, [user, toast, socialForm, supportForm, userProfile]);
+  }, [user, toast, socialForm, supportForm]);
 
 
   const handleShare = () => {
-    if (!userProfile) return;
-    const publicUrl = `${window.location.origin}/u/${userProfile.username}`;
+    if (!user) return;
+    const publicUrl = `${window.location.origin}/u/${user.username}`;
     navigator.clipboard.writeText(publicUrl);
     toast({
         title: "Link Copied!",
@@ -139,44 +147,69 @@ export default function LinksPage() {
     });
   }
 
-  const handleSocialSubmit = async (values: z.infer<typeof socialLinksSchema>) => {
+  const handleBatchUpdate = async (
+    values: Record<string, string | undefined>, 
+    type: 'social' | 'support'
+  ) => {
     if (!user) return;
-    setLoadingSocial(true);
     const linksCollection = collection(db, `users/${user.uid}/links`);
-    const platforms = ['email', 'instagram', 'facebook', 'github'];
+    const batch = writeBatch(db);
+    const existingLinks = links.filter(l => (type === 'social' && l.isSocial) || (type === 'support' && l.isSupport));
 
-    try {
-        const batch = writeBatch(db);
-        const existingSocialLinks = links.filter(l => l.isSocial);
+    const platformConfig: { [key: string]: { title: string, order: number, urlPrefix?: string } } = {
+        email: { title: 'Email', order: 1000, urlPrefix: 'mailto:' },
+        instagram: { title: 'Instagram', order: 1001 },
+        facebook: { title: 'Facebook', order: 1002 },
+        github: { title: 'Github', order: 1003 },
+        buyMeACoffee: { title: 'Buy Me A Coffee', order: 2000 },
+        'support-email': { title: 'E-Transfer', order: 2001, urlPrefix: 'mailto:'},
+        btc: { title: 'BTC', order: 2002 },
+        eth: { title: 'ETH', order: 2003 },
+        sol: { title: 'SOL', order: 2004 },
+    };
 
-        for (const [index, platform] of platforms.entries()) {
-            const url = values[platform as keyof typeof values];
-            const existingLink = existingSocialLinks.find(l => l.title.toLowerCase() === platform);
-            
-            if (url) {
-                const finalUrl = platform === 'email' ? `mailto:${url}` : url;
-                if (existingLink) {
-                    batch.update(doc(db, `users/${user.uid}/links`, existingLink.id), { url: finalUrl, active: true });
-                } else {
-                    const newLinkRef = doc(linksCollection);
-                    batch.set(newLinkRef, {
-                        title: platform.charAt(0).toUpperCase() + platform.slice(1),
-                        url: finalUrl,
-                        order: 1000 + index, 
-                        active: true,
-                        clicks: 0,
-                        createdAt: new Date(),
-                        isSocial: true,
-                    });
-                }
-            } else { 
-                if (existingLink) {
-                    batch.delete(doc(db, `users/${user.uid}/links`, existingLink.id));
-                }
+    for (const [key, config] of Object.entries(platformConfig)) {
+        // Skip platforms that don't belong to the current update type
+        if ((type === 'social' && config.order >= 2000) || (type === 'support' && config.order < 2000)) {
+            continue;
+        }
+
+        const formKey = (key === 'support-email') ? 'email' : key;
+        const url = values[formKey];
+        const existingLink = existingLinks.find(l => l.title === config.title);
+        
+        if (url) {
+            const finalUrl = config.urlPrefix ? `${config.urlPrefix}${url}` : url;
+            if (existingLink) {
+                batch.update(doc(db, `users/${user.uid}/links`, existingLink.id), { url: finalUrl, active: true });
+            } else {
+                const newLinkRef = doc(linksCollection);
+                batch.set(newLinkRef, {
+                    title: config.title,
+                    url: finalUrl,
+                    order: config.order,
+                    active: true,
+                    clicks: 0,
+                    createdAt: new Date(),
+                    isSocial: type === 'social',
+                    isSupport: type === 'support',
+                });
+            }
+        } else { 
+            if (existingLink) {
+                batch.delete(doc(db, `users/${user.uid}/links`, existingLink.id));
             }
         }
-        
-        await batch.commit();
+    }
+    
+    await batch.commit();
+  }
+
+
+  const handleSocialSubmit = async (values: z.infer<typeof socialLinksSchema>) => {
+    setLoadingSocial(true);
+    try {
+        await handleBatchUpdate(values, 'social');
         toast({ title: "Social links updated!" });
     } catch (error: any) {
         toast({ variant: 'destructive', title: "Error", description: error.message });
@@ -186,18 +219,22 @@ export default function LinksPage() {
   }
 
   const handleSupportSubmit = async (values: z.infer<typeof supportLinksSchema>) => {
-      if (!user) return;
-      setLoadingSupport(true);
-      try {
-          const userRef = doc(db, 'users', user.uid);
-          await updateDoc(userRef, { supportLinks: values });
-          setUser(prevUser => prevUser ? { ...prevUser, supportLinks: values } : null);
-          toast({ title: "Support links updated!" });
-      } catch (error: any) {
-          toast({ variant: 'destructive', title: 'Error', description: 'Failed to update support links.' });
-      } finally {
-          setLoadingSupport(false);
-      }
+    setLoadingSupport(true);
+    const supportValues: Record<string, string | undefined> = {
+        buyMeACoffee: values.buyMeACoffee,
+        'support-email': values.email, // Use a unique key to avoid conflict
+        btc: values.btc,
+        eth: values.eth,
+        sol: values.sol,
+    }
+    try {
+        await handleBatchUpdate(supportValues, 'support');
+        toast({ title: "Support links updated!" });
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Failed to update support links.' });
+    } finally {
+        setLoadingSupport(false);
+    }
   }
   
   const handleAddLink = async (title: string, url: string, startDate?: Date, endDate?: Date) => {
@@ -205,13 +242,14 @@ export default function LinksPage() {
     const newLink: Omit<Link, 'id'> = {
         title,
         url,
-        order: links.filter(l => !l.isSocial).length,
+        order: links.filter(l => !l.isSocial && !l.isSupport).length,
         active: true,
         clicks: 0,
         createdAt: new Date(),
         startDate: startDate || undefined,
         endDate: endDate || undefined,
         isSocial: false,
+        isSupport: false,
     };
     try {
         await addDoc(collection(db, `users/${user.uid}/links`), newLink);
@@ -247,7 +285,7 @@ export default function LinksPage() {
   const handleMoveLink = async (linkId: string, direction: 'up' | 'down') => {
     if (!user) return;
     
-    const regularLinks = links.filter(l => !l.isSocial).sort((a, b) => a.order - b.order);
+    const regularLinks = links.filter(l => !l.isSocial && !l.isSupport).sort((a, b) => a.order - b.order);
     const currentIndex = regularLinks.findIndex(link => link.id === linkId);
     if (currentIndex === -1) return;
 

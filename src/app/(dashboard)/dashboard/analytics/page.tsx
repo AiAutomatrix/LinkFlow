@@ -17,19 +17,14 @@ import type { Link } from "@/lib/types";
 import { useEffect, useState, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/auth-context";
-import { collection, onSnapshot, query, orderBy, doc, getDoc } from "firebase/firestore";
+import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
-
-type SupportClickData = {
-    [key: string]: number;
-};
 
 export default function AnalyticsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [links, setLinks] = useState<Link[]>([]);
-  const [supportClicks, setSupportClicks] = useState<SupportClickData>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -48,22 +43,7 @@ export default function AnalyticsPage() {
         if (!isMounted) return;
         const linksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Link));
         setLinks(linksData);
-        
-        // Fetch support clicks *after* we have the links data, or in parallel
-        const fetchSupportClicks = async () => {
-            const supportClicksDocRef = doc(db, `users/${user.uid}/clicks/support`);
-            try {
-                const docSnap = await getDoc(supportClicksDocRef);
-                if (docSnap.exists() && isMounted) {
-                    setSupportClicks(docSnap.data() as SupportClickData);
-                }
-            } catch (error) {
-                console.error("Error fetching support clicks: ", error);
-            } finally {
-               if(isMounted) setLoading(false);
-            }
-        };
-        fetchSupportClicks();
+        setLoading(false);
 
     }, (error) => {
         if (!isMounted) return;
@@ -93,7 +73,7 @@ export default function AnalyticsPage() {
     totalSupportClicks
   } = useMemo(() => {
     const totalClicks = links.reduce((acc, link) => acc + (link.clicks || 0), 0);
-    const totalLinks = links.length;
+    const totalLinks = links.filter(l => !l.isSocial && !l.isSupport).length;
     const avgClicks = totalLinks > 0 ? (totalClicks / totalLinks).toFixed(2) : "0";
 
     const allLinksWithClicks = links.filter(l => (l.clicks || 0) > 0);
@@ -104,21 +84,19 @@ export default function AnalyticsPage() {
         .map(link => ({ name: link.title, clicks: link.clicks || 0 }));
     
     const customLinksChartData = allLinksWithClicks
-        .filter(l => !l.isSocial)
+        .filter(l => !l.isSocial && !l.isSupport)
         .map(link => ({ name: link.title, clicks: link.clicks || 0 }));
     
     const socialLinksChartData = allLinksWithClicks
         .filter(l => l.isSocial)
         .map(link => ({ name: link.title, clicks: link.clicks || 0 }));
     
-    const supportLinksChartData = Object.entries(supportClicks)
-        .map(([platform, clicks]) => ({ name: platform.charAt(0).toUpperCase() + platform.slice(1).replace('buyMeACoffee', 'Buy Me A Coffee'), clicks }))
-        .filter(item => item.clicks > 0);
-        
-    const totalSupportClicks = Object.values(supportClicks).reduce((acc, val) => acc + val, 0);
+    const supportLinks = allLinksWithClicks.filter(l => l.isSupport);
+    const supportLinksChartData = supportLinks.map(link => ({ name: link.title, clicks: link.clicks || 0 }));
+    const totalSupportClicks = supportLinks.reduce((acc, link) => acc + (link.clicks || 0), 0);
 
     return { totalClicks, totalLinks, avgClicks, top10ChartData, customLinksChartData, socialLinksChartData, supportLinksChartData, totalSupportClicks };
-  }, [links, supportClicks]);
+  }, [links]);
 
 
   if (loading) {
@@ -237,7 +215,7 @@ export default function AnalyticsPage() {
       </div>
       
       <div className="grid gap-6 grid-cols-1">
-        <Chart data={top10ChartData} title="Top 10 Links by Clicks" description="This chart shows your most popular links, including both custom and social links." />
+        <Chart data={top10ChartData} title="Top 10 Links by Clicks" description="This chart shows your most popular links, including custom and social links." />
       </div>
 
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
@@ -249,3 +227,5 @@ export default function AnalyticsPage() {
     </>
   );
 }
+
+    

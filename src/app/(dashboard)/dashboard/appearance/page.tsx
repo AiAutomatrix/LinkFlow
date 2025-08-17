@@ -26,7 +26,7 @@ import {
 import { useEffect, useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import PublicProfilePreview from "./_components/public-profile-preview";
-import type { Link } from "@/lib/types";
+import type { Link, UserProfile } from "@/lib/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Camera, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -95,6 +95,14 @@ export default function AppearancePage() {
     },
   });
   
+  const watchedValues = form.watch();
+
+  const previewProfile: Partial<UserProfile> & { photoURL?: string } = {
+    ...user,
+    ...watchedValues,
+    photoURL,
+  };
+
   useEffect(() => {
       if (user) {
           form.reset({
@@ -107,8 +115,6 @@ export default function AppearancePage() {
           setPhotoURL(user.photoURL || "");
       }
   }, [user, form]);
-
-  const watchedValues = form.watch();
 
   useEffect(() => {
     if (!user) return;
@@ -126,7 +132,7 @@ export default function AppearancePage() {
     try {
         const userRef = doc(db, "users", user.uid);
         await updateDoc(userRef, values);
-        setUser({...user, ...values });
+        setUser((prevUser) => prevUser ? { ...prevUser, ...values } : null);
         toast({ title: "Profile updated successfully!" });
     } catch (error: any) {
         toast({ variant: 'destructive', title: "Error", description: error.message });
@@ -336,8 +342,10 @@ export default function AppearancePage() {
         </Form>
       </div>
       <div className="lg:col-span-1 order-1 lg:order-2">
-        <PublicProfilePreview profile={{...user, ...watchedValues, photoURL}} links={links} />
+        <PublicProfilePreview profile={previewProfile} links={links} />
       </div>
     </div>
   );
 }
+
+    
