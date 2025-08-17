@@ -126,7 +126,7 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
           className="h-[700px] w-full rounded-md border bg-background flex flex-col items-center relative overflow-hidden"
         >
             {profile.animatedBackground && <AnimatedBackground />}
-            <div className="flex-1 w-full flex flex-col items-center pt-8 text-center z-10 overflow-y-auto p-4">
+            <div className="flex-1 w-full flex flex-col items-center pt-8 text-center overflow-y-auto p-4">
               <Avatar className="h-24 w-24">
                 <AvatarImage src={profile.photoURL || undefined} />
                 <AvatarFallback>{getInitials(profile.displayName)}</AvatarFallback>
