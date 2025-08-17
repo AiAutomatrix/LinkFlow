@@ -34,19 +34,15 @@ export default function AnalyticsPage() {
     };
     
     setLoading(true);
-    let isMounted = true;
 
     const linksCollection = collection(db, `users/${user.uid}/links`);
     const q = query(linksCollection, orderBy("clicks", "desc"));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-        if (!isMounted) return;
         const linksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Link));
         setLinks(linksData);
         setLoading(false);
-
     }, (error) => {
-        if (!isMounted) return;
         console.error("Error fetching analytics data: ", error);
         toast({
             variant: "destructive",
@@ -57,7 +53,6 @@ export default function AnalyticsPage() {
     });
     
     return () => {
-        isMounted = false;
         unsubscribe();
     }
   }, [user, toast]);
@@ -72,28 +67,36 @@ export default function AnalyticsPage() {
     supportLinksChartData,
     totalSupportClicks
   } = useMemo(() => {
-    const totalClicks = links.reduce((acc, link) => acc + (link.clicks || 0), 0);
-    const totalLinks = links.filter(l => !l.isSocial && !l.isSupport).length;
-    const avgClicks = totalLinks > 0 ? (totalClicks / totalLinks).toFixed(2) : "0";
-
     const allLinksWithClicks = links.filter(l => (l.clicks || 0) > 0);
+
+    const customLinks = links.filter(l => !l.isSocial && !l.isSupport);
+    const socialLinks = links.filter(l => l.isSocial);
+    const supportLinks = links.filter(l => l.isSupport);
+    
+    const totalCustomClicks = customLinks.reduce((acc, link) => acc + (link.clicks || 0), 0);
+    const totalSocialClicks = socialLinks.reduce((acc, link) => acc + (link.clicks || 0), 0);
+    const totalSupportClicks = supportLinks.reduce((acc, link) => acc + (link.clicks || 0), 0);
+    
+    const totalClicks = totalCustomClicks + totalSocialClicks + totalSupportClicks;
+    const totalLinks = customLinks.length;
+    const avgClicks = totalLinks > 0 ? (totalCustomClicks / totalLinks).toFixed(2) : "0";
 
     const top10ChartData = allLinksWithClicks
         .sort((a,b) => (b.clicks || 0) - (a.clicks || 0))
         .slice(0, 10)
         .map(link => ({ name: link.title, clicks: link.clicks || 0 }));
     
-    const customLinksChartData = allLinksWithClicks
-        .filter(l => !l.isSocial && !l.isSupport)
+    const customLinksChartData = customLinks
+        .filter(l => (l.clicks || 0) > 0)
         .map(link => ({ name: link.title, clicks: link.clicks || 0 }));
     
-    const socialLinksChartData = allLinksWithClicks
-        .filter(l => l.isSocial)
+    const socialLinksChartData = socialLinks
+        .filter(l => (l.clicks || 0) > 0)
         .map(link => ({ name: link.title, clicks: link.clicks || 0 }));
     
-    const supportLinks = allLinksWithClicks.filter(l => l.isSupport);
-    const supportLinksChartData = supportLinks.map(link => ({ name: link.title, clicks: link.clicks || 0 }));
-    const totalSupportClicks = supportLinks.reduce((acc, link) => acc + (link.clicks || 0), 0);
+    const supportLinksChartData = supportLinks
+        .filter(l => (l.clicks || 0) > 0)
+        .map(link => ({ name: link.title, clicks: link.clicks || 0 }));
 
     return { totalClicks, totalLinks, avgClicks, top10ChartData, customLinksChartData, socialLinksChartData, supportLinksChartData, totalSupportClicks };
   }, [links]);
@@ -227,5 +230,7 @@ export default function AnalyticsPage() {
     </>
   );
 }
+
+    
 
     

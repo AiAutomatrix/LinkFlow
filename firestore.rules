@@ -1,23 +1,24 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /users/{userId} {
-      // Allow anyone to query the users collection to find a profile by username
-      // and to get a specific user's profile data. This is required for the 
-      // /u/[username] public profile page to function.
-      allow list, get: if true;
-      
-      // Only the authenticated user can write to their own profile.
+      // Allow public read of a user's profile for the /u/[username] page
+      allow get: if true;
+      // Allow an authenticated user to read their own full profile data for the dashboard
+      allow read: if request.auth != null && request.auth.uid == userId;
+      // Allow an authenticated user to write to their own profile
       allow write: if request.auth != null && request.auth.uid == userId;
 
       match /links/{linkId} {
-        // Allow anyone to read the links for a user. This is required for the
-        // public profile page to display them.
-        allow read: if true;
-
-        // Only the user who owns the parent profile can write to their own links.
+        // Allow public read of all links for the /u/[username] page
+        allow list, get: if true;
+        // Allow an authenticated user to read all their links for the dashboard
+        allow read: if request.auth != null && request.auth.uid == userId;
+        // Allow an authenticated user to write to their links
         allow write: if request.auth != null && request.auth.uid == userId;
       }
     }
   }
 }
+    
