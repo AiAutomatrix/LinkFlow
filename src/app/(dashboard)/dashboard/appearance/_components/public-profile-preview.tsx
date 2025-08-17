@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import type { UserProfile, Link as LinkType } from "@/lib/types";
 import { Mail, Instagram, Facebook, Github, Coffee, Banknote, Bitcoin, ClipboardCopy, ClipboardCheck } from 'lucide-react';
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 
@@ -89,41 +89,6 @@ const SupportLinks = ({ links }: { links: LinkType[] }) => {
 };
 
 export default function PublicProfilePreview({ profile, links = [], isPreview = false }: { profile: Partial<UserProfile>; links?: LinkType[], isPreview?: boolean }) {
-    const botContainerRef = useRef<HTMLDivElement>(null);
-    const embedScript = profile.bot?.embedScript;
-
-    useEffect(() => {
-        // This ensures we're on the client and the script exists
-        if (typeof window === 'undefined' || !embedScript || !botContainerRef.current) return;
-        
-        const container = botContainerRef.current;
-        // Clear previous scripts to prevent duplicates when script changes
-        container.innerHTML = '';
-
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = embedScript;
-
-        const scripts = wrapper.querySelectorAll('script');
-        scripts.forEach(oldScript => {
-            const newScript = document.createElement('script');
-            
-            // Copy all attributes (like src, async, etc.)
-            Array.from(oldScript.attributes).forEach(attr => 
-                newScript.setAttribute(attr.name, attr.value)
-            );
-            
-            // Copy inline script content
-            if (oldScript.text) {
-                try {
-                    newScript.appendChild(document.createTextNode(oldScript.text));
-                } catch(e) {
-                    newScript.text = oldScript.text;
-                }
-            }
-            container.appendChild(newScript);
-        });
-
-    }, [embedScript]);
 
     const getInitials = (name: string = "") => {
         return name.split(" ").map((n) => n[0]).join("");
@@ -194,8 +159,6 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
 
               <SupportLinks links={supportLinks} />
             </div>
-            {/* The container where the bot script will be injected */}
-            <div ref={botContainerRef} className="absolute inset-0 z-20 pointer-events-none [&>*]:pointer-events-auto"></div>
         </div>
       </CardContent>
     </Card>
