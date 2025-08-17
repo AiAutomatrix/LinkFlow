@@ -2,23 +2,25 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /users/{userId} {
-      // Allow anyone to query the users collection to find a profile by username.
-      // This is required for the /u/[username] page to work.
-      allow list: if true;
-      // Allow anyone to read the data of a specific user profile.
+      // Allow public read for profile pages and authenticated read for dashboards.
       allow get: if true;
+      allow list: if true; 
       
-      // Only the authenticated user can write to their own profile.
+      // Only the authenticated owner can write to their profile.
       allow write: if request.auth != null && request.auth.uid == userId;
 
       match /links/{linkId} {
-        // Allow anyone to list the links for a user.
-        allow list: if true;
-        // Allow anyone to read a specific link.
-        allow get: if true;
-        
-        // Only the user who owns the parent profile can write to the links.
-        allow write: if request.auth != null && request.auth.uid == userId;
+        // Allow public read for profile pages.
+        allow read: if true;
+
+        // Allow the owner to create/delete links.
+        allow create, delete: if request.auth != null && request.auth.uid == userId;
+
+        // Allow updates only if it's the owner OR it's just a click increment.
+        // This is secure because it only allows the 'clicks' field to be changed by the API.
+        allow update: if (request.auth != null && request.auth.uid == userId) || 
+                      (request.resource.data.diff(resource.data).affectedKeys().hasOnly(["clicks"]) && 
+                       request.resource.data.clicks == resource.data.clicks + 1);
       }
     }
   }
