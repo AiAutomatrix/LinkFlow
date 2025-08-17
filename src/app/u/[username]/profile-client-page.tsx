@@ -35,7 +35,7 @@ const toDate = (date: any): Date | null => {
     return null;
 }
 
-const CryptoLog = ({ icon, name, address, onCopy }: { icon: React.ReactNode, name: string, address: string, onCopy: (text: string) => void }) => {
+const CryptoLog = ({ icon, name, address, onCopy }: { icon: React.ReactNode, name: string, address: string, onCopy: () => void }) => {
     return (
         <div className="flex items-center justify-between gap-4 text-sm font-mono">
             <div className="flex items-center gap-2 text-muted-foreground shrink-0">
@@ -43,16 +43,31 @@ const CryptoLog = ({ icon, name, address, onCopy }: { icon: React.ReactNode, nam
                 <span className="font-sans font-medium text-foreground">{name}</span>
             </div>
             <p className="overflow-hidden truncate text-muted-foreground">{address}</p>
-            <button onClick={() => onCopy(address)} className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
+            <button onClick={onCopy} className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
                 <ClipboardCopy className="h-4 w-4" />
             </button>
         </div>
     )
 }
 
+
 const trackClick = (userId: string, linkId: string) => {
     const data = { userId, linkId };
-    navigator.sendBeacon('/api/clicks', JSON.stringify(data));
+    try {
+        // Use sendBeacon for reliable background sending
+        if (navigator.sendBeacon) {
+            navigator.sendBeacon('/api/clicks', JSON.stringify(data));
+        } else {
+            // Fallback for older browsers
+            fetch('/api/clicks', {
+                method: 'POST',
+                body: JSON.stringify(data),
+                keepalive: true,
+            });
+        }
+    } catch (e) {
+        console.error("Error tracking click: ", e);
+    }
 };
 
 const SupportLinks = ({ user, links }: { user: UserProfile, links: LinkType[] }) => {
@@ -60,7 +75,8 @@ const SupportLinks = ({ user, links }: { user: UserProfile, links: LinkType[] })
     const [copiedStates, setCopiedStates] = useState<{[key: string]: boolean}>({});
     
     const handleCopy = (link: LinkType) => {
-        navigator.clipboard.writeText(link.url);
+        const textToCopy = link.title === 'E-Transfer' ? link.url.replace('mailto:', '') : link.url;
+        navigator.clipboard.writeText(textToCopy);
         trackClick(user.uid, link.id);
         setCopiedStates(prev => ({ ...Object.fromEntries(Object.keys(prev).map(k => [k, false])), [link.id]: true }));
         toast({ title: "Copied to clipboard!"});
