@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import type { UserProfile, Link as LinkType } from "@/lib/types";
 import { Mail, Instagram, Facebook, Github, Coffee, Banknote, Bitcoin, ClipboardCopy, ClipboardCheck } from 'lucide-react';
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 
@@ -80,7 +80,7 @@ const SupportLinks = ({ links }: { links: LinkType[] }) => {
                         <p className="text-xs text-muted-foreground font-sans text-center">CRYPTO LOGS</p>
                         {btcLink && <CryptoLog icon={<Bitcoin className="h-5 w-5 shrink-0" />} name="BTC" address={btcLink.url} onCopy={(text) => handleCopy(text, btcLink.id)} />}
                         {ethLink && <CryptoLog icon={<EthIcon />} name="ETH" address={ethLink.url} onCopy={(text) => handleCopy(text, ethLink.id)} />}
-                        {solLink && <SolIcon />} name="SOL" address={solLink.url} onCopy={(text) => handleCopy(text, solLink.id)} />}
+                        {solLink && <CryptoLog icon={<SolIcon />} name="SOL" address={solLink.url} onCopy={(text) => handleCopy(text, solLink.id)} />}
                     </div>
                 )}
             </div>
