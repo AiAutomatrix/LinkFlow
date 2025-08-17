@@ -107,7 +107,11 @@ export default function LinksPage() {
             }
             if (link.isSupport) {
                 const platform = link.title.toLowerCase().replace(/\s/g, '') as keyof z.infer<typeof supportLinksSchema>;
-                supportLinksValues[platform] = link.url;
+                if (platform === 'etransfer') {
+                    supportLinksValues.email = link.url.replace('mailto:', '');
+                } else {
+                    (supportLinksValues as any)[platform] = link.url;
+                }
             }
         });
         
@@ -120,7 +124,7 @@ export default function LinksPage() {
         });
         supportForm.reset({
             buyMeACoffee: supportLinksValues.buyMeACoffee || '',
-            email: supportLinksValues.email?.replace('mailto:', '') || '',
+            email: supportLinksValues.email || '',
             btc: supportLinksValues.btc || '',
             eth: supportLinksValues.eth || '',
             sol: supportLinksValues.sol || '',
@@ -148,37 +152,42 @@ export default function LinksPage() {
   }
 
   const handleBatchUpdate = async (
-    values: Record<string, string | undefined>, 
+    values: Record<string, string | undefined>,
     type: 'social' | 'support'
   ) => {
     if (!user) return;
     const linksCollection = collection(db, `users/${user.uid}/links`);
     const batch = writeBatch(db);
-    const existingLinks = links.filter(l => (type === 'social' && l.isSocial) || (type === 'support' && l.isSupport));
+    const existingLinks = links.filter(
+        (l) => (type === 'social' && l.isSocial) || (type === 'support' && l.isSupport)
+    );
 
-    const platformConfig: { [key: string]: { title: string, order: number, urlPrefix?: string } } = {
+    const platformConfig: { [key: string]: { title: string; order: number; urlPrefix?: string } } = {
+        // Social
         email: { title: 'Email', order: 1000, urlPrefix: 'mailto:' },
         instagram: { title: 'Instagram', order: 1001 },
         facebook: { title: 'Facebook', order: 1002 },
         github: { title: 'Github', order: 1003 },
+        // Support
         buyMeACoffee: { title: 'Buy Me A Coffee', order: 2000 },
-        'support-email': { title: 'E-Transfer', order: 2001, urlPrefix: 'mailto:'},
+        'e-transfer': { title: 'E-Transfer', order: 2001, urlPrefix: 'mailto:' },
         btc: { title: 'BTC', order: 2002 },
         eth: { title: 'ETH', order: 2003 },
         sol: { title: 'SOL', order: 2004 },
     };
 
+    const isUpdatingSocial = type === 'social';
+
     for (const [key, config] of Object.entries(platformConfig)) {
-        // Skip platforms that don't belong to the current update type
-        if ((type === 'social' && config.order >= 2000) || (type === 'support' && config.order < 2000)) {
+        if ((isUpdatingSocial && config.order >= 2000) || (!isUpdatingSocial && config.order < 2000)) {
             continue;
         }
 
-        const formKey = (key === 'support-email') ? 'email' : key;
+        const formKey = key === 'e-transfer' ? 'email' : key;
         const url = values[formKey];
-        const existingLink = existingLinks.find(l => l.title === config.title);
-        
-        if (url) {
+        const existingLink = existingLinks.find((l) => l.title === config.title);
+
+        if (url && url.trim() !== '') {
             const finalUrl = config.urlPrefix ? `${config.urlPrefix}${url}` : url;
             if (existingLink) {
                 batch.update(doc(db, `users/${user.uid}/links`, existingLink.id), { url: finalUrl, active: true });
@@ -195,15 +204,15 @@ export default function LinksPage() {
                     isSupport: type === 'support',
                 });
             }
-        } else { 
+        } else {
             if (existingLink) {
                 batch.delete(doc(db, `users/${user.uid}/links`, existingLink.id));
             }
         }
     }
-    
+
     await batch.commit();
-  }
+};
 
 
   const handleSocialSubmit = async (values: z.infer<typeof socialLinksSchema>) => {
@@ -220,15 +229,23 @@ export default function LinksPage() {
 
   const handleSupportSubmit = async (values: z.infer<typeof supportLinksSchema>) => {
     setLoadingSupport(true);
-    const supportValues: Record<string, string | undefined> = {
+    const supportValues = {
         buyMeACoffee: values.buyMeACoffee,
-        'support-email': values.email, // Use a unique key to avoid conflict
+        email: values.email, // Corresponds to E-Transfer
         btc: values.btc,
         eth: values.eth,
         sol: values.sol,
-    }
+    };
+
     try {
-        await handleBatchUpdate(supportValues, 'support');
+        const mappedValues: Record<string, string | undefined> = {
+            buyMeACoffee: supportValues.buyMeACoffee,
+            'e-transfer': supportValues.email, // map form 'email' to 'e-transfer' key
+            btc: supportValues.btc,
+            eth: supportValues.eth,
+            sol: supportValues.sol,
+        };
+        await handleBatchUpdate(mappedValues, 'support');
         toast({ title: "Support links updated!" });
     } catch (error: any) {
         toast({ variant: 'destructive', title: 'Error', description: 'Failed to update support links.' });
@@ -362,11 +379,11 @@ export default function LinksPage() {
                         <LinkCard
                           key={link.id}
                           index={
-                            link.isSocial
+                            link.isSocial || link.isSupport
                               ? -1
-                              : links.filter((l) => !l.isSocial).findIndex((l) => l.id === link.id)
+                              : links.filter((l) => !l.isSocial && !l.isSupport).findIndex((l) => l.id === link.id)
                           }
-                          totalLinks={links.filter((l) => !l.isSocial).length}
+                          totalLinks={links.filter((l) => !l.isSocial && !l.isSupport).length}
                           link={link}
                           onUpdate={handleUpdateLink}
                           onDelete={handleDeleteLink}
@@ -613,5 +630,7 @@ export default function LinksPage() {
     </>
   );
 }
+
+    
 
     

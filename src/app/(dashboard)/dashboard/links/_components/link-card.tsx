@@ -64,7 +64,7 @@ export default function LinkCard({ link, index, totalLinks, onUpdate, onDelete, 
     }
     
     const truncatedUrl = link.url.length > 35 ? `${link.url.substring(0, 35)}...` : link.url;
-    const isMoveDisabled = link.isSocial;
+    const isMoveDisabled = link.isSocial || link.isSupport;
 
     return (
         <Card className="flex items-center p-3 gap-3 sm:p-4 sm:gap-4">
@@ -80,7 +80,7 @@ export default function LinkCard({ link, index, totalLinks, onUpdate, onDelete, 
             <div className="flex-grow overflow-hidden min-w-0">
                 <p className="font-semibold truncate">{link.title}</p>
                 <p className="text-sm text-muted-foreground truncate" title={link.url}>{truncatedUrl}</p>
-                {scheduleText && !link.isSocial && (
+                {scheduleText && !link.isSocial && !link.isSupport && (
                     <div className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1.5">
                         <CalendarDays className="h-3.5 w-3.5" />
                         <span>{scheduleText}</span>
@@ -109,7 +109,7 @@ export default function LinkCard({ link, index, totalLinks, onUpdate, onDelete, 
                         </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
-                        {!link.isSocial && 
+                        {!link.isSocial && !link.isSupport &&
                             <DialogTrigger asChild>
                                 <DropdownMenuItem>
                                     <Pencil className="mr-2 h-4 w-4" />
@@ -139,3 +139,5 @@ export default function LinkCard({ link, index, totalLinks, onUpdate, onDelete, 
         </Card>
     );
 };
+
+    
