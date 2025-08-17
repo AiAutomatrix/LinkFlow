@@ -8,9 +8,9 @@ export interface UserProfile {
   bio: string;
   photoURL: string;
   plan: 'free' | 'pro';
-  theme?: string;
-  animatedBackground?: boolean;
-  bot?: {
+  theme: string;
+  animatedBackground: boolean;
+  bot: {
     embedScript: string;
   };
   createdAt: Timestamp | FieldValue; 
