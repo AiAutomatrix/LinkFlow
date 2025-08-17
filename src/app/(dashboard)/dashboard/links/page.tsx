@@ -209,8 +209,8 @@ export default function LinksPage() {
         active: true,
         clicks: 0,
         createdAt: new Date(),
-        startDate: startDate || null,
-        endDate: endDate || null,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
         isSocial: false,
     };
     try {
@@ -575,4 +575,5 @@ export default function LinksPage() {
     </>
   );
 }
- 
+
+    
