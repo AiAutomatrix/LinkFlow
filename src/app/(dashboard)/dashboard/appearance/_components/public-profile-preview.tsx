@@ -114,7 +114,7 @@ const BotPreview = ({ embedScript }: { embedScript?: string }) => {
     if (!embedScript) return null;
 
     return (
-        <div className="fixed bottom-4 right-4 z-20">
+        <div className="absolute bottom-4 right-4 z-20">
             <iframe 
                 ref={iframeRef} 
                 className="w-96 h-[500px] border-0 rounded-lg shadow-xl"
