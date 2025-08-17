@@ -5,40 +5,29 @@ import { collection, query, where, getDocs, limit, Timestamp, orderBy } from 'fi
 import { db } from '@/lib/firebase';
 import { notFound } from 'next/navigation';
 
-// Helper function to safely convert Firestore Timestamps and nested objects to serializable structures.
+// This is a robust, recursive function to safely convert Firestore data types
+// to JSON-serializable formats. It correctly handles nested objects and Timestamps.
 const serializeFirestoreData = (data: any): any => {
-    if (data === null || data === undefined || typeof data !== 'object') {
+    if (data === null || data === undefined) {
         return data;
     }
-
     if (data instanceof Timestamp) {
         return data.toDate().toISOString();
     }
-    
-    // This is a Firestore GeoPoint, DocumentReference, etc.
-    // We can't serialize it, so we'll just remove it.
-    if (typeof data.isEqual === 'function') {
-        return undefined;
-    }
-    
     if (Array.isArray(data)) {
         return data.map(serializeFirestoreData);
     }
-    
-    const serializedData: { [key: string]: any } = {};
-    for (const key in data) {
-        if (Object.prototype.hasOwnProperty.call(data, key)) {
-            const value = data[key];
-            // Firebase Timestamps have a toDate method. This is a reliable check.
-            if (value && typeof value.toDate === 'function') {
-                serializedData[key] = value.toDate().toISOString();
-            } else {
-                // Recursively serialize nested objects
-                serializedData[key] = serializeFirestoreData(value);
+    // This handles nested objects (like the 'bot' field) recursively.
+    if (typeof data === 'object') {
+        const serializedData: { [key: string]: any } = {};
+        for (const key in data) {
+            if (Object.prototype.hasOwnProperty.call(data, key)) {
+                serializedData[key] = serializeFirestoreData(data[key]);
             }
         }
+        return serializedData;
     }
-    return serializedData;
+    return data;
 };
 
 

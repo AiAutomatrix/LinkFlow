@@ -7,7 +7,7 @@ import Logo from '@/components/logo';
 import AnimatedBackground from '@/components/animated-background';
 import { Mail, Instagram, Facebook, Github, Coffee, Banknote, Bitcoin, ClipboardCopy, ClipboardCheck } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 const SocialIcon = ({ platform }: { platform: string }) => {
@@ -152,21 +152,19 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     useEffect(() => {
         const embedCode = user?.bot?.embedScript;
         if (isClient && embedCode) {
-            const container = document.getElementById('public-bot-container');
-            if (!container) return;
-
-            container.innerHTML = ''; // Clear previous scripts
-            
+            // The container is used to parse the script, but we append to the body
+            // to ensure it executes correctly.
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = embedCode;
 
             Array.from(tempDiv.querySelectorAll('script')).forEach(oldScript => {
                 const newScript = document.createElement('script');
-                if (oldScript.src) {
-                    newScript.src = oldScript.src;
-                } else {
-                    newScript.textContent = oldScript.textContent;
+                // Copy all attributes from the old script to the new one
+                for (let i = 0; i < oldScript.attributes.length; i++) {
+                    const attr = oldScript.attributes[i];
+                    newScript.setAttribute(attr.name, attr.value);
                 }
+                newScript.textContent = oldScript.textContent;
                 document.body.appendChild(newScript);
             });
         }
@@ -231,6 +229,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
                 <SupportLinks user={user} links={supportLinks} />
             </div>
             
+            {/* The container is now just a conceptual location; the script is appended to the body. */}
             <div id="public-bot-container" className="fixed bottom-4 right-4 z-20"></div>
 
             <footer className="mt-auto py-8 z-10">

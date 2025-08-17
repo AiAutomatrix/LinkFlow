@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import type { UserProfile, Link as LinkType } from "@/lib/types";
 import { Mail, Instagram, Facebook, Github, Coffee, Banknote, Bitcoin, ClipboardCopy, ClipboardCheck } from 'lucide-react';
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 
@@ -90,7 +90,9 @@ const SupportLinks = ({ links }: { links: LinkType[] }) => {
 
 const BotPreview = ({ embedScript }: { embedScript?: string }) => {
     const [isClient, setIsClient] = useState(false);
-    useEffect(() => setIsClient(true), []);
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     useEffect(() => {
         if (!isClient || !embedScript) return;
@@ -103,21 +105,23 @@ const BotPreview = ({ embedScript }: { embedScript?: string }) => {
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = embedScript;
 
-        Array.from(tempDiv.querySelectorAll('script')).forEach(script => {
+        Array.from(tempDiv.querySelectorAll('script')).forEach(oldScript => {
             const newScript = document.createElement('script');
-            if (script.src) {
-                newScript.src = script.src;
-            } else {
-                newScript.textContent = script.textContent;
+            // Copy all attributes from the old script to the new one
+            for (let i = 0; i < oldScript.attributes.length; i++) {
+                const attr = oldScript.attributes[i];
+                newScript.setAttribute(attr.name, attr.value);
             }
-            container.appendChild(newScript);
+            newScript.textContent = oldScript.textContent;
+            document.body.appendChild(newScript);
         });
 
     }, [isClient, embedScript]);
 
     if (!embedScript) return null;
     
-    return <div id="live-preview-bot-container" className="absolute inset-0 z-20"></div>;
+    // This div is just a placeholder; the script is appended to the body
+    return <div id="live-preview-bot-container" className="fixed bottom-4 right-4 z-20"></div>;
 };
 
 
