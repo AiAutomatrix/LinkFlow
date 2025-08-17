@@ -51,12 +51,12 @@ export default async function UserProfilePage({ params }: { params: { username: 
     if (!userData) {
         notFound();
     }
+    console.log("Raw Firestore userData:", JSON.stringify(userData));
 
-    const allLinksData = await getUserLinks(userData.uid);
 
     // Serialize the data before passing it to the client component.
     const user = serializeFirestoreData(userData) as UserProfile;
-    const links = allLinksData.map(link => serializeFirestoreData(link)) as LinkType[];
+    const links = await getUserLinks(userData.uid).then(links => links.map(link => serializeFirestoreData(link) as LinkType));
 
     console.log("Serialized user data being passed to client:", JSON.stringify(user, null, 2));
 
