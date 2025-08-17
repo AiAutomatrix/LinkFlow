@@ -26,51 +26,24 @@ import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Loading from "@/app/loading";
+import PublicProfilePreview from "@/app/(dashboard)/dashboard/appearance/_components/public-profile-preview";
+import type { Link, UserProfile } from "@/lib/types";
 
 const botSchema = z.object({
-  embedScript: z.string().refine((val) => val.includes("<script"), {
-    message: "Embed code must include a <script> tag.",
-  }).refine((val) => val.includes("botpress.cloud") || val.includes("bpcontent.cloud"), {
-    message: "Only official Botpress embed scripts are allowed.",
-  }).optional().or(z.literal('')),
+  embedScript: z.string().refine((val) => val.trim() === '' || (val.includes("<script") && (val.includes("botpress.cloud") || val.includes("bpcdn.cloud"))), {
+    message: "Embed code must be a valid Botpress script or be empty.",
+  }).optional(),
 });
-
-// Utility to safely inject the embed script
-function injectEmbedScript(scriptString: string, containerId: string) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-
-    container.innerHTML = ""; // Clear old bot if updating
-
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = scriptString;
-
-    const scripts = Array.from(tempDiv.querySelectorAll("script"));
-    
-    scripts.forEach((oldScript) => {
-        const newScript = document.createElement("script");
-        // Copy all attributes
-        for (let i = 0; i < oldScript.attributes.length; i++) {
-            const attr = oldScript.attributes[i];
-            newScript.setAttribute(attr.name, attr.value);
-        }
-        if (oldScript.src) {
-            newScript.src = oldScript.src;
-        } else {
-            newScript.textContent = oldScript.textContent;
-        }
-        container.appendChild(newScript);
-    });
-}
 
 
 export default function BotPage() {
   const { toast } = useToast();
   const { user, loading: authLoading, setUser } = useAuth();
   const [formLoading, setFormLoading] = useState(false);
+  const [links, setLinks] = useState<Link[]>([]);
   
   const form = useForm<z.infer<typeof botSchema>>({
     resolver: zodResolver(botSchema),
@@ -81,14 +54,31 @@ export default function BotPage() {
 
   const embedScriptValue = form.watch("embedScript");
 
+  const previewProfile: Partial<UserProfile> = {
+      ...user,
+      bot: {
+        embedScript: embedScriptValue || ""
+      }
+  }
+
   useEffect(() => {
-    if (user?.bot?.embedScript) {
-      form.reset({
-        embedScript: user.bot.embedScript,
-      });
-      injectEmbedScript(user.bot.embedScript, 'bot-embed-container');
+    if (user) {
+        form.reset({
+            embedScript: user.bot?.embedScript || ''
+        });
     }
   }, [user, form]);
+
+  useEffect(() => {
+    if (!user) return;
+    const linksCollection = collection(db, `users/${user.uid}/links`);
+    const q = query(linksCollection, orderBy("order"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        setLinks(snapshot.docs.map(doc => ({id: doc.id, ...doc.data()} as Link)))
+    });
+    return () => unsubscribe();
+  }, [user]);
+
   
   async function onSubmit(values: z.infer<typeof botSchema>) {
     if (!user) return;
@@ -99,12 +89,6 @@ export default function BotPage() {
         await updateDoc(userRef, botData);
         setUser((prevUser) => prevUser ? { ...prevUser, ...botData } : null);
         toast({ title: "Bot embed script updated successfully!" });
-        if(values.embedScript) {
-            injectEmbedScript(values.embedScript, 'bot-embed-container');
-        } else {
-             const container = document.getElementById('bot-embed-container');
-             if(container) container.innerHTML = "";
-        }
     } catch (error: any) {
         toast({ variant: 'destructive', title: "Error", description: error.message });
     } finally {
@@ -166,7 +150,7 @@ export default function BotPage() {
             </Form>
         </div>
 
-         <div className="lg:col-span-1">
+        <div className="lg:col-span-1 lg:sticky top-20">
             <Card>
                 <CardHeader>
                     <CardTitle>Live Preview</CardTitle>
@@ -175,14 +159,9 @@ export default function BotPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                     <div id="bot-embed-container" className="relative w-full h-[400px] bg-muted rounded-md flex items-center justify-center">
-                        {(!embedScriptValue || embedScriptValue.trim() === '') && (
-                             <div className="text-center text-muted-foreground">
-                                <p>Your chatbot will appear here.</p>
-                                <p className="text-sm">Save an embed script to see it.</p>
-                             </div>
-                        )}
-                     </div>
+                    <div className="relative w-full h-auto">
+                        <PublicProfilePreview profile={previewProfile} links={links} isPreview={true} />
+                    </div>
                 </CardContent>
             </Card>
         </div>

@@ -7,7 +7,7 @@ import Logo from '@/components/logo';
 import AnimatedBackground from '@/components/animated-background';
 import { Mail, Instagram, Facebook, Github, Coffee, Banknote, Bitcoin, ClipboardCopy, ClipboardCheck } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 const SocialIcon = ({ platform }: { platform: string }) => {
@@ -125,37 +125,13 @@ const SupportLinks = ({ user, links }: { user: UserProfile, links: LinkType[] })
     );
 };
 
-// Utility to safely inject the embed script
-function injectEmbedScript(scriptString: string, containerId: string) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-
-    container.innerHTML = ""; // Clear old bot if updating
-
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = scriptString;
-
-    const scripts = Array.from(tempDiv.querySelectorAll("script"));
-    
-    scripts.forEach((oldScript) => {
-        const newScript = document.createElement("script");
-        // Copy all attributes
-        for (let i = 0; i < oldScript.attributes.length; i++) {
-            const attr = oldScript.attributes[i];
-            newScript.setAttribute(attr.name, attr.value);
-        }
-        if (oldScript.src) {
-            newScript.src = oldScript.src;
-        } else {
-            newScript.textContent = oldScript.textContent;
-        }
-        container.appendChild(newScript);
-    });
-}
-
-
 export default function ProfileClientPage({ user, links: serverLinks }: { user: UserProfile; links: LinkType[] }) {
     const [activeLinks, setActiveLinks] = useState<LinkType[]>([]);
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     useEffect(() => {
       const now = new Date();
@@ -174,10 +150,27 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     }, [serverLinks]);
 
     useEffect(() => {
-        if (user?.bot?.embedScript) {
-            injectEmbedScript(user.bot.embedScript, 'public-bot-container');
+        const embedCode = user?.bot?.embedScript;
+        if (isClient && embedCode) {
+            const container = document.getElementById('public-bot-container');
+            if (!container) return;
+
+            container.innerHTML = ''; // Clear previous scripts
+            
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = embedCode;
+
+            Array.from(tempDiv.querySelectorAll('script')).forEach(oldScript => {
+                const newScript = document.createElement('script');
+                if (oldScript.src) {
+                    newScript.src = oldScript.src;
+                } else {
+                    newScript.textContent = oldScript.textContent;
+                }
+                document.body.appendChild(newScript);
+            });
         }
-    }, [user?.bot?.embedScript]);
+    }, [isClient, user?.bot?.embedScript]);
 
 
     const getInitials = (name: string = '') => {
@@ -237,7 +230,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
 
                 <SupportLinks user={user} links={supportLinks} />
             </div>
-
+            
             <div id="public-bot-container" className="fixed bottom-4 right-4 z-20"></div>
 
             <footer className="mt-auto py-8 z-10">

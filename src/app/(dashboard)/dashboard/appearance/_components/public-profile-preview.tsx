@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import type { UserProfile, Link as LinkType } from "@/lib/types";
 import { Mail, Instagram, Facebook, Github, Coffee, Banknote, Bitcoin, ClipboardCopy, ClipboardCheck } from 'lucide-react';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 
@@ -80,7 +80,7 @@ const SupportLinks = ({ links }: { links: LinkType[] }) => {
                         <p className="text-xs text-muted-foreground font-sans text-center">CRYPTO LOGS</p>
                         {btcLink && <CryptoLog icon={<Bitcoin className="h-5 w-5 shrink-0" />} name="BTC" address={btcLink.url} onCopy={(text) => handleCopy(text, btcLink.id)} />}
                         {ethLink && <CryptoLog icon={<EthIcon />} name="ETH" address={ethLink.url} onCopy={(text) => handleCopy(text, ethLink.id)} />}
-                        {solLink && <CryptoLog icon={<SolIcon />} name="SOL" address={solLink.url} onCopy={(text) => handleCopy(text, solLink.id)} />}
+                        {solLink && <SolIcon />} name="SOL" address={solLink.url} onCopy={(text) => handleCopy(text, solLink.id)} />}
                     </div>
                 )}
             </div>
@@ -88,13 +88,49 @@ const SupportLinks = ({ links }: { links: LinkType[] }) => {
     );
 };
 
+const BotPreview = ({ embedScript }: { embedScript?: string }) => {
+    const iframeRef = useRef<HTMLIFrameElement>(null);
 
-export default function PublicProfilePreview({ profile, links = [] }: { profile: Partial<UserProfile>; links?: LinkType[] }) {
+    useEffect(() => {
+        if (!embedScript || !iframeRef.current) return;
+        
+        const doc = iframeRef.current.contentDocument;
+        if (doc) {
+            doc.open();
+            doc.write(`
+                <html>
+                    <head>
+                        <style>body { margin: 0; padding: 0; }</style>
+                    </head>
+                    <body>
+                        ${embedScript}
+                    </body>
+                </html>
+            `);
+            doc.close();
+        }
+    }, [embedScript]);
+
+    if (!embedScript) return null;
+
+    return (
+        <div className="fixed bottom-4 right-4 z-20">
+            <iframe 
+                ref={iframeRef} 
+                className="w-96 h-[500px] border-0 rounded-lg shadow-xl"
+                sandbox="allow-scripts allow-same-origin"
+                title="Bot Preview"
+            ></iframe>
+        </div>
+    );
+};
+
+
+export default function PublicProfilePreview({ profile, links = [], isPreview = false }: { profile: Partial<UserProfile>; links?: LinkType[], isPreview?: boolean }) {
     const getInitials = (name: string = "") => {
         return name.split(" ").map((n) => n[0]).join("");
     };
 
-    // Correctly filter links into their respective categories based on flags
     const socialLinks = links.filter(l => l.isSocial && l.active);
     const regularLinks = links.filter(l => !l.isSocial && !l.isSupport && l.active);
     const supportLinks = links.filter(l => l.isSupport && l.active);
@@ -160,6 +196,7 @@ export default function PublicProfilePreview({ profile, links = [] }: { profile:
 
               <SupportLinks links={supportLinks} />
             </div>
+             {isPreview && profile.bot?.embedScript && <BotPreview embedScript={profile.bot.embedScript} />}
         </div>
       </CardContent>
     </Card>

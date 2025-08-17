@@ -5,17 +5,26 @@ import { collection, query, where, getDocs, limit, Timestamp, orderBy } from 'fi
 import { db } from '@/lib/firebase';
 import { notFound } from 'next/navigation';
 
-// Helper function to safely convert Firestore Timestamps to serializable strings
-// This is necessary because Server Components can't pass complex objects to Client Components.
+// Helper function to safely convert Firestore Timestamps and nested objects to serializable structures.
 const serializeFirestoreData = (data: any): any => {
-    if (!data) return data;
+    if (data === null || data === undefined || typeof data === 'string' || typeof data === 'number' || typeof data === 'boolean') {
+        return data;
+    }
+
     if (data instanceof Timestamp) {
         return data.toDate().toISOString();
     }
+
+    if (data.toDate && typeof data.toDate === 'function') { // Handle Date objects
+        return data.toDate().toISOString();
+    }
+
     if (Array.isArray(data)) {
         return data.map(serializeFirestoreData);
     }
-    if (typeof data === 'object' && data !== null) {
+
+    // This is the crucial part for nested objects like `bot`.
+    if (typeof data === 'object') {
         const serializedData: { [key: string]: any } = {};
         for (const key in data) {
             if (Object.prototype.hasOwnProperty.call(data, key)) {
@@ -24,9 +33,9 @@ const serializeFirestoreData = (data: any): any => {
         }
         return serializedData;
     }
+
     return data;
 };
-
 
 async function getUserData(username: string): Promise<UserProfile | null> {
     if (!username) return null;
