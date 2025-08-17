@@ -129,6 +129,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     const [activeLinks, setActiveLinks] = useState<LinkType[]>([]);
     const botContainerRef = useRef<HTMLDivElement>(null);
 
+
     useEffect(() => {
         // This effect handles filtering for active links based on date
         const now = new Date();
@@ -147,37 +148,34 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     }, [serverLinks]);
 
     useEffect(() => {
-        const embedScript = `<script src="https://cdn.botpress.cloud/webchat/v3.2/inject.js"></script>\n<script src="https://files.bpcontent.cloud/2025/06/24/23/20250624233433-30VR2IP1.js" defer></script>`
-        if (typeof window === 'undefined') return;
+        if (!user?.bot?.embedScript || typeof window === 'undefined') return;
 
         const container = botContainerRef.current;
         if (!container) return;
 
-        // Clear previous scripts to avoid duplicates on re-render
+        // Clear previous scripts to avoid duplicates
         container.innerHTML = '';
 
-        // Parse the embedScript string into a document fragment
+        // Parse embedScript into DOM elements
         const parser = new DOMParser();
-        const doc = parser.parseFromString(embedScript, 'text/html');
+        const doc = parser.parseFromString(user.bot.embedScript, 'text/html');
         const scripts = Array.from(doc.querySelectorAll('script'));
 
-        // Re-create and append each script to make it executable
-        scripts.forEach(oldScript => {
+        // Append all scripts to the container, which forces execution
+        scripts.forEach((oldScript) => {
             const newScript = document.createElement('script');
-            
-            // Copy all attributes from the old script to the new one
-            Array.from(oldScript.attributes).forEach(attr => {
+            // Copy all attributes from the original script to the new one
+            Array.from(oldScript.attributes).forEach((attr) => {
                 newScript.setAttribute(attr.name, attr.value);
             });
-
-            // Copy the script content
+            // Copy the inline script content
             if (oldScript.textContent) {
                 newScript.textContent = oldScript.textContent;
             }
-            
             container.appendChild(newScript);
         });
-    }, []);
+    }, [user?.bot?.embedScript]);
+
 
     const getInitials = (name: string = '') => {
         return name.split(' ').map(n => n[0]).join('')
@@ -241,10 +239,8 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
                 <Logo />
             </footer>
             
-            {/* This container is where the bot script will be safely injected and executed */}
+            {/* Container where the bot embed will render */}
             <div ref={botContainerRef} id="public-bot-container" />
         </div>
     );
 }
-
-    

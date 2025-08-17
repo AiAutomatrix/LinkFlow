@@ -25,7 +25,7 @@ export interface Link {
   active: boolean;
   clicks: number;
   isSocial: boolean;
-  isSupport: boolean;
+  isSupport?: boolean;
   createdAt?: Timestamp | Date | string;
   startDate?: Timestamp | Date | string;
   endDate?: Timestamp | Date | string;
