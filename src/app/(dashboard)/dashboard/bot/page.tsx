@@ -148,7 +148,7 @@ export default function BotPage() {
         </Form>
     </div>
      <div className="lg:col-span-1">
-        <PublicProfilePreview profile={previewProfile} links={links} isPreview />
+        <PublicProfilePreview profile={previewProfile} links={links} isPreview embedScript={watchedEmbedScript} />
       </div>
     </div>
   );
