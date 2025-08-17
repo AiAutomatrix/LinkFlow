@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { SidebarProvider, Sidebar, SidebarTrigger, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset, useSidebar } from "@/components/ui/sidebar";
 import Logo from "@/components/logo";
 import { UserNav } from "@/components/user-nav";
-import { User, Palette, Link as LinkIcon, BarChart3, Settings, ExternalLink } from "lucide-react";
+import { User, Palette, Link as LinkIcon, BarChart3, Settings, ExternalLink, Bot } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Loading from "@/app/loading";
@@ -25,6 +25,7 @@ function DashboardMobileLayout({
     { href: "/dashboard/links", label: "Links", icon: LinkIcon },
     { href: "/dashboard/appearance", label: "Appearance", icon: Palette },
     { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
+    { href: "/dashboard/bot", label: "Bot", icon: Bot },
   ];
   
   if (!user) return null;

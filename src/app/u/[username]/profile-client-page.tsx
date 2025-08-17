@@ -125,6 +125,35 @@ const SupportLinks = ({ user, links }: { user: UserProfile, links: LinkType[] })
     );
 };
 
+// Utility to safely inject the embed script
+function injectEmbedScript(scriptString: string, containerId: string) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    container.innerHTML = ""; // Clear old bot if updating
+
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = scriptString;
+
+    const scripts = Array.from(tempDiv.querySelectorAll("script"));
+    
+    scripts.forEach((oldScript) => {
+        const newScript = document.createElement("script");
+        // Copy all attributes
+        for (let i = 0; i < oldScript.attributes.length; i++) {
+            const attr = oldScript.attributes[i];
+            newScript.setAttribute(attr.name, attr.value);
+        }
+        if (oldScript.src) {
+            newScript.src = oldScript.src;
+        } else {
+            newScript.textContent = oldScript.textContent;
+        }
+        container.appendChild(newScript);
+    });
+}
+
+
 export default function ProfileClientPage({ user, links: serverLinks }: { user: UserProfile; links: LinkType[] }) {
     const [activeLinks, setActiveLinks] = useState<LinkType[]>([]);
 
@@ -143,6 +172,12 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
       });
       setActiveLinks(filteredLinks);
     }, [serverLinks]);
+
+    useEffect(() => {
+        if (user?.bot?.embedScript) {
+            injectEmbedScript(user.bot.embedScript, 'public-bot-container');
+        }
+    }, [user?.bot?.embedScript]);
 
 
     const getInitials = (name: string = '') => {
@@ -202,6 +237,9 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
 
                 <SupportLinks user={user} links={supportLinks} />
             </div>
+
+            <div id="public-bot-container" className="fixed bottom-4 right-4 z-20"></div>
+
             <footer className="mt-auto py-8 z-10">
                 <Logo />
             </footer>

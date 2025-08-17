@@ -10,6 +10,9 @@ export interface UserProfile {
   plan: 'free' | 'pro';
   theme?: string;
   animatedBackground?: boolean;
+  bot?: {
+    embedScript: string;
+  };
   createdAt: Timestamp | FieldValue; 
 }
 
@@ -26,5 +29,3 @@ export interface Link {
   startDate?: Timestamp | Date | string;
   endDate?: Timestamp | Date | string;
 }
-
-    

@@ -52,8 +52,9 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
             username: username,
             plan: 'free',
             theme: 'light',
-            createdAt: serverTimestamp(),
             animatedBackground: false,
+            bot: { embedScript: '' },
+            createdAt: serverTimestamp(),
           };
 
           try {
@@ -104,7 +105,7 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
 
     const username = (email.split('@')[0] || fbUser.uid).replace(/[^a-zA-Z0-9_]/g, '').slice(0, 20);
     const userDocRef = doc(db, 'users', fbUser.uid);
-    const newUserProfile: Omit<UserProfile, 'uid'> = {
+    const newUserProfile: Omit<UserProfile, 'uid' | 'createdAt'> = {
       email: fbUser.email!,
       displayName: displayName,
       bio: '',
@@ -112,11 +113,11 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
       username: username,
       plan: 'free',
       theme: 'light',
-      createdAt: serverTimestamp(),
       animatedBackground: false,
+      bot: { embedScript: '' },
     };
     // The onAuthStateChanged listener will handle creating the profile doc
-    await setDoc(userDocRef, newUserProfile);
+    await setDoc(userDocRef, { ...newUserProfile, createdAt: serverTimestamp() });
   };
 
   const signOut = async (): Promise<void> => {
