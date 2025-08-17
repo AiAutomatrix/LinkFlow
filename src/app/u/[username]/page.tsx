@@ -7,35 +7,40 @@ import { notFound } from 'next/navigation';
 
 // Helper function to safely convert Firestore Timestamps and nested objects to serializable structures.
 const serializeFirestoreData = (data: any): any => {
-    if (data === null || data === undefined || typeof data === 'string' || typeof data === 'number' || typeof data === 'boolean') {
+    if (data === null || data === undefined || typeof data !== 'object') {
         return data;
     }
 
     if (data instanceof Timestamp) {
         return data.toDate().toISOString();
     }
-
-    if (data.toDate && typeof data.toDate === 'function') { // Handle Date objects
-        return data.toDate().toISOString();
+    
+    // This is a Firestore GeoPoint, DocumentReference, etc.
+    // We can't serialize it, so we'll just remove it.
+    if (typeof data.isEqual === 'function') {
+        return undefined;
     }
-
+    
     if (Array.isArray(data)) {
         return data.map(serializeFirestoreData);
     }
-
-    // This is the crucial part for nested objects like `bot`.
-    if (typeof data === 'object') {
-        const serializedData: { [key: string]: any } = {};
-        for (const key in data) {
-            if (Object.prototype.hasOwnProperty.call(data, key)) {
-                serializedData[key] = serializeFirestoreData(data[key]);
+    
+    const serializedData: { [key: string]: any } = {};
+    for (const key in data) {
+        if (Object.prototype.hasOwnProperty.call(data, key)) {
+            const value = data[key];
+            // Firebase Timestamps have a toDate method. This is a reliable check.
+            if (value && typeof value.toDate === 'function') {
+                serializedData[key] = value.toDate().toISOString();
+            } else {
+                // Recursively serialize nested objects
+                serializedData[key] = serializeFirestoreData(value);
             }
         }
-        return serializedData;
     }
-
-    return data;
+    return serializedData;
 };
+
 
 async function getUserData(username: string): Promise<UserProfile | null> {
     if (!username) return null;

@@ -89,32 +89,35 @@ const SupportLinks = ({ links }: { links: LinkType[] }) => {
 };
 
 const BotPreview = ({ embedScript }: { embedScript?: string }) => {
-    const botContainerRef = useRef<HTMLDivElement>(null);
+    const [isClient, setIsClient] = useState(false);
+    useEffect(() => setIsClient(true), []);
 
     useEffect(() => {
-        const container = botContainerRef.current;
-        if (!container || !embedScript) return;
+        if (!isClient || !embedScript) return;
         
-        container.innerHTML = ''; // Clear previous scripts
-        
+        const container = document.getElementById('live-preview-bot-container');
+        if (!container) return;
+
+        container.innerHTML = ''; // Clear previous content
+
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = embedScript;
 
-        Array.from(tempDiv.querySelectorAll('script')).forEach(oldScript => {
+        Array.from(tempDiv.querySelectorAll('script')).forEach(script => {
             const newScript = document.createElement('script');
-            if (oldScript.src) {
-                newScript.src = oldScript.src;
+            if (script.src) {
+                newScript.src = script.src;
             } else {
-                newScript.textContent = oldScript.textContent;
+                newScript.textContent = script.textContent;
             }
             container.appendChild(newScript);
         });
 
-    }, [embedScript]);
+    }, [isClient, embedScript]);
 
     if (!embedScript) return null;
     
-    return <div ref={botContainerRef} className="absolute inset-0 z-20"></div>;
+    return <div id="live-preview-bot-container" className="absolute inset-0 z-20"></div>;
 };
 
 
@@ -188,11 +191,9 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
 
               <SupportLinks links={supportLinks} />
             </div>
-             {isPreview && profile.bot?.embedScript && <BotPreview embedScript={profile.bot.embedScript} />}
+             {isPreview && <BotPreview embedScript={profile.bot?.embedScript} />}
         </div>
       </CardContent>
     </Card>
   );
 }
-
-    
