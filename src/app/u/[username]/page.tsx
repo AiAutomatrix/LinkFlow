@@ -4,32 +4,12 @@ import type { Link as LinkType, UserProfile } from '@/lib/types';
 import { collection, query, where, getDocs, limit, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { notFound } from 'next/navigation';
+import { serializeFirestoreData } from '@/lib/utils';
 
-// This is a robust, recursive function to safely convert Firestore data types
-// to JSON-serializable formats. It correctly handles nested objects and Timestamps.
-const serializeFirestoreData = (data: any): any => {
-    if (data === null || data === undefined) {
-        return data;
-    }
-    // Firestore Timestamps have a toDate() method.
-    if (typeof data.toDate === 'function') {
-        return data.toDate().toISOString();
-    }
-    if (Array.isArray(data)) {
-        return data.map(serializeFirestoreData);
-    }
-    // This handles nested objects (like the 'bot' field) recursively.
-    if (typeof data === 'object' && !data.nanoseconds) { // Added check to exclude Timestamps which are also objects
-        const serializedData: { [key: string]: any } = {};
-        for (const key in data) {
-            if (Object.prototype.hasOwnProperty.call(data, key)) {
-                serializedData[key] = serializeFirestoreData(data[key]);
-            }
-        }
-        return serializedData;
-    }
-    return data;
-};
+// This is the key change: It forces Next.js to treat this page as
+// fully dynamic, disabling all caching and ensuring data is fetched
+// fresh from Firestore on every single request.
+export const revalidate = 0;
 
 async function getUserData(username: string): Promise<UserProfile | null> {
     if (!username) return null;
