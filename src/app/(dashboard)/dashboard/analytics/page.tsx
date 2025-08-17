@@ -48,7 +48,23 @@ export default function AnalyticsPage() {
         if (!isMounted) return;
         const linksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Link));
         setLinks(linksData);
-        setLoading(false);
+        
+        // Fetch support clicks *after* we have the links data, or in parallel
+        const fetchSupportClicks = async () => {
+            const supportClicksDocRef = doc(db, `users/${user.uid}/clicks/support`);
+            try {
+                const docSnap = await getDoc(supportClicksDocRef);
+                if (docSnap.exists() && isMounted) {
+                    setSupportClicks(docSnap.data() as SupportClickData);
+                }
+            } catch (error) {
+                console.error("Error fetching support clicks: ", error);
+            } finally {
+               if(isMounted) setLoading(false);
+            }
+        };
+        fetchSupportClicks();
+
     }, (error) => {
         if (!isMounted) return;
         console.error("Error fetching analytics data: ", error);
@@ -59,21 +75,6 @@ export default function AnalyticsPage() {
         });
         setLoading(false);
     });
-
-    const fetchSupportClicks = async () => {
-        const supportClicksDocRef = doc(db, `users/${user.uid}/clicks/support`);
-        try {
-            const docSnap = await getDoc(supportClicksDocRef);
-            if (docSnap.exists() && isMounted) {
-                setSupportClicks(docSnap.data() as SupportClickData);
-            }
-        } catch (error) {
-            console.error("Error fetching support clicks: ", error);
-            // Don't show a toast for this, as it might not be critical
-        }
-    };
-    
-    fetchSupportClicks();
     
     return () => {
         isMounted = false;
