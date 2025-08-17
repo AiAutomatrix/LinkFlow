@@ -5,6 +5,8 @@ import { collection, query, where, getDocs, limit, Timestamp, orderBy } from 'fi
 import { db } from '@/lib/firebase';
 import { notFound } from 'next/navigation';
 
+export const revalidate = 0; // Forces fresh data on every request
+
 // This is a robust, recursive function to safely convert Firestore data types
 // to JSON-serializable formats. It correctly handles nested objects and Timestamps.
 const serializeFirestoreData = (data: any): any => {
@@ -71,6 +73,7 @@ async function getUserLinks(uid: string): Promise<LinkType[]> {
 
 export default async function UserProfilePage({ params }: { params: { username: string } }) {
     const userData = await getUserData(params.username);
+    console.log("Fetched user data on server:", JSON.stringify(userData, null, 2));
     
     if (!userData) {
         notFound();

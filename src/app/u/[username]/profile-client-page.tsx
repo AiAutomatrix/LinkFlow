@@ -148,6 +148,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     }, [serverLinks]);
 
     useEffect(() => {
+        console.log("Embed script received on client:", user?.bot?.embedScript);
         if (!user?.bot?.embedScript || typeof window === 'undefined') return;
 
         const container = botContainerRef.current;
