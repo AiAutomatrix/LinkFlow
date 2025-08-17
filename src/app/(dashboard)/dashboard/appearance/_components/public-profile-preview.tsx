@@ -122,7 +122,7 @@ const BotPreview = ({ embedScript }: { embedScript?: string }) => {
     if (!embedScript) return null;
     
     // This div is the container where the script will be injected.
-    return <div ref={botContainerRef} className="fixed bottom-4 right-4 z-20"></div>;
+    return <div ref={botContainerRef} className="absolute inset-0 z-20"></div>;
 };
 
 
@@ -196,9 +196,11 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
 
               <SupportLinks links={supportLinks} />
             </div>
-             {isPreview && <BotPreview embedScript={profile.bot?.embedScript} />}
+            {isPreview && <BotPreview embedScript={profile.bot?.embedScript} />}
         </div>
       </CardContent>
     </Card>
   );
 }
+
+    
