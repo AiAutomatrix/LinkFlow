@@ -5,7 +5,8 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
-    const { userId, linkId } = await request.json();
+    const body = await request.text();
+    const { userId, linkId } = JSON.parse(body);
 
     if (!userId || !linkId) {
       console.error('Click API Error: Missing userId or linkId in request body');
@@ -23,5 +24,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Failed to update clicks', details: error.message }, { status: 500 });
   }
 }
-
-    

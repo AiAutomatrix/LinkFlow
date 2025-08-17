@@ -50,25 +50,18 @@ const CryptoLog = ({ icon, name, address, onCopy }: { icon: React.ReactNode, nam
     )
 }
 
+const trackClick = (userId: string, linkId: string) => {
+    const data = { userId, linkId };
+    navigator.sendBeacon('/api/clicks', JSON.stringify(data));
+};
+
 const SupportLinks = ({ user, links }: { user: UserProfile, links: LinkType[] }) => {
     const { toast } = useToast();
     const [copiedStates, setCopiedStates] = useState<{[key: string]: boolean}>({});
-
-    const handleLinkClick = async (link: LinkType) => {
-        try {
-          fetch('/api/clicks', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: user.uid, linkId: link.id }),
-          });
-        } catch (error) {
-          console.error('Failed to track click:', error);
-        }
-    };
     
     const handleCopy = (link: LinkType) => {
         navigator.clipboard.writeText(link.url);
-        handleLinkClick(link);
+        trackClick(user.uid, link.id);
         setCopiedStates(prev => ({ ...Object.fromEntries(Object.keys(prev).map(k => [k, false])), [link.id]: true }));
         toast({ title: "Copied to clipboard!"});
         setTimeout(() => {
@@ -93,7 +86,7 @@ const SupportLinks = ({ user, links }: { user: UserProfile, links: LinkType[] })
             <h3 className="text-xs font-semibold uppercase text-muted-foreground text-center mb-4">Support Me</h3>
             <div className="grid grid-cols-1 gap-3">
                 {buyMeACoffeeLink && (
-                    <a href={buyMeACoffeeLink.url} target="_blank" rel="noopener noreferrer" onClick={() => handleLinkClick(buyMeACoffeeLink)} className="w-full text-center bg-yellow-400 text-black font-semibold p-3 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:scale-105 transition-transform">
+                    <a href={buyMeACoffeeLink.url} target="_blank" rel="noopener noreferrer" onClick={() => trackClick(user.uid, buyMeACoffeeLink.id)} className="w-full text-center bg-yellow-400 text-black font-semibold p-3 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:scale-105 transition-transform">
                         <Coffee className="h-5 w-5" /> Buy Me a Coffee
                     </a>
                 )}
@@ -140,16 +133,8 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         return name.split(' ').map(n => n[0]).join('')
     }
     
-    const handleLinkClick = async (link: LinkType) => {
-        try {
-          fetch('/api/clicks', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: user.uid, linkId: link.id }),
-          });
-        } catch (error) {
-          console.error('Failed to track click:', error);
-        }
+    const handleLinkClick = (link: LinkType) => {
+        trackClick(user.uid, link.id);
         window.open(link.url, '_blank', 'noopener,noreferrer');
     };
     
@@ -207,5 +192,3 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         </div>
     );
 }
-
-    
