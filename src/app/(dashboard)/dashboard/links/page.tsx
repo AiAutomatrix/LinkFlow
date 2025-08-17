@@ -44,7 +44,7 @@ const EthIcon = () => (
     <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-muted-foreground"><title>Ethereum</title><path d="M11.944 17.97L4.58 13.62 11.943 24l7.365-10.38-7.364 4.35zM12.056 0L4.69 12.223l7.366-4.354 7.365 4.354L12.056 0z"/></svg>
 );
 const SolIcon = () => (
-    <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-muted-foreground"><title>Solana</title><path d="M4.236.427a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533V-.001a.6.6 0 00-.128-.532.6.6 0 00-.49-.28L4.236.427zm10.02 6.046a.6.6 0 00-.532.127.6.6 0 00-.28.491v4.54a.6.6 0 00.28.49.6.6 0 00.532.128l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.532V5.76a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12zm-4.383 6.64a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533v-4.54a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12z"/></svg>
+    <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-muted-foreground"><title>Solana</title><path d="M4.236.427a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533V-.001a.6.6 0 00-.128-.532.6.6 0 00-.49-.28L4.236.427zm10.02 6.046a.6.6 0 00-.532.127a.6.6 0 00-.28.491v4.54a.6.6 0 00.28.49.6.6 0 00.532.128l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.532V5.76a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12zm-4.383 6.64a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533v-4.54a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12z"/></svg>
 );
 
 const socialLinksSchema = z.object({
@@ -106,11 +106,21 @@ export default function LinksPage() {
                 }
             }
             if (link.isSupport) {
-                const platform = link.title.toLowerCase().replace(/\s/g, '') as keyof z.infer<typeof supportLinksSchema>;
-                if (platform === 'etransfer') {
-                    supportLinksValues.email = link.url.replace('mailto:', '');
-                } else {
-                    (supportLinksValues as any)[platform] = link.url;
+                const platformMap: { [key: string]: keyof z.infer<typeof supportLinksSchema> } = {
+                    'buy me a coffee': 'buyMeACoffee',
+                    'etransfer': 'email',
+                    'btc': 'btc',
+                    'eth': 'eth',
+                    'sol': 'sol'
+                };
+                const platformKey = platformMap[link.title.toLowerCase()];
+
+                if(platformKey) {
+                    if (platformKey === 'email') { // E-Transfer
+                        (supportLinksValues as any)[platformKey] = link.url.replace('mailto:', '');
+                    } else {
+                        (supportLinksValues as any)[platformKey] = link.url;
+                    }
                 }
             }
         });
@@ -126,7 +136,7 @@ export default function LinksPage() {
             buyMeACoffee: supportLinksValues.buyMeACoffee || '',
             email: supportLinksValues.email || '',
             btc: supportLinksValues.btc || '',
-            eth: supportLinksValues.eth || '',
+eth: supportLinksValues.eth || '',
             sol: supportLinksValues.sol || '',
         });
 
@@ -162,24 +172,24 @@ export default function LinksPage() {
         (l) => (type === 'social' && l.isSocial) || (type === 'support' && l.isSupport)
     );
 
-    const platformConfig: { [key: string]: { title: string; order: number; urlPrefix?: string } } = {
+    const platformConfig: { [key: string]: { title: string; order: number; urlPrefix?: string; isSocial: boolean; isSupport: boolean } } = {
         // Social
-        email: { title: 'Email', order: 1000, urlPrefix: 'mailto:' },
-        instagram: { title: 'Instagram', order: 1001 },
-        facebook: { title: 'Facebook', order: 1002 },
-        github: { title: 'Github', order: 1003 },
+        email: { title: 'Email', order: 1000, urlPrefix: 'mailto:', isSocial: true, isSupport: false },
+        instagram: { title: 'Instagram', order: 1001, isSocial: true, isSupport: false },
+        facebook: { title: 'Facebook', order: 1002, isSocial: true, isSupport: false },
+        github: { title: 'Github', order: 1003, isSocial: true, isSupport: false },
         // Support
-        buyMeACoffee: { title: 'Buy Me A Coffee', order: 2000 },
-        'e-transfer': { title: 'E-Transfer', order: 2001, urlPrefix: 'mailto:' },
-        btc: { title: 'BTC', order: 2002 },
-        eth: { title: 'ETH', order: 2003 },
-        sol: { title: 'SOL', order: 2004 },
+        buyMeACoffee: { title: 'Buy Me A Coffee', order: 2000, isSocial: false, isSupport: true },
+        'e-transfer': { title: 'E-Transfer', order: 2001, urlPrefix: 'mailto:', isSocial: false, isSupport: true },
+        btc: { title: 'BTC', order: 2002, isSocial: false, isSupport: true },
+        eth: { title: 'ETH', order: 2003, isSocial: false, isSupport: true },
+        sol: { title: 'SOL', order: 2004, isSocial: false, isSupport: true },
     };
 
     const isUpdatingSocial = type === 'social';
 
     for (const [key, config] of Object.entries(platformConfig)) {
-        if ((isUpdatingSocial && config.order >= 2000) || (!isUpdatingSocial && config.order < 2000)) {
+        if ((isUpdatingSocial && !config.isSocial) || (!isUpdatingSocial && !config.isSupport)) {
             continue;
         }
 
@@ -192,7 +202,7 @@ export default function LinksPage() {
             if (existingLink) {
                 batch.update(doc(db, `users/${user.uid}/links`, existingLink.id), { url: finalUrl, active: true });
             } else {
-                const newLinkRef = doc(linksCollection);
+                const newLinkRef = doc(collection(db, `users/${user.uid}/links`));
                 batch.set(newLinkRef, {
                     title: config.title,
                     url: finalUrl,
@@ -200,8 +210,8 @@ export default function LinksPage() {
                     active: true,
                     clicks: 0,
                     createdAt: new Date(),
-                    isSocial: type === 'social',
-                    isSupport: type === 'support',
+                    isSocial: config.isSocial,
+                    isSupport: config.isSupport,
                 });
             }
         } else {
@@ -256,10 +266,15 @@ export default function LinksPage() {
   
   const handleAddLink = async (title: string, url: string, startDate?: Date, endDate?: Date) => {
     if (!user) return;
+    
+    // Correctly calculate the next order number for custom links
+    const customLinks = links.filter(l => !l.isSocial && !l.isSupport);
+    const maxOrder = customLinks.reduce((max, link) => Math.max(max, link.order), -1);
+
     const newLink: Omit<Link, 'id'> = {
         title,
         url,
-        order: links.filter(l => !l.isSocial && !l.isSupport).length,
+        order: maxOrder + 1,
         active: true,
         clicks: 0,
         createdAt: new Date(),
@@ -381,7 +396,7 @@ export default function LinksPage() {
                           index={
                             link.isSocial || link.isSupport
                               ? -1
-                              : links.filter((l) => !l.isSocial && !l.isSupport).findIndex((l) => l.id === link.id)
+                              : links.filter((l) => !l.isSocial && !l.isSupport).sort((a,b) => a.order - b.order).findIndex((l) => l.id === link.id)
                           }
                           totalLinks={links.filter((l) => !l.isSocial && !l.isSupport).length}
                           link={link}
@@ -630,7 +645,3 @@ export default function LinksPage() {
     </>
   );
 }
-
-    
-
-    
