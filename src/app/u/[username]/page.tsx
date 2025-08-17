@@ -11,7 +11,8 @@ const serializeFirestoreData = (data: any): any => {
     if (data === null || data === undefined) {
         return data;
     }
-    if (data instanceof Timestamp) {
+    // Firestore Timestamps have a toDate() method.
+    if (typeof data.toDate === 'function') {
         return data.toDate().toISOString();
     }
     if (Array.isArray(data)) {
@@ -46,6 +47,12 @@ async function getUserData(username: string): Promise<UserProfile | null> {
         }
         const userDoc = querySnapshot.docs[0];
         const userData = { uid: userDoc.id, ...userDoc.data() } as UserProfile;
+        
+        // Ensure bot field exists to prevent client-side errors
+        if (!userData.bot) {
+            userData.bot = { embedScript: '' };
+        }
+        
         return userData;
 
     } catch (error) {

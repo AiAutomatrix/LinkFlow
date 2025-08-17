@@ -7,7 +7,7 @@ import Logo from '@/components/logo';
 import AnimatedBackground from '@/components/animated-background';
 import { Mail, Instagram, Facebook, Github, Coffee, Banknote, Bitcoin, ClipboardCopy, ClipboardCheck } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 const SocialIcon = ({ platform }: { platform: string }) => {
@@ -127,52 +127,52 @@ const SupportLinks = ({ user, links }: { user: UserProfile, links: LinkType[] })
 
 export default function ProfileClientPage({ user, links: serverLinks }: { user: UserProfile; links: LinkType[] }) {
     const [activeLinks, setActiveLinks] = useState<LinkType[]>([]);
-    const [isClient, setIsClient] = useState(false);
+    const botContainerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        setIsClient(true);
-    }, []);
+        // This effect handles filtering for active links based on date
+        const now = new Date();
+        const filteredLinks = serverLinks.filter(link => {
+            if (!link.active) return false;
 
-    useEffect(() => {
-      const now = new Date();
-      const filteredLinks = serverLinks.filter(link => {
-          if (!link.active) return false;
+            const startDate = toDate(link.startDate);
+            const endDate = toDate(link.endDate);
+            
+            if (startDate && now < startDate) return false;
+            if (endDate && now > endDate) return false;
 
-          const startDate = toDate(link.startDate);
-          const endDate = toDate(link.endDate);
-          
-          if (startDate && now < startDate) return false;
-          if (endDate && now > endDate) return false;
-
-          return true;
-      });
-      setActiveLinks(filteredLinks);
+            return true;
+        });
+        setActiveLinks(filteredLinks);
     }, [serverLinks]);
 
     useEffect(() => {
-        const embedCode = user?.bot?.embedScript;
-        if (isClient && embedCode) {
-            const container = document.getElementById('public-bot-container');
-            if (!container) return;
+        // This effect handles injecting the bot script
+        if (!user?.bot?.embedScript || !botContainerRef.current) return;
 
-            container.innerHTML = '';
+        const container = botContainerRef.current;
+        container.innerHTML = ''; // Clear previous scripts to prevent duplicates
 
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = embedCode;
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = user.bot.embedScript;
 
-            Array.from(tempDiv.querySelectorAll('script')).forEach(oldScript => {
-                const newScript = document.createElement('script');
-                for (let i = 0; i < oldScript.attributes.length; i++) {
-                    const attr = oldScript.attributes[i];
-                    newScript.setAttribute(attr.name, attr.value);
-                }
-                newScript.textContent = oldScript.textContent;
-                // Append to body to ensure global execution context
-                document.body.appendChild(newScript);
-            });
-        }
-    }, [isClient, user?.bot?.embedScript]);
+        const scripts = wrapper.querySelectorAll('script');
+        scripts.forEach(oldScript => {
+            const newScript = document.createElement('script');
+            
+            // Copy all attributes from the old script to the new one
+            Array.from(oldScript.attributes).forEach(attr => 
+                newScript.setAttribute(attr.name, attr.value)
+            );
+            
+            // Copy inline script content
+            if (oldScript.text) {
+                newScript.text = oldScript.text;
+            }
 
+            container.appendChild(newScript);
+        });
+    }, [user?.bot?.embedScript]);
 
     const getInitials = (name: string = '') => {
         return name.split(' ').map(n => n[0]).join('')
@@ -232,8 +232,8 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
                 <SupportLinks user={user} links={supportLinks} />
             </div>
             
-            {/* The container is now just a conceptual location; the script is appended to the body. */}
-            <div id="public-bot-container" className="fixed bottom-4 right-4 z-20"></div>
+            {/* The container for the bot embed */}
+            <div id="public-bot-container" ref={botContainerRef} className="fixed bottom-4 right-4 z-20"></div>
 
             <footer className="mt-auto py-8 z-10">
                 <Logo />
