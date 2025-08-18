@@ -138,8 +138,17 @@ export default function AppearancePage() {
   }
   
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-      <div className="lg:col-span-1 space-y-6">
+    <div className="space-y-6">
+      <div className="relative h-[700px] w-full max-w-sm mx-auto">
+        <PublicProfilePreview 
+            profile={previewProfile} 
+            links={links} 
+            isPreview 
+            embedScript={user?.bot?.embedScript}
+        />
+      </div>
+      
+      <div>
         <div>
             <h1 className="text-2xl font-bold">Appearance</h1>
             <p className="text-muted-foreground">
@@ -147,7 +156,7 @@ export default function AppearancePage() {
             </p>
         </div>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-6">
             <Card>
               <CardHeader>
                 <CardTitle>Theme</CardTitle>
@@ -168,7 +177,7 @@ export default function AppearancePage() {
                       >
                         <CarouselContent>
                           {themes.map((theme) => (
-                            <CarouselItem key={theme.id} className="basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/3 xl:basis-1/4">
+                            <CarouselItem key={theme.id} className="basis-1/3 sm:basis-1/4 md:basis-1/5">
                               <div className="p-1">
                                   <div 
                                       className={cn(
@@ -222,14 +231,6 @@ export default function AppearancePage() {
             </Button>
           </form>
         </Form>
-      </div>
-      <div className="relative lg:col-span-1 h-[700px]">
-        <PublicProfilePreview 
-            profile={previewProfile} 
-            links={links} 
-            isPreview 
-            embedScript={user?.bot?.embedScript}
-        />
       </div>
     </div>
   );
