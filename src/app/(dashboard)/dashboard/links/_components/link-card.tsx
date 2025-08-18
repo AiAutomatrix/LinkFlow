@@ -3,7 +3,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { Link } from "@/lib/types";
 import { MoreHorizontal, Pencil, Trash2, CalendarDays, ArrowUp, ArrowDown } from "lucide-react";
@@ -126,6 +126,9 @@ export default function LinkCard({ link, index, totalLinks, onUpdate, onDelete, 
                     <DialogContent>
                         <DialogHeader>
                             <DialogTitle>Edit Link</DialogTitle>
+                             <DialogDescription>
+                                Make changes to your link here. Click save when you're done.
+                            </DialogDescription>
                         </DialogHeader>
                         <LinkForm
                             onSubmit={handleFormSubmit}
@@ -139,5 +142,3 @@ export default function LinkCard({ link, index, totalLinks, onUpdate, onDelete, 
         </Card>
     );
 };
-
-    

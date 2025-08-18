@@ -29,6 +29,7 @@ import LinkCard from "./_components/link-card";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -355,6 +356,9 @@ export default function LinksPage() {
               <DialogContent>
                   <DialogHeader>
                   <DialogTitle>Add a new link</DialogTitle>
+                  <DialogDescription>
+                    Add a new link to your profile. You can schedule it to appear at a later date.
+                  </DialogDescription>
                   </DialogHeader>
                   <LinkForm onSubmit={handleAddLink} onCancel={() => setDialogOpen(false)} />
               </DialogContent>
