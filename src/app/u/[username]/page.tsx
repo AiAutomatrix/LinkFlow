@@ -1,3 +1,4 @@
+
 import ProfileClientPage from './profile-client-page';
 import type { Link as LinkType, UserProfile } from '@/lib/types';
 import { collection, query, where, getDocs, limit, orderBy } from 'firebase/firestore';
