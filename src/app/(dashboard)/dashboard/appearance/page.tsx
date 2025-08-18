@@ -138,17 +138,19 @@ export default function AppearancePage() {
   }
   
   return (
-    <div className="space-y-6">
-      <div className="relative h-[700px] w-full max-w-sm mx-auto">
-        <PublicProfilePreview 
-            profile={previewProfile} 
-            links={links} 
-            isPreview 
-            embedScript={user?.bot?.embedScript}
-        />
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+      <div className="lg:sticky lg:top-6 space-y-6">
+        <div className="relative h-[700px] w-full max-w-sm mx-auto">
+            <PublicProfilePreview 
+                profile={previewProfile} 
+                links={links} 
+                isPreview 
+                embedScript={user?.bot?.embedScript}
+            />
+        </div>
       </div>
       
-      <div>
+      <div className="space-y-6">
         <div>
             <h1 className="text-2xl font-bold">Appearance</h1>
             <p className="text-muted-foreground">
@@ -156,7 +158,7 @@ export default function AppearancePage() {
             </p>
         </div>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Theme</CardTitle>
@@ -235,3 +237,5 @@ export default function AppearancePage() {
     </div>
   );
 }
+
+    
