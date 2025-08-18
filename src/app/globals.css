@@ -141,8 +141,6 @@ body {
     --card-foreground: 215 80% 25%;
     --primary: 210 90% 55%;
     --primary-foreground: 215 80% 25%;
-    --secondary: 210 95% 90%;
-    --secondary-foreground: 215 80% 25%;
     --accent: 190 90% 50%;
     --accent-foreground: 215 80% 25%;
     --border: 210 80% 85%;
@@ -343,6 +341,22 @@ body {
     --accent-foreground: 220 30% 10%;
     --border: 220 30% 45%;
   }
+  
+  [data-theme="sky-blue"] { --background: 220 100% 98%; --foreground: 220 80% 25%; --card: 220 100% 100%; --card-foreground: 220 80% 25%; --primary: 220 90% 60%; --primary-foreground: 220 80% 25%; --secondary: 220 100% 94%; --secondary-foreground: 220 80% 25%; --accent: 210 90% 70%; --accent-foreground: 220 80% 25%; --border: 220 100% 90%; }
+  [data-theme="candy-floss"] { --background: 330 80% 98%; --foreground: 330 60% 25%; --card: 330 80% 100%; --card-foreground: 330 60% 25%; --primary: 330 85% 75%; --primary-foreground: 330 60% 25%; --secondary: 330 80% 95%; --secondary-foreground: 330 60% 25%; --accent: 340 85% 80%; --accent-foreground: 330 60% 25%; --border: 330 80% 92%; }
+  [data-theme="cyberpunk"] { --background: 272 90% 7%; --foreground: 182 100% 80%; --card: 272 90% 10%; --card-foreground: 182 100% 80%; --primary: 182 100% 50%; --primary-foreground: 272 90% 7%; --secondary: 272 90% 15%; --secondary-foreground: 182 100% 80%; --accent: 300 100% 60%; --accent-foreground: 272 90% 7%; --border: 272 90% 20%; }
+  [data-theme="vintage-paper"] { --background: 30 20% 97%; --foreground: 30 10% 30%; --card: 30 20% 100%; --card-foreground: 30 10% 30%; --primary: 30 15% 55%; --primary-foreground: 30 20% 97%; --secondary: 30 10% 90%; --secondary-foreground: 30 10% 30%; --accent: 40 20% 65%; --accent-foreground: 30 10% 30%; --border: 30 10% 85%; }
+  [data-theme="gothic"] { --background: 0 0% 9%; --foreground: 0 0% 85%; --card: 0 0% 12%; --card-foreground: 0 0% 85%; --primary: 0 0% 60%; --primary-foreground: 0 0% 9%; --secondary: 0 0% 20%; --secondary-foreground: 0 0% 85%; --accent: 0 70% 50%; --accent-foreground: 0 0% 9%; --border: 0 0% 25%; }
+  [data-theme="beach-vibes"] { --background: 45 100% 96%; --foreground: 35 80% 30%; --card: 45 100% 98%; --card-foreground: 35 80% 30%; --primary: 200 90% 55%; --primary-foreground: 35 80% 30%; --secondary: 45 100% 90%; --secondary-foreground: 35 80% 30%; --accent: 25 95% 65%; --accent-foreground: 35 80% 30%; --border: 45 100% 85%; }
+  [data-theme="earthy-tones"] { --background: 45 30% 90%; --foreground: 35 80% 20%; --card: 45 30% 95%; --card-foreground: 35 80% 20%; --primary: 35 80% 30%; --primary-foreground: 45 30% 90%; --secondary: 45 25% 80%; --secondary-foreground: 35 80% 20%; --accent: 80 50% 40%; --accent-foreground: 45 30% 90%; --border: 45 25% 75%; }
+  [data-theme="monochrome-cool"] { --background: 220 10% 96%; --foreground: 220 10% 25%; --card: 220 10% 100%; --card-foreground: 220 10% 25%; --primary: 220 10% 45%; --primary-foreground: 220 10% 96%; --secondary: 220 10% 85%; --secondary-foreground: 220 10% 25%; --accent: 220 15% 60%; --accent-foreground: 220 10% 96%; --border: 220 10% 80%; }
+  [data-theme="sunrise-orange"] { --background: 30 100% 97%; --foreground: 25 80% 30%; --card: 30 100% 99%; --card-foreground: 25 80% 30%; --primary: 25 90% 60%; --primary-foreground: 25 80% 30%; --secondary: 30 100% 92%; --secondary-foreground: 25 80% 30%; --accent: 15 95% 65%; --accent-foreground: 25 80% 30%; --border: 30 100% 88%; }
+  [data-theme="deep-space"] { --background: 220 90% 5%; --foreground: 220 80% 90%; --card: 220 90% 8%; --card-foreground: 220 80% 90%; --primary: 220 90% 60%; --primary-foreground: 220 80% 90%; --secondary: 220 90% 15%; --secondary-foreground: 220 80% 90%; --accent: 260 90% 70%; --accent-foreground: 220 90% 5%; --border: 220 90% 20%; }
+  [data-theme="bubblegum"] { --background: 330 80% 98%; --foreground: 330 80% 30%; --card: 330 80% 100%; --card-foreground: 330 80% 30%; --primary: 330 80% 60%; --primary-foreground: 330 80% 98%; --secondary: 330 80% 94%; --secondary-foreground: 330 80% 30%; --accent: 280 80% 70%; --accent-foreground: 330 80% 98%; --border: 330 80% 90%; }
+  [data-theme="sandstone"] { --background: 40 80% 95%; --foreground: 40 80% 20%; --card: 40 80% 98%; --card-foreground: 40 80% 20%; --primary: 40 90% 40%; --primary-foreground: 40 80% 95%; --secondary: 40 80% 85%; --secondary-foreground: 40 80% 20%; --accent: 25 70% 50%; --accent-foreground: 40 80% 95%; --border: 40 80% 80%; }
+  [data-theme="velvet"] { --background: 270 20% 10%; --foreground: 270 80% 85%; --card: 270 20% 13%; --card-foreground: 270 80% 85%; --primary: 270 70% 65%; --primary-foreground: 270 80% 85%; --secondary: 270 20% 20%; --secondary-foreground: 270 80% 85%; --accent: 0 60% 60%; --accent-foreground: 270 20% 10%; --border: 270 20% 25%; }
+  [data-theme="jungle"] { --background: 150 20% 97%; --foreground: 150 80% 20%; --card: 150 20% 100%; --card-foreground: 150 80% 20%; --primary: 150 80% 40%; --primary-foreground: 150 20% 97%; --secondary: 150 20% 90%; --secondary-foreground: 150 80% 20%; --accent: 100 60% 50%; --accent-foreground: 150 20% 97%; --border: 150 20% 85%; }
+  [data-theme="retro-wave"] { --background: 270 70% 15%; --foreground: 300 90% 80%; --card: 270 70% 18%; --card-foreground: 300 90% 80%; --primary: 300 90% 70%; --primary-foreground: 270 70% 15%; --secondary: 270 70% 25%; --secondary-foreground: 300 90% 80%; --accent: 180 90% 60%; --accent-foreground: 270 70% 15%; --border: 270 70% 30%; }
 
 }
 

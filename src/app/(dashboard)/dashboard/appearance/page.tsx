@@ -60,6 +60,21 @@ export const themes = [
     { id: 'olive', name: 'Olive', colors: ['#F4FCE8', '#A3CC4A'], cssVars: { background: '80 20% 96%', foreground: '80 40% 20%', primary: '80 30% 45%', primaryForeground: '80 40% 20%', secondary: '80 25% 90%', secondaryForeground: '80 40% 20%' } },
     { id: 'rose-gold', name: 'Rose Gold', colors: ['#FFF1F2', '#F4C4C4'], cssVars: { background: '25 80% 96%', foreground: '25 50% 30%', primary: '350 70% 75%', primaryForeground: '25 50% 15%', secondary: '25 70% 92%', secondaryForeground: '25 50% 30%' } },
     { id: 'slate', name: 'Slate', colors: ['#475569', '#E2E8F0'], cssVars: { background: '220 30% 25%', foreground: '220 20% 95%', primary: '210 40% 75%', primaryForeground: '220 20% 95%', secondary: '220 30% 40%', secondaryForeground: '220 20% 95%' } },
+    { id: 'sky-blue', name: 'Sky Blue', colors: ['#EFF6FF', '#60A5FA'], cssVars: { background: '220 100% 98%', foreground: '220 80% 25%', primary: '220 90% 60%', primaryForeground: '220 80% 25%', secondary: '220 100% 94%', secondaryForeground: '220 80% 25%' } },
+    { id: 'candy-floss', name: 'Candy Floss', colors: ['#FCE7F3', '#F9A8D4'], cssVars: { background: '330 80% 98%', foreground: '330 60% 25%', primary: '330 85% 75%', primaryForeground: '330 60% 25%', secondary: '330 80% 95%', secondaryForeground: '330 60% 25%' } },
+    { id: 'cyberpunk', name: 'Cyberpunk', colors: ['#0d0221', '#00f6ff'], cssVars: { background: '272 90% 7%', foreground: '182 100% 80%', primary: '182 100% 50%', primaryForeground: '272 90% 7%', secondary: '272 90% 15%', secondaryForeground: '182 100% 80%' } },
+    { id: 'vintage-paper', name: 'Vintage Paper', colors: ['#FDFBF6', '#D4CFCB'], cssVars: { background: '30 20% 97%', foreground: '30 10% 30%', primary: '30 15% 55%', primaryForeground: '30 20% 97%', secondary: '30 10% 90%', secondaryForeground: '30 10% 30%' } },
+    { id: 'gothic', name: 'Gothic', colors: ['#171717', '#737373'], cssVars: { background: '0 0% 9%', foreground: '0 0% 85%', primary: '0 0% 60%', primaryForeground: '0 0% 9%', secondary: '0 0% 20%', secondaryForeground: '0 0% 85%' } },
+    { id: 'beach-vibes', name: 'Beach Vibes', colors: ['#FFFBEB', '#F59E0B'], cssVars: { background: '45 100% 96%', foreground: '35 80% 30%', primary: '200 90% 55%', primaryForeground: '35 80% 30%', secondary: '45 100% 90%', secondaryForeground: '35 80% 30%' } },
+    { id: 'earthy-tones', name: 'Earthy Tones', colors: ['#FEFCE8', '#854d0e'], cssVars: { background: '45 30% 90%', foreground: '35 80% 20%', primary: '35 80% 30%', primaryForeground: '45 30% 90%', secondary: '45 25% 80%', secondaryForeground: '35 80% 20%' } },
+    { id: 'monochrome-cool', name: 'Monochrome Cool', colors: ['#F3F4F6', '#4B5563'], cssVars: { background: '220 10% 96%', foreground: '220 10% 25%', primary: '220 10% 45%', primaryForeground: '220 10% 96%', secondary: '220 10% 85%', secondaryForeground: '220 10% 25%' } },
+    { id: 'sunrise-orange', name: 'Sunrise Orange', colors: ['#FFF7ED', '#FB923C'], cssVars: { background: '30 100% 97%', foreground: '25 80% 30%', primary: '25 90% 60%', primaryForeground: '25 80% 30%', secondary: '30 100% 92%', secondaryForeground: '25 80% 30%' } },
+    { id: 'deep-space', name: 'Deep Space', colors: ['#030712', '#3B82F6'], cssVars: { background: '220 90% 5%', foreground: '220 80% 90%', primary: '220 90% 60%', primaryForeground: '220 80% 90%', secondary: '220 90% 15%', secondaryForeground: '220 80% 90%' } },
+    { id: 'bubblegum', name: 'Bubblegum', colors: ['#FDF2F8', '#EC4899'], cssVars: { background: '330 80% 98%', foreground: '330 80% 30%', primary: '330 80% 60%', primaryForeground: '330 80% 98%', secondary: '330 80% 94%', secondaryForeground: '330 80% 30%' } },
+    { id: 'sandstone', name: 'Sandstone', colors: ['#FDF6E3', '#B8860B'], cssVars: { background: '40 80% 95%', foreground: '40 80% 20%', primary: '40 90% 40%', primaryForeground: '40 80% 95%', secondary: '40 80% 85%', secondaryForeground: '40 80% 20%' } },
+    { id: 'velvet', name: 'Velvet', colors: ['#1E1B26', '#9D4EDD'], cssVars: { background: '270 20% 10%', foreground: '270 80% 85%', primary: '270 70% 65%', primaryForeground: '270 80% 85%', secondary: '270 20% 20%', secondaryForeground: '270 80% 85%' } },
+    { id: 'jungle', name: 'Jungle', colors: ['#F0FFF4', '#10B981'], cssVars: { background: '150 20% 97%', foreground: '150 80% 20%', primary: '150 80% 40%', primaryForeground: '150 20% 97%', secondary: '150 20% 90%', secondaryForeground: '150 80% 20%' } },
+    { id: 'retro-wave', name: 'Retro Wave', colors: ['#2A0944', '#F86CF5'], cssVars: { background: '270 70% 15%', foreground: '300 90% 80%', primary: '300 90% 70%', primaryForeground: '270 70% 15%', secondary: '270 70% 25%', secondaryForeground: '300 90% 80%' } },
   ];
 
 export default function AppearancePage() {
@@ -123,8 +138,17 @@ export default function AppearancePage() {
   }
   
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-      <div className="lg:col-span-1 space-y-6">
+    <div className="flex flex-col gap-6">
+      <div className="relative h-[700px] w-full">
+        <PublicProfilePreview 
+            profile={previewProfile} 
+            links={links} 
+            isPreview 
+            embedScript={user?.bot?.embedScript}
+        />
+      </div>
+      
+      <div className="space-y-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Card>
@@ -148,7 +172,7 @@ export default function AppearancePage() {
                       >
                         <CarouselContent>
                           {themes.map((theme) => (
-                            <CarouselItem key={theme.id} className="basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/4">
+                            <CarouselItem key={theme.id} className="basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/6 xl:basis-1/8">
                               <div className="p-1">
                                   <div 
                                       className={cn(
@@ -202,14 +226,6 @@ export default function AppearancePage() {
             </Button>
           </form>
         </Form>
-      </div>
-      <div className="relative lg:col-span-1 h-[700px]">
-        <PublicProfilePreview 
-            profile={previewProfile} 
-            links={links} 
-            isPreview 
-            embedScript={user?.bot?.embedScript}
-        />
       </div>
     </div>
   );
