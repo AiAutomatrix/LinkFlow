@@ -88,7 +88,7 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle>Shareable URL</CardTitle>
           <CardDescription>
-            Your public URL is based on your username. You can change your username on the Appearance page.
+            Your public URL is based on your username. You can change your username on the Profile page.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -100,7 +100,7 @@ export default function SettingsPage() {
         </CardContent>
         <CardFooter>
             <Button asChild variant="secondary">
-                <Link href="/dashboard/appearance">Customize your Profile and URL</Link>
+                <Link href="/dashboard/profile">Edit Your Profile</Link>
             </Button>
         </CardFooter>
       </Card>

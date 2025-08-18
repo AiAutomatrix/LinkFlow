@@ -177,6 +177,9 @@ export default function ProfilePage() {
                     <FormItem>
                       <FormLabel>Username</FormLabel>
                       <Input placeholder="your_unique_name" {...field} />
+                      <FormDescription>
+                        This will be your public URL: linkflow.com/u/{form.getValues("username")}
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
