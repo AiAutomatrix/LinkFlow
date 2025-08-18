@@ -10,6 +10,7 @@ import { serializeFirestoreData } from '@/lib/utils';
 // fully dynamic, disabling all caching and ensuring data is fetched
 // fresh from Firestore on every single request.
 export const revalidate = 0;
+export const dynamic = 'force-dynamic';
 
 async function getUserData(username: string): Promise<UserProfile | null> {
     if (!username) return null;
