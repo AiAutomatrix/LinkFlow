@@ -138,23 +138,20 @@ export default function AppearancePage() {
   }
   
   return (
-    <div className="flex flex-col gap-6">
-      <div className="relative h-[700px] w-full">
-        <PublicProfilePreview 
-            profile={previewProfile} 
-            links={links} 
-            isPreview 
-            embedScript={user?.bot?.embedScript}
-        />
-      </div>
-      
-      <div className="space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+      <div className="lg:col-span-1 space-y-6">
+        <div>
+            <h1 className="text-2xl font-bold">Appearance</h1>
+            <p className="text-muted-foreground">
+              Customize the look and feel of your public profile.
+            </p>
+        </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Appearance</CardTitle>
-                <CardDescription>Select a theme and customize the look of your profile.</CardDescription>
+                <CardTitle>Theme</CardTitle>
+                <CardDescription>Select a color scheme for your profile.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <FormField
@@ -162,7 +159,6 @@ export default function AppearancePage() {
                   name="theme"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Theme</FormLabel>
                        <Carousel
                         opts={{
                           align: "start",
@@ -172,7 +168,7 @@ export default function AppearancePage() {
                       >
                         <CarouselContent>
                           {themes.map((theme) => (
-                            <CarouselItem key={theme.id} className="basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/6 xl:basis-1/8">
+                            <CarouselItem key={theme.id} className="basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/3 xl:basis-1/4">
                               <div className="p-1">
                                   <div 
                                       className={cn(
@@ -226,6 +222,14 @@ export default function AppearancePage() {
             </Button>
           </form>
         </Form>
+      </div>
+      <div className="relative lg:col-span-1 h-[700px]">
+        <PublicProfilePreview 
+            profile={previewProfile} 
+            links={links} 
+            isPreview 
+            embedScript={user?.bot?.embedScript}
+        />
       </div>
     </div>
   );

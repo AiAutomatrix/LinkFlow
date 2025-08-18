@@ -92,18 +92,6 @@ export default function BotPage() {
       return <Loading />;
   }
   
-  const srcDoc = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <style>body { margin: 0; padding: 0; }</style>
-      </head>
-      <body>
-        ${watchedEmbedScript || ''}
-      </body>
-    </html>
-  `;
-  
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
       <div className="lg:col-span-1 space-y-6">
@@ -154,15 +142,12 @@ export default function BotPage() {
         </Form>
     </div>
      <div className="relative lg:col-span-1 h-[700px]">
-        <PublicProfilePreview profile={user} links={links} isPreview />
-        {watchedEmbedScript && (
-          <iframe
-            srcDoc={srcDoc}
-            className="absolute inset-0 w-full h-full border-0"
-            title="Chatbot Preview"
-            sandbox="allow-scripts allow-same-origin"
-          />
-        )}
+        <PublicProfilePreview 
+          profile={user} 
+          links={links} 
+          isPreview 
+          embedScript={watchedEmbedScript}
+        />
       </div>
     </div>
   );
