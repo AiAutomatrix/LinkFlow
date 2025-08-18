@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Link as LinkType, UserProfile } from '@/lib/types';
@@ -128,6 +129,15 @@ const SupportLinks = ({ user, links }: { user: UserProfile, links: LinkType[] })
 
 // ---------- Main Component ----------
 
+declare global {
+    interface Window {
+        botpressWebChat?: {
+            init: (config: any) => void;
+            close: () => void;
+        };
+    }
+}
+
 export default function ProfileClientPage({ user, links: serverLinks }: { user: UserProfile; links: LinkType[] }) {
   const [activeLinks, setActiveLinks] = useState<LinkType[]>([]);
   const botContainerRef = useRef<HTMLDivElement>(null);
@@ -150,21 +160,33 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
   useEffect(() => {
     if (!user?.bot?.embedScript || typeof window === 'undefined') return;
 
+    // Cleanup previous bot instance and global object to prevent issues on refresh.
+    if (window.botpressWebChat && typeof window.botpressWebChat.close === 'function') {
+        try {
+            window.botpressWebChat.close();
+        } catch (e) {
+            console.error("Error closing previous bot instance:", e);
+        }
+    }
+    // @ts-ignore
+    delete window.botpressWebChat;
+
+
     const container = botContainerRef.current;
     if (!container) return;
 
+    // Clear previous DOM nodes from the container.
     container.innerHTML = '';
 
+    // Inject fresh embed script.
     const parser = new DOMParser();
     const doc = parser.parseFromString(user.bot.embedScript, 'text/html');
-    const scripts = doc.querySelectorAll('script');
-
-    scripts.forEach((oldScript) => {
-      const newScript = document.createElement('script');
-      Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
-      if (oldScript.textContent) newScript.textContent = oldScript.textContent;
-      container.appendChild(newScript);
+    
+    // Use body.childNodes to preserve all nodes (including scripts)
+    doc.body.childNodes.forEach(node => {
+        container.appendChild(node.cloneNode(true));
     });
+
   }, [user?.bot?.embedScript]);
 
   const getInitials = (name: string = '') => name.split(' ').map(n => n[0]).join('');
@@ -221,3 +243,4 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     </div>
   );
 }
+
