@@ -152,31 +152,23 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         const container = botContainerRef.current;
         if (!container) return;
 
-        // Clear previous scripts to avoid duplicates
         container.innerHTML = '';
 
-        // Parse embedScript into DOM elements
         const parser = new DOMParser();
         const doc = parser.parseFromString(user.bot.embedScript, 'text/html');
         const scripts = doc.querySelectorAll('script');
 
-        // Append all scripts to the container
         scripts.forEach((oldScript) => {
             const newScript = document.createElement('script');
-
-            // Copy attributes
             Array.from(oldScript.attributes).forEach((attr) => {
                 newScript.setAttribute(attr.name, attr.value);
             });
-
-            // Inline script content
             if (oldScript.textContent) {
                 newScript.textContent = oldScript.textContent;
             }
-
             container.appendChild(newScript);
         });
-  }, [user?.bot?.embedScript]);
+    }, [user?.bot?.embedScript]);
 
     const getInitials = (name: string = '') => {
         return name.split(' ').map(n => n[0]).join('')
