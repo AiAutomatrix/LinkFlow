@@ -1,4 +1,3 @@
-
 // src/lib/botpress.ts
 type Attrs = Record<string, string>;
 

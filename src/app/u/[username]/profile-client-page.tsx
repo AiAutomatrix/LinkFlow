@@ -8,6 +8,13 @@ import { Mail, Instagram, Facebook, Github, Coffee, Banknote, Bitcoin, Clipboard
 import { Timestamp } from 'firebase/firestore';
 import { useEffect, useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { injectEmbedHtmlSequentially } from '@/lib/botpress';
+
+declare global {
+  interface Window {
+    botpressWebChat?: { init?: (cfg: any) => void; close?: () => void };
+  }
+}
 
 // ---------- Helper Components ----------
 
@@ -130,6 +137,8 @@ const SupportLinks = ({ user, links }: { user: UserProfile, links: LinkType[] })
 
 export default function ProfileClientPage({ user, links: serverLinks }: { user: UserProfile; links: LinkType[] }) {
   const [activeLinks, setActiveLinks] = useState<LinkType[]>([]);
+  const botContainerRef = useRef<HTMLDivElement>(null);
+  const injectingRef = useRef(false);
 
   // Filter active links
   useEffect(() => {
@@ -144,6 +153,52 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     });
     setActiveLinks(filteredLinks);
   }, [serverLinks]);
+
+  // Inject bot embed dynamically and safely
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const container = botContainerRef.current;
+    const embed = user?.bot?.embedScript?.trim();
+
+    if (!container || !embed || injectingRef.current) return;
+
+    let cancelled = false;
+    injectingRef.current = true;
+
+    const run = async () => {
+      // 1) Close any existing instance (idempotent)
+      try {
+        window.botpressWebChat?.close?.();
+      } catch {}
+
+      // 2) Clear the container (DOM)
+      container.innerHTML = '';
+
+      try {
+        // 3) Inject sequentially
+        await injectEmbedHtmlSequentially(container, embed, {
+          cacheBustKey: String(user?.uid || '1'),
+        });
+      } finally {
+        if (!cancelled) {
+          injectingRef.current = false;
+        }
+      }
+    };
+
+    run();
+
+    // Cleanup on unmount / route change
+    return () => {
+      cancelled = true;
+      injectingRef.current = false;
+      try {
+        window.botpressWebChat?.close?.();
+      } catch {}
+      if (container) container.innerHTML = '';
+    };
+  }, [user?.uid, user?.bot?.embedScript]);
+
 
   const getInitials = (name: string = '') => name.split(' ').map(n => n[0]).join('');
 
@@ -190,10 +245,8 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         </div>
       </div>
 
-      {/* Simplified, direct script injection */}
-      {user?.bot?.embedScript && (
-          <div dangerouslySetInnerHTML={{ __html: user.bot.embedScript }} />
-      )}
+      {/* Container where the bot embed will render */}
+      <div ref={botContainerRef} id="public-bot-container" />
 
       <footer className="mt-auto py-8 z-10">
         <Logo />
