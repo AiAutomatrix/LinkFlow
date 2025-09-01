@@ -81,7 +81,7 @@ const SupportLinks = ({ links }: { links: LinkType[] }) => {
                         <p className="text-xs text-muted-foreground font-sans text-center">CRYPTO LOGS</p>
                         {btcLink && <CryptoLog icon={<Bitcoin className="h-5 w-5 shrink-0" />} name="BTC" address={btcLink.url} onCopy={(text) => handleCopy(text, btcLink.id)} />}
                         {ethLink && <CryptoLog icon={<EthIcon />} name="ETH" address={ethLink.url} onCopy={(text) => handleCopy(text, ethLink.id)} />}
-                        {solLink && <CryptoLog icon={<SolIcon />} name="SOL" address={solLink.url} onCopy={(text) => handleCopy(text, solLink.id)} />}
+                        {solLink && <SolIcon />} name="SOL" address={solLink.url} onCopy={(text) => handleCopy(text, solLink.id)} />
                     </div>
                 )}
             </div>
@@ -162,12 +162,16 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
         </html>`
     : '';
 
-  const customStyles = profile.theme === 'custom' ? {
-    '--gradient-from': profile.customThemeGradient?.from || '#FFFFFF',
-    '--gradient-to': profile.customThemeGradient?.to || '#AAAAAA',
-    '--btn-gradient-from': profile.customButtonGradient?.from || '#AAAAAA',
-    '--btn-gradient-to': profile.customButtonGradient?.to || '#FFFFFF',
-  } as React.CSSProperties : {};
+  const customStyles: React.CSSProperties = {};
+  if (profile.theme === 'custom') {
+    if (profile.customThemeGradient?.from && profile.customThemeGradient?.to) {
+        customStyles.backgroundImage = `linear-gradient(to bottom, ${profile.customThemeGradient.from}, ${profile.customThemeGradient.to})`;
+    }
+    if (profile.customButtonGradient?.from && profile.customButtonGradient?.to) {
+        customStyles['--btn-gradient-from'] = profile.customButtonGradient.from;
+        customStyles['--btn-gradient-to'] = profile.customButtonGradient.to;
+    }
+  }
 
 
   return (
