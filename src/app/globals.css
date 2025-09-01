@@ -117,9 +117,7 @@ body {
     --gradient-to: #AAAAAA;
     --btn-gradient-from: #AAAAAA;
     --btn-gradient-to: #FFFFFF;
-  }
-  
-  [data-theme="custom"] {
+    
     --background: var(--gradient-from);
     --foreground: #111827;
     --card: transparent;
