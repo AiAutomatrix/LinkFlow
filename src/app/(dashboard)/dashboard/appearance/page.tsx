@@ -129,12 +129,6 @@ export default function AppearancePage() {
   
   const watchedValues = form.watch();
 
-  const previewProfile: Partial<UserProfile> & { photoURL?: string } = {
-    ...user,
-    ...watchedValues,
-    bot: user?.bot, // Ensure bot data is passed to the preview
-  };
-
   useEffect(() => {
       if (user) {
           const isCustom = user.theme === 'custom';
@@ -200,6 +194,12 @@ export default function AppearancePage() {
       return <Loading />;
   }
   
+  const previewProfile: Partial<UserProfile> & { photoURL?: string } = {
+    ...user,
+    ...watchedValues,
+    bot: user?.bot, // Ensure bot data is passed to the preview
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
       <div className="lg:sticky lg:top-6 space-y-6">
@@ -422,5 +422,3 @@ export default function AppearancePage() {
     </div>
   );
 }
-
-    
