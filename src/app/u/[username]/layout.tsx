@@ -5,5 +5,5 @@ export default function UserProfileLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <div className="h-screen">{children}</div>;
+  return <div className="h-[95vh]">{children}</div>;
 }
