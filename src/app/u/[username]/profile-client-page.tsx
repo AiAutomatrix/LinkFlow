@@ -33,7 +33,7 @@ const EthIcon = () => (
 const SolIcon = () => (
   <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0">
     <title>Solana</title>
-    <path d="M4.236.427a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533V-.001a.6.6 0 00-.128-.532.6.6 0 00-.49-.28L4.236.427zm10.02 6.046a.6.6 0 00-.532.127a.6.6 0 00-.28.491v4.54a.6.6 0 00.28.49.6.6 0 00.532.128l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.532V5.76a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12zm-4.383 6.64a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533v-4.54a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12z"/>
+    <path d="M4.236.427a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533V-.001a.6.6 0 00-.128-.532.6.6 0 00-.49-.28L4.236.427zm10.02 6.046a.6.6 0 00-.532.127a.6.6 0 00-.28.491v4.54a.6.6 0 00.28.49.6.6 0 00.532.128l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.532V5.76a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12zm-4.383 6.64a.6.6 0 00-.532.127a.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533v-4.54a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12z"/>
   </svg>
 );
 
@@ -204,43 +204,44 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
 
 
   return (
-    <div data-theme={user.theme || 'light'} className="relative flex flex-col items-center p-4 bg-background text-foreground h-full overflow-auto">
-      {user.animatedBackground && <AnimatedBackground />}
-      
-      <div className="relative w-full max-w-md mx-auto z-10 flex flex-col items-center flex-grow justify-center">
-        <div className="flex flex-col items-center text-center">
-          <Avatar className="h-24 w-24 border-2 border-white/50">
-            <AvatarImage src={user.photoURL || undefined} alt={user.displayName} />
-            <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
-          </Avatar>
-          <h1 className="text-2xl font-bold mt-3">{user.displayName}</h1>
-          <p className="text-md text-muted-foreground">@{user.username}</p>
-          <p className="mt-2 text-sm max-w-xs text-foreground/80">{user.bio}</p>
-          <div className="flex gap-4 justify-center mt-3 text-foreground/80">
-            {socialLinks.map(link => (
-              <button key={link.id} aria-label={`My ${link.title}`} className="hover:text-primary transition-colors" onClick={() => handleLinkClick(link)}>
-                <SocialIcon platform={link.title} />
-              </button>
-            ))}
-          </div>
-          <div className="mt-6 space-y-3 w-full">
-            {regularLinks.map((link) => (
-                <button 
-                    key={link.id}
-                    className="w-full text-center bg-secondary text-secondary-foreground font-semibold p-4 rounded-lg shadow-md transition-transform transform hover:scale-105 active:scale-[0.98] truncate"
-                    onClick={() => handleLinkClick(link)}
-                >
-                  {link.title}
-                </button>
-            ))}
-          </div>
-          <SupportLinks user={user} links={supportLinks} />
+    <div data-theme={user.theme || 'light'} className="h-full">
+        <div className="relative flex flex-col items-center p-4 bg-background text-foreground h-full overflow-auto">
+        {user.animatedBackground && <AnimatedBackground />}
+        
+        <div className="relative w-full max-w-md mx-auto z-10 flex flex-col items-center flex-grow justify-start pt-12">
+            <div className="flex flex-col items-center text-center">
+                <Avatar className="h-24 w-24 border-2 border-white/50">
+                    <AvatarImage src={user.photoURL || undefined} alt={user.displayName} />
+                    <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+                </Avatar>
+                <h1 className="text-2xl font-bold mt-3">{user.displayName}</h1>
+                <p className="text-md text-muted-foreground">@{user.username}</p>
+                <p className="mt-2 text-sm max-w-xs text-foreground/80">{user.bio}</p>
+                <div className="flex gap-4 justify-center mt-3 text-foreground/80">
+                    {socialLinks.map(link => (
+                    <button key={link.id} aria-label={`My ${link.title}`} className="hover:text-primary transition-colors" onClick={() => handleLinkClick(link)}>
+                        <SocialIcon platform={link.title} />
+                    </button>
+                    ))}
+                </div>
+                <div className="mt-6 space-y-3 w-full">
+                    {regularLinks.map((link) => (
+                        <button 
+                            key={link.id}
+                            className="w-full text-center bg-secondary text-secondary-foreground font-semibold p-4 rounded-lg shadow-md transition-transform transform hover:scale-105 active:scale-[0.98] truncate"
+                            onClick={() => handleLinkClick(link)}
+                        >
+                        {link.title}
+                        </button>
+                    ))}
+                </div>
+                <SupportLinks user={user} links={supportLinks} />
+            </div>
         </div>
-      </div>
-      
-      <footer className="w-full mt-4 text-center z-10 py-2">
-        <Logo />
-      </footer>
+        
+        <footer className="w-full mt-4 text-center z-10 py-2">
+            <Logo />
+        </footer>
 
 
        <iframe
@@ -250,5 +251,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
           sandbox="allow-scripts allow-same-origin"
         />
     </div>
+    </div>
   );
 }
+
