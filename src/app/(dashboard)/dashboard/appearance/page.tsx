@@ -145,7 +145,7 @@ export default function AppearancePage() {
                 profile={previewProfile} 
                 links={links} 
                 isPreview 
-                showBot={false}
+                showBot={true}
             />
         </div>
       </div>
