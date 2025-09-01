@@ -205,7 +205,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
   const customStyles: React.CSSProperties = {};
   if (user.theme === 'custom') {
     if (user.customThemeGradient?.from && user.customThemeGradient?.to) {
-      customStyles.backgroundImage = `linear-gradient(to bottom, ${user.customThemeGradient.from}, ${user.customThemeGradient.to})`;
+      (customStyles as any).backgroundImage = `linear-gradient(to bottom, ${user.customThemeGradient.from}, ${user.customThemeGradient.to})`;
     }
     if (user.customButtonGradient?.from && user.customButtonGradient?.to) {
       (customStyles as any)["--btn-gradient-from"] = user.customButtonGradient.from;
