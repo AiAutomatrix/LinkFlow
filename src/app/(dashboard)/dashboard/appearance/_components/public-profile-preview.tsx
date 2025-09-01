@@ -162,15 +162,13 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
         </html>`
     : '';
 
-  const themeStyle = profile.theme === 'custom' && profile.customThemeGradient?.from && profile.customThemeGradient?.to ? {
-    '--gradient-from': profile.customThemeGradient.from,
-    '--gradient-to': profile.customThemeGradient.to,
+  const customStyles = profile.theme === 'custom' ? {
+    '--gradient-from': profile.customThemeGradient?.from || '#FFFFFF',
+    '--gradient-to': profile.customThemeGradient?.to || '#AAAAAA',
+    '--btn-gradient-from': profile.customButtonGradient?.from || '#AAAAAA',
+    '--btn-gradient-to': profile.customButtonGradient?.to || '#FFFFFF',
   } as React.CSSProperties : {};
 
-  const buttonStyle = profile.theme === 'custom' && profile.customButtonGradient?.from && profile.customButtonGradient?.to ? {
-    '--btn-gradient-from': profile.customButtonGradient.from,
-    '--btn-gradient-to': profile.customButtonGradient.to,
-  } as React.CSSProperties : {};
 
   return (
     <>
@@ -183,7 +181,7 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
                 data-theme={profile.theme || 'light'}
                 data-style={profile.buttonStyle || 'solid'}
                 className="h-full w-full rounded-md border bg-background flex flex-col items-center relative overflow-hidden"
-                style={{ ...themeStyle, ...buttonStyle }}
+                style={customStyles}
             >
                 {profile.animatedBackground && <AnimatedBackground />}
                 <div className="flex-1 w-full flex flex-col items-center pt-12 text-center overflow-y-auto p-4">
