@@ -12,6 +12,7 @@ import {
   Legend,
   ResponsiveContainer,
   BarChart as RechartsBarChart,
+  Gradient,
 } from "recharts";
 import type { Link } from "@/lib/types";
 import { useEffect, useState, useMemo } from "react";
@@ -20,6 +21,34 @@ import { useAuth } from "@/contexts/auth-context";
 import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="rounded-lg border bg-background p-2 shadow-sm">
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col space-y-1">
+              <span className="text-[0.70rem] uppercase text-muted-foreground">
+                Link
+              </span>
+              <span className="font-bold text-muted-foreground truncate max-w-[120px]">
+                {label}
+              </span>
+            </div>
+            <div className="flex flex-col space-y-1">
+              <span className="text-[0.70rem] uppercase text-muted-foreground">
+                Clicks
+              </span>
+              <span className="font-bold text-foreground">
+                {payload[0].value}
+              </span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
 
 export default function AnalyticsPage() {
   const { user } = useAuth();
@@ -78,8 +107,8 @@ export default function AnalyticsPage() {
     const totalSupportClicks = supportLinks.reduce((acc, link) => acc + (link.clicks || 0), 0);
     
     const totalClicks = totalCustomClicks + totalSocialClicks + totalSupportClicks;
-    const totalLinks = links.length;
-    const avgClicks = totalLinks > 0 ? (totalClicks / totalLinks).toFixed(2) : "0";
+    const totalLinksCount = links.length;
+    const avgClicks = totalLinksCount > 0 ? (totalClicks / totalLinksCount).toFixed(2) : "0";
 
     const top10ChartData = allLinksWithClicks
         .sort((a,b) => (b.clicks || 0) - (a.clicks || 0))
@@ -98,7 +127,7 @@ export default function AnalyticsPage() {
         .filter(l => (l.clicks || 0) > 0)
         .map(link => ({ name: link.title, clicks: link.clicks || 0 }));
 
-    return { totalClicks, totalLinks, avgClicks, top10ChartData, customLinksChartData, socialLinksChartData, supportLinksChartData, totalSupportClicks };
+    return { totalClicks, totalLinks: totalLinksCount, avgClicks, top10ChartData, customLinksChartData, socialLinksChartData, supportLinksChartData, totalSupportClicks };
   }, [links]);
 
 
@@ -146,18 +175,21 @@ export default function AnalyticsPage() {
         <CardContent>
         <ResponsiveContainer width="100%" height={350}>
             {data.length > 0 ? (
-                <RechartsBarChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
+                <RechartsBarChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                    <defs>
+                        <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
+                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.2}/>
+                        </linearGradient>
+                    </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border) / 0.5)" />
+                <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
                 <Tooltip
-                    contentStyle={{
-                    backgroundColor: "hsl(var(--background))",
-                    borderColor: "hsl(var(--border))",
-                    }}
+                    cursor={{fill: 'hsl(var(--accent))', radius: '4px'}}
+                    content={<CustomTooltip />}
                 />
-                <Legend />
-                <Bar dataKey="clicks" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Clicks" />
+                <Bar dataKey="clicks" fill="url(#chartGradient)" radius={[4, 4, 0, 0]} name="Clicks" />
                 </RechartsBarChart>
             ) : (
                 <div className="flex h-full w-full flex-col items-center justify-center">
@@ -230,7 +262,3 @@ export default function AnalyticsPage() {
     </>
   );
 }
-
-    
-
-    
