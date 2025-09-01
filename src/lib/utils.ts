@@ -40,3 +40,16 @@ export const serializeFirestoreData = (data: any): any => {
 
   return data;
 };
+
+/**
+ * Unescapes HTML entities in a string.
+ * This is necessary for script tags that might be escaped during data transfer.
+ * @param html The HTML string to unescape.
+ * @returns The unescaped HTML string.
+ */
+export const unescapeHtml = (html: string) => {
+  if (typeof window === 'undefined' || !html) return html;
+  const ta = document.createElement("textarea");
+  ta.innerHTML = html;
+  return ta.value;
+}

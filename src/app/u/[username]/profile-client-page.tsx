@@ -9,6 +9,7 @@ import { Mail, Instagram, Facebook, Github, Coffee, Banknote, Bitcoin, Clipboard
 import { Timestamp } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { unescapeHtml } from '@/lib/utils';
 
 // ---------- Helper Components ----------
 
@@ -133,14 +134,6 @@ const getBotConfigUrl = (embedScript: string): string | null => {
     const match = embedScript.match(/src="(https:\/\/files\.bpcontent\.cloud\/[^"]+\.js)"/);
     return match ? match[1] : null;
 };
-
-// Unescapes HTML entities.
-const unescapeHtml = (html: string) => {
-  if (typeof window === 'undefined') return html;
-  const ta = document.createElement("textarea");
-  ta.innerHTML = html;
-  return ta.value;
-}
 
 
 // ---------- Main Component ----------

@@ -8,6 +8,7 @@ import type { UserProfile, Link as LinkType } from "@/lib/types";
 import { Mail, Instagram, Facebook, Github, Coffee, Banknote, Bitcoin, ClipboardCopy, ClipboardCheck } from 'lucide-react';
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { unescapeHtml } from "@/lib/utils";
 
 
 const EthIcon = () => (
@@ -94,14 +95,6 @@ const getBotConfigUrl = (embedScript: string): string | null => {
     const match = embedScript.match(/src="(https:\/\/files\.bpcontent\.cloud\/[^"]+\.js)"/);
     return match ? match[1] : null;
 };
-
-// Unescapes HTML entities.
-const unescapeHtml = (html: string) => {
-  if (typeof window === 'undefined') return html;
-  const ta = document.createElement("textarea");
-  ta.innerHTML = html;
-  return ta.value;
-}
 
 
 export default function PublicProfilePreview({ profile, links = [], isPreview = false, showBot = false }: { profile: Partial<UserProfile>; links?: LinkType[], isPreview?: boolean, showBot?: boolean }) {
