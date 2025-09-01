@@ -178,12 +178,12 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
       <CardContent className={cn(isPreview ? "p-0" : "p-4")}>
         <div 
           className="relative h-[700px] w-full"
-          style={{ ...themeStyle, ...buttonStyle }}
         >
             <div 
                 data-theme={profile.theme || 'light'}
                 data-style={profile.buttonStyle || 'solid'}
                 className="h-full w-full rounded-md border bg-background flex flex-col items-center relative overflow-hidden"
+                style={{ ...themeStyle, ...buttonStyle }}
             >
                 {profile.animatedBackground && <AnimatedBackground />}
                 <div className="flex-1 w-full flex flex-col items-center pt-12 text-center overflow-y-auto p-4">
@@ -235,7 +235,3 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
     </>
   );
 }
-
-    
-
-    

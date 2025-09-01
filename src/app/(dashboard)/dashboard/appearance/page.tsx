@@ -21,11 +21,11 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useReducer } from "react";
 import { useToast } from "@/hooks/use-toast";
 import PublicProfilePreview from "./_components/public-profile-preview";
 import type { Link, UserProfile } from "@/lib/types";
-import { Loader2 } from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Switch } from "@/components/ui/switch";
@@ -115,6 +115,8 @@ export default function AppearancePage() {
   const [formLoading, setFormLoading] = useState(false);
   const [links, setLinks] = useState<Link[]>([]);
   const [customGradientsEnabled, setCustomGradientsEnabled] = useState(false);
+  const [_, forceUpdate] = useReducer((x) => x + 1, 0);
+
 
   const form = useForm<z.infer<typeof appearanceSchema>>({
     resolver: zodResolver(appearanceSchema),
@@ -130,24 +132,20 @@ export default function AppearancePage() {
   const watchedValues = form.watch();
 
   useEffect(() => {
-      if (user) {
-          const isCustom = user.theme === 'custom';
-          setCustomGradientsEnabled(isCustom);
-          
-          form.reset({
-              theme: user.theme || 'light',
-              animatedBackground: user.animatedBackground || false,
-              buttonStyle: user.buttonStyle || 'solid',
-              customThemeGradient: user.customThemeGradient || { from: '#FFFFFF', to: '#AAAAAA' },
-              customButtonGradient: user.customButtonGradient || { from: '#AAAAAA', to: '#FFFFFF' },
-          });
-      }
+    if (user) {
+        const isCustom = user.theme === 'custom';
+        setCustomGradientsEnabled(isCustom);
+        form.reset({
+            theme: user.theme || 'light',
+            animatedBackground: user.animatedBackground || false,
+            buttonStyle: user.buttonStyle || 'solid',
+            customThemeGradient: user.customThemeGradient || { from: '#FFFFFF', to: '#AAAAAA' },
+            customButtonGradient: user.customButtonGradient || { from: '#AAAAAA', to: '#FFFFFF' },
+        });
+    }
   }, [user]);
   
   useEffect(() => {
-    // This effect ensures that toggling the custom gradients switch
-    // immediately updates the theme in the form state for the preview,
-    // without needing to save first.
     const currentTheme = form.getValues('theme');
     if (customGradientsEnabled) {
         if (currentTheme !== 'custom') {
@@ -155,7 +153,6 @@ export default function AppearancePage() {
         }
     } else {
         if (currentTheme === 'custom') {
-            // Revert to the user's saved theme if they toggle custom off
             form.setValue('theme', user?.theme !== 'custom' ? user?.theme || 'light' : 'light');
         }
     }
@@ -197,6 +194,7 @@ export default function AppearancePage() {
   const previewProfile: Partial<UserProfile> = {
     ...user,
     ...watchedValues,
+    theme: customGradientsEnabled ? 'custom' : watchedValues.theme,
     bot: user?.bot, // Ensure bot data is passed to the preview
   };
 
@@ -408,6 +406,10 @@ export default function AppearancePage() {
                           />
                       </div>
                     </div>
+                     <Button type="button" variant="outline" onClick={() => forceUpdate()}>
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Refresh Preview
+                    </Button>
                 </CardContent>
             </Card>
 
@@ -422,5 +424,3 @@ export default function AppearancePage() {
     </div>
   );
 }
-
-    
