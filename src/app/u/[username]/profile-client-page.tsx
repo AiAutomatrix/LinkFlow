@@ -157,7 +157,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
   };
 
   const socialLinks = activeLinks.filter(l => l.isSocial);
-  const regularLinks = activeLinks.filter(l => !l.isSocial && !l.isSupport);
+  const regularLinks = activeLinks.filter(l => !l.isSocial && l.isSupport !== true);
   const supportLinks = activeLinks.filter(l => l.isSupport);
   
   const rawEmbedScript = user.bot?.embedScript || '';
@@ -210,6 +210,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         data-style={user.buttonStyle || 'solid'}
         className="h-full"
     >
+      <div className="h-full w-full bg-background">
         <div className="relative flex flex-col p-4 bg-background text-foreground h-full overflow-auto">
         {user.animatedBackground && <AnimatedBackground />}
         
@@ -258,6 +259,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
           title="Chatbot"
           sandbox="allow-scripts allow-same-origin"
         />
+    </div>
     </div>
     </div>
   );

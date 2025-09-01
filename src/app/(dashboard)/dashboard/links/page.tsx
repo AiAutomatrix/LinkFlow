@@ -197,7 +197,7 @@ export default function LinksPage() {
             continue;
         }
 
-        const existingLink = existingLinks.find((l) => l.title === config.title);
+        const existingLink = existingLinks.find((l) => l.title.toLowerCase() === config.title.toLowerCase());
 
         if (url && url.trim() !== '') {
             const finalUrl = config.urlPrefix ? `${config.urlPrefix}${url}` : url;
