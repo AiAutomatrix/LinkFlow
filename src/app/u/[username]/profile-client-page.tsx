@@ -128,13 +128,6 @@ const SupportLinks = ({ user, links }: { user: UserProfile, links: LinkType[] })
   );
 };
 
-// Extracts the Botpress config URL from the full embed script
-const getBotConfigUrl = (embedScript: string): string | null => {
-    if (!embedScript) return null;
-    const match = embedScript.match(/src="(https:\/\/files\.bpcontent\.cloud\/[^"]+\.js)"/);
-    return match ? match[1] : null;
-};
-
 
 // ---------- Main Component ----------
 
@@ -169,12 +162,11 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
   
   const rawEmbedScript = user.bot?.embedScript || '';
   const embedScript = unescapeHtml(rawEmbedScript);
-  const botConfigUrl = getBotConfigUrl(embedScript);
 
-  const srcDoc = botConfigUrl ? `
+  const srcDoc = embedScript ? `
     <html>
       <head>
-        <script src="https://cdn.botpress.cloud/webchat/v1/inject.js"><\/script>
+        ${embedScript}
         <style>
           html, body, #webchat, #webchat .bpWebchat {
             position: unset !important;
@@ -192,7 +184,6 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         </style>
       </head>
       <body>
-        <script src="${botConfigUrl}" defer><\/script>
         <script>
           const initBotpress = () => {
             if (window.botpress) {
@@ -252,7 +243,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
 
        <iframe
           srcDoc={srcDoc}
-          className={botConfigUrl ? "absolute inset-0 w-full h-full border-0" : "hidden"}
+          className={srcDoc ? "absolute inset-0 w-full h-full border-0" : "hidden"}
           title="Chatbot"
           sandbox="allow-scripts allow-same-origin"
         />

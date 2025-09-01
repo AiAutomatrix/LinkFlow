@@ -89,13 +89,6 @@ const SupportLinks = ({ links }: { links: LinkType[] }) => {
     );
 };
 
-// Extracts the Botpress config URL from the full embed script
-const getBotConfigUrl = (embedScript: string): string | null => {
-    if (!embedScript) return null;
-    const match = embedScript.match(/src="(https:\/\/files\.bpcontent\.cloud\/[^"]+\.js)"/);
-    return match ? match[1] : null;
-};
-
 
 export default function PublicProfilePreview({ profile, links = [], isPreview = false, showBot = false }: { profile: Partial<UserProfile>; links?: LinkType[], isPreview?: boolean, showBot?: boolean }) {
 
@@ -128,12 +121,11 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
     
     const rawEmbedScript = profile.bot?.embedScript || '';
     const embedScript = unescapeHtml(rawEmbedScript);
-    const botConfigUrl = getBotConfigUrl(embedScript);
 
-    const srcDoc = botConfigUrl ? `
+    const srcDoc = embedScript ? `
         <html>
         <head>
-            <script src="https://cdn.botpress.cloud/webchat/v1/inject.js"><\/script>
+            ${embedScript}
             <style>
             html, body, #webchat, #webchat .bpWebchat {
                 position: unset !important;
@@ -151,7 +143,6 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
             </style>
         </head>
         <body>
-            <script src="${botConfigUrl}" defer><\/script>
             <script>
             const initBotpress = () => {
                 if (window.botpress) {
@@ -219,7 +210,7 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
                 srcDoc={srcDoc}
                 className={cn(
                     "absolute inset-0 w-full h-full border-0 pointer-events-auto",
-                    !botConfigUrl || !showBot ? "hidden" : ""
+                    !srcDoc || !showBot ? "hidden" : ""
                 )}
                 title="Chatbot Preview"
                 sandbox="allow-scripts allow-same-origin"
