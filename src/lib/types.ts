@@ -12,8 +12,8 @@ export interface UserProfile {
   theme: string;
   animatedBackground: boolean;
   buttonStyle: 'solid' | 'gradient';
-  customThemeGradient?: { from: string; to: string };
-  customButtonGradient?: { from: string; to: string };
+  customThemeGradient?: { from?: string; to?: string };
+  customButtonGradient?: { from?: string; to?: string };
   bot: {
     embedScript: string;
     autoOpen?: boolean;

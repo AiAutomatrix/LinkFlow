@@ -132,6 +132,7 @@ export default function AppearancePage() {
   const previewProfile: Partial<UserProfile> & { photoURL?: string } = {
     ...user,
     ...watchedValues,
+    theme: customGradientsEnabled ? 'custom' : watchedValues.theme,
     bot: user?.bot, // Ensure bot data is passed to the preview
   };
 
@@ -151,12 +152,19 @@ export default function AppearancePage() {
   }, [user, form]);
   
   useEffect(() => {
+    // This effect ensures that toggling the custom gradients switch
+    // immediately updates the theme in the form state for the preview,
+    // without needing to save first.
+    const currentTheme = form.getValues('theme');
     if (customGradientsEnabled) {
-      form.setValue('theme', 'custom');
+        if (currentTheme !== 'custom') {
+            form.setValue('theme', 'custom');
+        }
     } else {
-      if(form.getValues('theme') === 'custom') {
-        form.setValue('theme', user?.theme !== 'custom' ? user?.theme || 'light' : 'light');
-      }
+        if (currentTheme === 'custom') {
+            // Revert to the user's saved theme if they toggle custom off
+            form.setValue('theme', user?.theme !== 'custom' ? user?.theme || 'light' : 'light');
+        }
     }
   }, [customGradientsEnabled, form, user?.theme]);
 
@@ -175,11 +183,12 @@ export default function AppearancePage() {
     setFormLoading(true);
     try {
         const userRef = doc(db, "users", user.uid);
-        await updateDoc(userRef, {
-            ...values,
-            theme: customGradientsEnabled ? 'custom' : values.theme,
-        });
-        setUser((prevUser) => prevUser ? { ...prevUser, ...values, theme: customGradientsEnabled ? 'custom' : values.theme } : null);
+        const dataToUpdate = {
+          ...values,
+          theme: customGradientsEnabled ? 'custom' : values.theme,
+        };
+        await updateDoc(userRef, dataToUpdate);
+        setUser((prevUser) => prevUser ? { ...prevUser, ...dataToUpdate } : null);
         toast({ title: "Appearance updated successfully!" });
     } catch (error: any) {
         toast({ variant: 'destructive', title: "Error", description: error.message });
@@ -238,11 +247,18 @@ export default function AppearancePage() {
                               <div className="p-1">
                                   <button 
                                       type="button"
+                                      disabled={theme.id === 'custom'}
                                       className={cn(
                                           "w-full aspect-square rounded-lg flex items-center justify-center border-2 cursor-pointer transition-all",
-                                          field.value === theme.id ? 'border-primary ring-2 ring-primary/50' : 'border-transparent hover:border-primary/50'
+                                          field.value === theme.id ? 'border-primary ring-2 ring-primary/50' : 'border-transparent hover:border-primary/50',
+                                          theme.id === 'custom' && 'cursor-not-allowed opacity-50'
                                       )}
-                                      onClick={() => field.onChange(theme.id)}
+                                      onClick={() => {
+                                        if (theme.id !== 'custom') {
+                                          setCustomGradientsEnabled(false);
+                                          field.onChange(theme.id)
+                                        }
+                                      }}
                                   >
                                       <div className="w-10 h-10 rounded-full flex overflow-hidden border" style={{ background: `linear-gradient(45deg, ${theme.colors[0]} 50%, ${theme.colors[1]} 50%)` }}></div>
                                   </button>
@@ -327,7 +343,7 @@ export default function AppearancePage() {
                 <CardHeader className="flex-row items-center justify-between">
                     <div className="space-y-1">
                         <CardTitle>Custom Gradients</CardTitle>
-                        <CardDescription>Create your own unique gradients. Select the 'Custom' theme to apply.</CardDescription>
+                        <CardDescription>Create your own unique gradients. This enables the 'Custom' theme.</CardDescription>
                     </div>
                      <Switch
                         checked={customGradientsEnabled}
