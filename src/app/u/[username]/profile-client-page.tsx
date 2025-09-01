@@ -138,18 +138,18 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
   useEffect(() => {
     const now = new Date();
     const filteredLinks = serverLinks.filter(link => {
-      if (!link.active) {
-        return false;
-      }
-      const startDate = toDate(link.startDate);
-      const endDate = toDate(link.endDate);
-      if (startDate && now < startDate) {
-        return false;
-      }
-      if (endDate && now > endDate) {
-        return false;
-      }
-      return true;
+        if (!link.active) {
+            return false;
+        }
+        const startDate = toDate(link.startDate);
+        const endDate = toDate(link.endDate);
+        if (startDate && now < startDate) {
+            return false;
+        }
+        if (endDate && now > endDate) {
+            return false;
+        }
+        return true;
     });
     setActiveLinks(filteredLinks);
   }, [serverLinks]);
