@@ -34,6 +34,7 @@ import { doc, updateDoc, collection, onSnapshot, query, orderBy } from "firebase
 import { db } from "@/lib/firebase";
 import Loading from "@/app/loading";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 const appearanceSchema = z.object({
   theme: z.string().optional(),
