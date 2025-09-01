@@ -139,9 +139,7 @@ export default function AppearancePage() {
       if (user) {
           const isCustom = user.theme === 'custom';
           setCustomGradientsEnabled(isCustom);
-          if (isCustom) {
-            form.setValue('theme', 'custom');
-          }
+          
           form.reset({
               theme: user.theme || 'light',
               animatedBackground: user.animatedBackground || false,
@@ -336,7 +334,7 @@ export default function AppearancePage() {
                         onCheckedChange={setCustomGradientsEnabled}
                      />
                 </CardHeader>
-                <CardContent className={cn("space-y-4", !customGradientsEnabled && "opacity-50 pointer-events-none")}>
+                <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                        <FormField
                         control={form.control}
@@ -419,3 +417,5 @@ export default function AppearancePage() {
     </div>
   );
 }
+
+    
