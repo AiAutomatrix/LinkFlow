@@ -78,8 +78,8 @@ export default function AnalyticsPage() {
     const totalSupportClicks = supportLinks.reduce((acc, link) => acc + (link.clicks || 0), 0);
     
     const totalClicks = totalCustomClicks + totalSocialClicks + totalSupportClicks;
-    const totalLinks = customLinks.length;
-    const avgClicks = totalLinks > 0 ? (totalCustomClicks / totalLinks).toFixed(2) : "0";
+    const totalLinks = links.length;
+    const avgClicks = totalLinks > 0 ? (totalClicks / totalLinks).toFixed(2) : "0";
 
     const top10ChartData = allLinksWithClicks
         .sort((a,b) => (b.clicks || 0) - (a.clicks || 0))
