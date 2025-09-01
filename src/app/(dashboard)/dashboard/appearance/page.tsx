@@ -9,7 +9,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -36,6 +35,7 @@ import { db } from "@/lib/firebase";
 import Loading from "@/app/loading";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { ColorPicker } from "@/components/ui/color-picker";
 
 const hexColor = () => z.string().regex(/^#[0-9a-fA-F]{6}$/, "Must be a valid hex color");
 
@@ -192,25 +192,6 @@ export default function AppearancePage() {
       return <Loading />;
   }
   
-  const ColorPickerInput = ({ field, label }: { field: any, label: string }) => (
-    <FormItem>
-      <FormLabel>{label}</FormLabel>
-      <div className="flex items-center gap-2 rounded-md border border-input p-1 pr-2">
-        <div className="relative h-8 w-10 shrink-0">
-          <FormControl>
-            <Input type="color" {...field} className="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
-          </FormControl>
-          <div
-            className="h-full w-full rounded-sm"
-            style={{ backgroundColor: field.value }}
-          />
-        </div>
-        <span className="font-mono text-sm uppercase text-muted-foreground">{field.value}</span>
-      </div>
-      <FormMessage />
-    </FormItem>
-  );
-  
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
       <div className="lg:sticky lg:top-6 space-y-6">
@@ -353,30 +334,64 @@ export default function AppearancePage() {
                         onCheckedChange={setCustomGradientsEnabled}
                      />
                 </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                       <FormField
-                          control={form.control}
-                          name="customThemeGradient.from"
-                          render={({ field }) => <ColorPickerInput field={field} label="Theme From" />}
-                        />
-                         <FormField
-                          control={form.control}
-                          name="customThemeGradient.to"
-                          render={({ field }) => <ColorPickerInput field={field} label="Theme To" />}
-                        />
+                <CardContent className="space-y-6">
+                    <div>
+                      <Label className="font-medium">Theme Gradient</Label>
+                      <div className="grid grid-cols-2 gap-4 mt-2">
+                        <FormField
+                            control={form.control}
+                            name="customThemeGradient.from"
+                            render={({ field }) => (
+                              <FormItem>
+                                  <FormLabel className="text-xs text-muted-foreground">From</FormLabel>
+                                  <FormControl>
+                                    <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
+                                  </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="customThemeGradient.to"
+                            render={({ field }) => (
+                              <FormItem>
+                                  <FormLabel className="text-xs text-muted-foreground">To</FormLabel>
+                                  <FormControl>
+                                    <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
+                                  </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                      </div>
                     </div>
-                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                       <FormField
-                          control={form.control}
-                          name="customButtonGradient.from"
-                          render={({ field }) => <ColorPickerInput field={field} label="Button From" />}
-                        />
-                         <FormField
-                          control={form.control}
-                          name="customButtonGradient.to"
-                          render={({ field }) => <ColorPickerInput field={field} label="Button To" />}
-                        />
+                    <div>
+                      <Label className="font-medium">Button Gradient</Label>
+                      <div className="grid grid-cols-2 gap-4 mt-2">
+                        <FormField
+                            control={form.control}
+                            name="customButtonGradient.from"
+                            render={({ field }) => (
+                              <FormItem>
+                                  <FormLabel className="text-xs text-muted-foreground">From</FormLabel>
+                                  <FormControl>
+                                    <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
+                                  </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="customButtonGradient.to"
+                            render={({ field }) => (
+                              <FormItem>
+                                  <FormLabel className="text-xs text-muted-foreground">To</FormLabel>
+                                  <FormControl>
+                                    <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
+                                  </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                      </div>
                     </div>
                 </CardContent>
             </Card>
