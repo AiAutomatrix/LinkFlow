@@ -7,7 +7,7 @@ import Logo from '@/components/logo';
 import AnimatedBackground from '@/components/animated-background';
 import { Mail, Instagram, Facebook, Github, Coffee, Banknote, Bitcoin, ClipboardCopy, ClipboardCheck } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { unescapeHtml } from '@/lib/utils';
 import { cn } from '@/lib/utils';
@@ -135,7 +135,7 @@ const SupportLinks = ({ user, links }: { user: UserProfile, links: LinkType[] })
 export default function ProfileClientPage({ user, links: serverLinks }: { user: UserProfile; links: LinkType[] }) {
   const [activeLinks, setActiveLinks] = useState<LinkType[]>([]);
 
-  useState(() => {
+  useEffect(() => {
     const now = new Date();
     const filteredLinks = serverLinks.filter(link => {
       if (!link.active) return false;
@@ -146,7 +146,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
       return true;
     });
     setActiveLinks(filteredLinks);
-  });
+  }, [serverLinks]);
 
 
   const getInitials = (name: string = '') => name.split(' ').map(n => n[0]).join('');
@@ -204,16 +204,13 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
   : '';
 
   const customStyles: React.CSSProperties = {};
-  if (user.theme === 'custom') {
-    if (user.customThemeGradient?.from && user.customThemeGradient?.to) {
-        customStyles.backgroundImage = `linear-gradient(to bottom, ${user.customThemeGradient.from}, ${user.customThemeGradient.to})`;
-    }
-    if (user.customButtonGradient?.from && user.customButtonGradient?.to) {
-        customStyles['--btn-gradient-from'] = user.customButtonGradient.from;
-        customStyles['--btn-gradient-to'] = user.customButtonGradient.to;
-    }
+  if (user.theme === 'custom' && user.customThemeGradient?.from && user.customThemeGradient?.to) {
+      customStyles.backgroundImage = `linear-gradient(to bottom, ${user.customThemeGradient.from}, ${user.customThemeGradient.to})`;
   }
-
+  if (user.customButtonGradient?.from && user.customButtonGradient?.to) {
+      customStyles['--btn-gradient-from'] = user.customButtonGradient.from;
+      customStyles['--btn-gradient-to'] = user.customButtonGradient.to;
+  }
 
   return (
     <div 
