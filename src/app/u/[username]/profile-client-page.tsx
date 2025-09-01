@@ -203,23 +203,24 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     </html>` 
   : '';
 
-  const themeStyle = user.theme === 'custom' && user.customThemeGradient?.from && user.customThemeGradient?.to ? {
-    '--gradient-from': user.customThemeGradient.from,
-    '--gradient-to': user.customThemeGradient.to,
-  } as React.CSSProperties : {};
-
-  const buttonStyle = user.theme === 'custom' && user.customButtonGradient?.from && user.customButtonGradient?.to ? {
-    '--btn-gradient-from': user.customButtonGradient.from,
-    '--btn-gradient-to': user.customButtonGradient.to,
-  } as React.CSSProperties : {};
+  const customStyles: React.CSSProperties = {};
+  if (user.theme === 'custom') {
+    if (user.customThemeGradient?.from && user.customThemeGradient?.to) {
+        customStyles.backgroundImage = `linear-gradient(to bottom, ${user.customThemeGradient.from}, ${user.customThemeGradient.to})`;
+    }
+    if (user.customButtonGradient?.from && user.customButtonGradient?.to) {
+        customStyles['--btn-gradient-from'] = user.customButtonGradient.from;
+        customStyles['--btn-gradient-to'] = user.customButtonGradient.to;
+    }
+  }
 
 
   return (
     <div 
         data-theme={user.theme || 'light'}
         data-style={user.buttonStyle || 'solid'}
-        className="h-full"
-        style={{ ...themeStyle, ...buttonStyle }}
+        className="h-full w-full"
+        style={customStyles}
     >
       <div className="h-full w-full bg-background">
         <div className="relative flex flex-col p-4 bg-background text-foreground h-full overflow-auto">
@@ -270,7 +271,6 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
           title="Chatbot"
           sandbox="allow-scripts allow-same-origin"
         />
-    </div>
     </div>
     </div>
   );

@@ -113,16 +113,12 @@ body {
   [data-theme="beach-vibes"] { --background: 45 100% 96%; --foreground: 35 80% 30%; --card: 45 100% 98%; --card-foreground: 35 80% 30%; --primary: 200 90% 55%; --primary-foreground: 35 80% 10%; --secondary: 45 100% 90%; --secondary-foreground: 35 80% 30%; --muted: 45 100% 90%; --muted-foreground: 35 80% 50%; --accent: 25 95% 65%; --accent-foreground: 35 80% 30%; --border: 45 100% 85%; --input: 45 100% 85%; --ring: 200 90% 55%; }
   
   [data-theme="custom"] {
-    --btn-gradient-from: #AAAAAA;
-    --btn-gradient-to: #FFFFFF;
-    
-    --background: var(--gradient-from, #FFFFFF);
     --foreground: #111827;
     --card: transparent;
     --card-foreground: #111827;
     --popover: #FFFFFF;
     --popover-foreground: #111827;
-    --primary: var(--gradient-to, #AAAAAA);
+    --primary: var(--btn-gradient-to, #AAAAAA);
     --primary-foreground: #FFFFFF;
     --secondary: #FFFFFF30;
     --secondary-foreground: #111827;
@@ -132,7 +128,7 @@ body {
     --accent-foreground: #111827;
     --border: #E5E7EB;
     --input: #E5E7EB;
-    --ring: var(--gradient-to, #AAAAAA);
+    --ring: var(--btn-gradient-to, #AAAAAA);
   }
 
 }
