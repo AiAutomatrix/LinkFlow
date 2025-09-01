@@ -142,7 +142,7 @@ export default function AppearancePage() {
               customButtonGradient: user.customButtonGradient || { from: '#AAAAAA', to: '#FFFFFF' },
           });
       }
-  }, [user, form]);
+  }, [user]);
   
   useEffect(() => {
     // This effect ensures that toggling the custom gradients switch
@@ -194,7 +194,7 @@ export default function AppearancePage() {
       return <Loading />;
   }
   
-  const previewProfile: Partial<UserProfile> & { photoURL?: string } = {
+  const previewProfile: Partial<UserProfile> = {
     ...user,
     ...watchedValues,
     bot: user?.bot, // Ensure bot data is passed to the preview
@@ -422,3 +422,5 @@ export default function AppearancePage() {
     </div>
   );
 }
+
+    
