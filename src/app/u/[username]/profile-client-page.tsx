@@ -10,12 +10,6 @@ import { Timestamp } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
-declare global {
-  interface Window {
-    botpress?: { on: (event: string, callback: () => void) => void; open: () => void; };
-  }
-}
-
 // ---------- Helper Components ----------
 
 const SocialIcon = ({ platform }: { platform: string }) => {
@@ -38,7 +32,7 @@ const EthIcon = () => (
 const SolIcon = () => (
   <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0">
     <title>Solana</title>
-    <path d="M4.236.427a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533V-.001a.6.6 0 00-.128-.532.6.6 0 00-.49-.28L4.236.427zm10.02 6.046a.6.6 0 00-.532.127a.6.6 0 00-.28.491v4.54a.6.6 0 00.28.49.6.6 0 00.532.128l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.532V5.76a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12zm-4.383 6.64a.6.6 0 00-.532.127a.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533v-4.54a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12z"/>
+    <path d="M4.236.427a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533V-.001a.6.6 0 00-.128-.532.6.6 0 00-.49-.28L4.236.427zm10.02 6.046a.6.6 0 00-.532.127a.6.6 0 00-.28.491v4.54a.6.6 0 00.28.49.6.6 0 00.532.128l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.532V5.76a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12zm-4.383 6.64a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533v-4.54a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12z"/>
   </svg>
 );
 
@@ -171,7 +165,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
   const socialLinks = activeLinks.filter(l => l.isSocial);
   const regularLinks = activeLinks.filter(l => !l.isSocial && !l.isSupport);
   const supportLinks = activeLinks.filter(l => l.isSupport);
-
+  
   const botConfigUrl = user.bot?.embedScript ? getBotConfigUrl(user.bot.embedScript) : null;
 
   const srcDoc = botConfigUrl ? `
@@ -253,16 +247,13 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         </footer>
       </div>
 
-      {botConfigUrl && (
-        <iframe
+       <iframe
           srcDoc={srcDoc}
-          className="absolute inset-0 w-full h-full border-0"
+          className={botConfigUrl ? "absolute inset-0 w-full h-full border-0" : "hidden"}
           title="Chatbot"
           sandbox="allow-scripts allow-same-origin"
         />
-      )}
     </div>
   );
 }
 
-    
