@@ -204,10 +204,10 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
 
 
   return (
-    <div data-theme={user.theme || 'light'} className="relative flex flex-col justify-center items-center py-6 px-4 bg-background text-foreground overflow-hidden">
+    <div data-theme={user.theme || 'light'} className="relative flex flex-col items-center py-6 px-4 bg-background text-foreground h-full overflow-auto">
       {user.animatedBackground && <AnimatedBackground />}
       
-      <div className="relative w-full max-w-md mx-auto z-10 flex flex-col items-center">
+      <div className="relative w-full max-w-md mx-auto z-10 flex flex-col items-center flex-grow justify-center">
         <div className="flex flex-col items-center text-center">
           <Avatar className="h-24 w-24 border-2 border-white/50">
             <AvatarImage src={user.photoURL || undefined} alt={user.displayName} />
@@ -236,10 +236,12 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
           </div>
           <SupportLinks user={user} links={supportLinks} />
         </div>
-        <footer className="mt-6 z-10 text-center">
-          <Logo />
-        </footer>
       </div>
+      
+      <footer className="w-full mt-4 text-center z-10 py-2">
+        <Logo />
+      </footer>
+
 
        <iframe
           srcDoc={srcDoc}
