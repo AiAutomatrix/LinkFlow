@@ -33,7 +33,7 @@ import type { Link, UserProfile } from "@/lib/types";
 import PublicProfilePreview from "@/app/(dashboard)/dashboard/appearance/_components/public-profile-preview";
 
 const botSchema = z.object({
-  embedScript: z.string().refine((val) => val.trim() === '' || (val.includes("<script") && (val.includes("botpress.cloud") || val.includes("bpcdn.cloud"))), {
+  embedScript: z.string().refine((val) => val.trim() === '' || (val.includes("<script") && (val.includes("botpress.cloud") || val.includes("bpcdn.cloud") || val.includes("bpcontent.cloud"))), {
     message: "Embed code must be a valid Botpress script or be empty.",
   }).optional(),
 });
@@ -53,6 +53,13 @@ export default function BotPage() {
   });
   
   const watchedEmbedScript = form.watch("embedScript");
+
+  const previewProfile: Partial<UserProfile> = {
+    ...user,
+    bot: {
+      embedScript: watchedEmbedScript || '',
+    },
+  };
 
   useEffect(() => {
     if (user) {
@@ -143,14 +150,12 @@ export default function BotPage() {
     </div>
      <div className="relative lg:col-span-1 h-[700px]">
         <PublicProfilePreview 
-          profile={user} 
+          profile={previewProfile} 
           links={links} 
           isPreview 
-          embedScript={watchedEmbedScript}
+          showBot={true}
         />
       </div>
     </div>
   );
 }
-
-    

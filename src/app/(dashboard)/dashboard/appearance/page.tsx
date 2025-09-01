@@ -145,7 +145,7 @@ export default function AppearancePage() {
                 profile={previewProfile} 
                 links={links} 
                 isPreview 
-                embedScript={user?.bot?.embedScript}
+                showBot={false}
             />
         </div>
       </div>
@@ -237,5 +237,3 @@ export default function AppearancePage() {
     </div>
   );
 }
-
-    
