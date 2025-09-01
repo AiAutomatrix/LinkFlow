@@ -132,7 +132,6 @@ export default function AppearancePage() {
   const previewProfile: Partial<UserProfile> & { photoURL?: string } = {
     ...user,
     ...watchedValues,
-    theme: customGradientsEnabled ? 'custom' : watchedValues.theme,
     bot: user?.bot, // Ensure bot data is passed to the preview
   };
 
@@ -423,3 +422,5 @@ export default function AppearancePage() {
     </div>
   );
 }
+
+    
