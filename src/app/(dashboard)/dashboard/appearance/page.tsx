@@ -42,47 +42,59 @@ const appearanceSchema = z.object({
 });
 
 export const themes = [
-    { id: 'light', name: 'Light', colors: ['#FFFFFF', '#E2E8F0'], cssVars: {} },
-    { id: 'dark', name: 'Dark', colors: ['#1A202C', '#4A5568'], cssVars: {} },
-    { id: 'neon-green', name: 'Neon Green', colors: ['#0F172A', '#34D399'], cssVars: {} },
-    { id: 'neon-pink', name: 'Neon Pink', colors: ['#1E1B4B', '#F472B6'], cssVars: {} },
-    { id: 'gradient-sunset', name: 'Sunset', colors: ['#FECACA', '#F9A8D4'], cssVars: {} },
-    { id: 'ocean-blue', name: 'Ocean Blue', colors: ['#E0F2FE', '#38BDF8'], cssVars: {} },
-    { id: 'forest-green', name: 'Forest Green', colors: ['#F0FDF4', '#4ADE80'], cssVars: {} },
-    { id: 'royal-purple', name: 'Royal Purple', colors: ['#F5F3FF', '#A78BFA'], cssVars: {} },
-    { id: 'crimson-red', name: 'Crimson Red', colors: ['#FEF2F2', '#F87171'], cssVars: {} },
-    { id: 'goldenrod', name: 'Goldenrod', colors: ['#FEFCE8', '#FACC15'], cssVars: {} },
-    { id: 'minty-fresh', name: 'Minty Fresh', colors: ['#F0FDF4', '#6EE7B7'], cssVars: {} },
-    { id: 'charcoal', name: 'Charcoal', colors: ['#334155', '#94A3B8'], cssVars: {} },
-    { id: 'lavender', name: 'Lavender', colors: ['#F5F3FF', '#C4B5FD'], cssVars: {} },
-    { id: 'mocha', name: 'Mocha', colors: ['#FDF4E6', '#D4A574'], cssVars: {} },
-    { id: 'teal', name: 'Teal', colors: ['#F0FDFA', '#2DD4BF'], cssVars: {} },
-    { id: 'coral', name: 'Coral', colors: ['#FFF1F2', '#FB7185'], cssVars: {} },
-    { id: 'indigo', name: 'Indigo', colors: ['#283593', '#818CF8'], cssVars: {} },
-    { id: 'olive', name: 'Olive', colors: ['#F4FCE8', '#A3CC4A'], cssVars: {} },
-    { id: 'rose-gold', name: 'Rose Gold', colors: ['#FFF1F2', '#F4C4C4'], cssVars: {} },
-    { id: 'slate', name: 'Slate', colors: ['#475569', '#E2E8F0'], cssVars: {} },
-    { id: 'sky-blue', name: 'Sky Blue', colors: ['#EFF6FF', '#60A5FA'], cssVars: {} },
-    { id: 'candy-floss', name: 'Candy Floss', colors: ['#FCE7F3', '#F9A8D4'], cssVars: {} },
-    { id: 'cyberpunk', name: 'Cyberpunk', colors: ['#0d0221', '#00f6ff'], cssVars: {} },
-    { id: 'vintage-paper', name: 'Vintage Paper', colors: ['#FDFBF6', '#D4CFCB'], cssVars: {} },
-    { id: 'gothic', name: 'Gothic', colors: ['#171717', '#737373'], cssVars: {} },
-    { id: 'beach-vibes', name: 'Beach Vibes', colors: ['#FFFBEB', '#F59E0B'], cssVars: {} },
-    { id: 'earthy-tones', name: 'Earthy Tones', colors: ['#FEFCE8', '#854d0e'], cssVars: {} },
-    { id: 'monochrome-cool', name: 'Monochrome Cool', colors: ['#F3F4F6', '#4B5563'], cssVars: {} },
-    { id: 'sunrise-orange', name: 'Sunrise Orange', colors: ['#FFF7ED', '#FB923C'], cssVars: {} },
-    { id: 'deep-space', name: 'Deep Space', colors: ['#030712', '#3B82F6'], cssVars: {} },
-    { id: 'bubblegum', name: 'Bubblegum', colors: ['#FDF2F8', '#EC4899'], cssVars: {} },
-    { id: 'sandstone', name: 'Sandstone', colors: ['#FDF6E3', '#B8860B'], cssVars: {} },
-    { id: 'velvet', name: 'Velvet', colors: ['#1E1B26', '#9D4EDD'], cssVars: {} },
-    { id: 'jungle', name: 'Jungle', colors: ['#F0FFF4', '#10B981'], cssVars: {} },
-    { id: 'retro-wave', name: 'Retro Wave', colors: ['#2A0944', '#F86CF5'], cssVars: {} },
-    { id: 'amethyst', name: 'Amethyst', colors: ['#241933', '#e0c3fc'], cssVars: {} },
-    { id: 'cherry-blossom', name: 'Cherry Blossom', colors: ['#fdebf3', '#fbb1d3'], cssVars: {} },
-    { id: 'seafoam', name: 'Seafoam', colors: ['#e6fcf5', '#96f2d7'], cssVars: {} },
-    { id: 'copper', name: 'Copper', colors: ['#4a2c2a', '#da8a67'], cssVars: {} },
-    { id: 'nordic-blue', name: 'Nordic Blue', colors: ['#2e3440', '#88c0d0'], cssVars: {} },
-  ];
+    // Core
+    { id: 'light', name: 'Light', colors: ['#FFFFFF', '#E2E8F0'] },
+    { id: 'dark', name: 'Dark', colors: ['#1A202C', '#4A5568'] },
+    { id: 'charcoal', name: 'Charcoal', colors: ['#334155', '#94A3B8'] },
+    { id: 'slate', name: 'Slate', colors: ['#475569', '#E2E8F0'] },
+    
+    // Vibrant & Neon
+    { id: 'neon-green', name: 'Neon Green', colors: ['#0F172A', '#34D399'] },
+    { id: 'neon-pink', name: 'Neon Pink', colors: ['#1E1B4B', '#F472B6'] },
+    { id: 'cyberpunk', name: 'Cyberpunk', colors: ['#0d0221', '#00f6ff'] },
+    { id: 'retro-wave', name: 'Retro Wave', colors: ['#2A0944', '#F86CF5'] },
+    
+    // Gradients & Soft
+    { id: 'gradient-sunset', name: 'Sunset', colors: ['#FECACA', '#F9A8D4'] },
+    { id: 'ocean-blue', name: 'Ocean Blue', colors: ['#E0F2FE', '#38BDF8'] },
+    { id: 'lavender', name: 'Lavender', colors: ['#F5F3FF', '#C4B5FD'] },
+    { id: 'cherry-blossom', name: 'Cherry Blossom', colors: ['#fdebf3', '#fbb1d3'] },
+    { id: 'seafoam', name: 'Seafoam', colors: ['#e6fcf5', '#96f2d7'] },
+    { id: 'candy-floss', name: 'Candy Floss', colors: ['#FCE7F3', '#F9A8D4'] },
+    { id: 'sky-blue', name: 'Sky Blue', colors: ['#EFF6FF', '#60A5FA'] },
+    
+    // Elegant & Rich
+    { id: 'amethyst', name: 'Amethyst', colors: ['#241933', '#e0c3fc'] },
+    { id: 'royal-purple', name: 'Royal Purple', colors: ['#F5F3FF', '#A78BFA'] },
+    { id: 'indigo', name: 'Indigo', colors: ['#283593', '#818CF8'] },
+    { id: 'velvet', name: 'Velvet', colors: ['#1E1B26', '#9D4EDD'] },
+    { id: 'copper', name: 'Copper', colors: ['#4a2c2a', '#da8a67'] },
+    { id: 'crimson-red', name: 'Crimson Red', colors: ['#FEF2F2', '#F87171'] },
+    
+    // Natural & Earthy
+    { id: 'forest-green', name: 'Forest', colors: ['#F0FDF4', '#4ADE80'] },
+    { id: 'jungle', name: 'Jungle', colors: ['#F0FFF4', '#10B981'] },
+    { id: 'earthy-tones', name: 'Earthy', colors: ['#FEFCE8', '#854d0e'] },
+    { id: 'olive', name: 'Olive', colors: ['#F4FCE8', '#A3CC4A'] },
+    { id: 'sandstone', name: 'Sandstone', colors: ['#FDF6E3', '#B8860B'] },
+    { id: 'mocha', name: 'Mocha', colors: ['#FDF4E6', '#D4A574'] },
+    
+    // Bright & Fun
+    { id: 'goldenrod', name: 'Goldenrod', colors: ['#FEFCE8', '#FACC15'] },
+    { id: 'minty-fresh', name: 'Minty', colors: ['#F0FDF4', '#6EE7B7'] },
+    { id: 'coral', name: 'Coral', colors: ['#FFF1F2', '#FB7185'] },
+    { id: 'sunrise-orange', name: 'Sunrise', colors: ['#FFF7ED', '#FB923C'] },
+    { id: 'bubblegum', name: 'Bubblegum', colors: ['#FDF2F8', '#EC4899'] },
+    
+    // Unique & Themed
+    { id: 'gothic', name: 'Gothic', colors: ['#171717', '#737373'] },
+    { id: 'rose-gold', name: 'Rose Gold', colors: ['#FFF1F2', '#F4C4C4'] },
+    { id: 'vintage-paper', name: 'Vintage', colors: ['#FDFBF6', '#D4CFCB'] },
+    { id: 'deep-space', name: 'Deep Space', colors: ['#030712', '#3B82F6'] },
+    { id: 'nordic-blue', name: 'Nordic Blue', colors: ['#2e3440', '#88c0d0'] },
+    { id: 'teal', name: 'Teal', colors: ['#F0FDFA', '#2DD4BF'] },
+    { id: 'beach-vibes', name: 'Beach', colors: ['#FFFBEB', '#F59E0B'] },
+];
 
 export default function AppearancePage() {
   const { toast } = useToast();
@@ -190,16 +202,17 @@ export default function AppearancePage() {
                           {themes.map((theme) => (
                             <CarouselItem key={theme.id} className="basis-1/3 sm:basis-1/4 md:basis-1/5">
                               <div className="p-1">
-                                  <div 
+                                  <button 
+                                      type="button"
                                       className={cn(
-                                          "w-full aspect-square rounded-lg flex items-center justify-center border-2 cursor-pointer",
-                                          field.value === theme.id ? 'border-primary' : 'border-transparent'
+                                          "w-full aspect-square rounded-lg flex items-center justify-center border-2 cursor-pointer transition-all",
+                                          field.value === theme.id ? 'border-primary ring-2 ring-primary/50' : 'border-transparent hover:border-primary/50'
                                       )}
                                       onClick={() => field.onChange(theme.id)}
                                   >
-                                      <div className="w-10 h-10 rounded-full flex overflow-hidden" style={{ background: `linear-gradient(45deg, ${theme.colors[0]} 50%, ${theme.colors[1]} 50%)` }}></div>
-                                  </div>
-                                  <p className="text-sm text-center mt-2">{theme.name}</p>
+                                      <div className="w-10 h-10 rounded-full flex overflow-hidden border" style={{ background: `linear-gradient(45deg, ${theme.colors[0]} 50%, ${theme.colors[1]} 50%)` }}></div>
+                                  </button>
+                                  <p className="text-xs text-center mt-1 text-muted-foreground truncate">{theme.name}</p>
                               </div>
                             </CarouselItem>
                           ))}
@@ -251,23 +264,21 @@ export default function AppearancePage() {
                             <RadioGroup
                               onValueChange={field.onChange}
                               defaultValue={field.value}
-                              className="flex flex-col space-y-1"
+                              className="grid grid-cols-2 gap-4"
                             >
-                              <FormItem className="flex items-center space-x-3 space-y-0">
-                                <FormControl>
-                                  <RadioGroupItem value="solid" />
-                                </FormControl>
-                                <FormLabel className="font-normal">
+                              <FormItem>
+                                <RadioGroupItem value="solid" id="solid" className="peer sr-only" />
+                                <Label htmlFor="solid" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
+                                  <div className="h-6 w-full rounded-md bg-secondary mb-2"></div>
                                   Solid
-                                </FormLabel>
+                                </Label>
                               </FormItem>
-                              <FormItem className="flex items-center space-x-3 space-y-0">
-                                <FormControl>
-                                  <RadioGroupItem value="gradient" />
-                                </FormControl>
-                                <FormLabel className="font-normal">
+                              <FormItem>
+                                <RadioGroupItem value="gradient" id="gradient" className="peer sr-only" />
+                                <Label htmlFor="gradient" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
+                                  <div className="h-6 w-full rounded-md bg-gradient-to-r from-secondary to-primary mb-2"></div>
                                   Gradient
-                                </FormLabel>
+                                </Label>
                               </FormItem>
                             </RadioGroup>
                           </FormControl>
@@ -314,5 +325,3 @@ export default function AppearancePage() {
     </div>
   );
 }
-
-    
