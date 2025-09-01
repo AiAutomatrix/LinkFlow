@@ -7,7 +7,7 @@ import Logo from '@/components/logo';
 import AnimatedBackground from '@/components/animated-background';
 import { Mail, Instagram, Facebook, Github, Coffee, Banknote, Bitcoin, ClipboardCopy, ClipboardCheck } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { unescapeHtml } from '@/lib/utils';
 
@@ -33,7 +33,7 @@ const EthIcon = () => (
 const SolIcon = () => (
   <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0">
     <title>Solana</title>
-    <path d="M4.236.427a.6.6 0 00-.532.127a.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491a.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533V-.001a.6.6 0 00-.128-.532.6.6 0 00-.49-.28L4.236.427zm10.02 6.046a.6.6 0 00-.532.127a.6.6 0 00-.28.491v4.54a.6.6 0 00.28.49.6.6 0 00.532.128l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.532V5.76a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12zm-4.383 6.64a.6.6 0 00-.532.127a.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533v-4.54a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12z"/>
+    <path d="M4.236.427a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533V-.001a.6.6 0 00-.128-.532.6.6 0 00-.49-.28L4.236.427zm10.02 6.046a.6.6 0 00-.532.127a.6.6 0 00-.28.491v4.54a.6.6 0 00.28.49.6.6 0 00.532.128l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.532V5.76a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12zm-4.383 6.64a.6.6 0 00-.532.127a.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533v-4.54a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12z"/>
   </svg>
 );
 
@@ -134,8 +134,7 @@ const SupportLinks = ({ user, links }: { user: UserProfile, links: LinkType[] })
 export default function ProfileClientPage({ user, links: serverLinks }: { user: UserProfile; links: LinkType[] }) {
   const [activeLinks, setActiveLinks] = useState<LinkType[]>([]);
 
-  // Filter active links
-  useEffect(() => {
+  useState(() => {
     const now = new Date();
     const filteredLinks = serverLinks.filter(link => {
       if (!link.active) return false;
@@ -146,7 +145,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
       return true;
     });
     setActiveLinks(filteredLinks);
-  }, [serverLinks]);
+  });
 
 
   const getInitials = (name: string = '') => name.split(' ').map(n => n[0]).join('');
@@ -205,7 +204,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
 
 
   return (
-    <div data-theme={user.theme || 'light'} className="relative min-h-screen flex flex-col justify-center items-center py-6 px-4 bg-background text-foreground overflow-hidden">
+    <div data-theme={user.theme || 'light'} className="relative flex flex-col justify-center items-center py-6 px-4 bg-background text-foreground overflow-hidden">
       {user.animatedBackground && <AnimatedBackground />}
       
       <div className="relative w-full max-w-md mx-auto z-10 flex flex-col items-center">
