@@ -33,7 +33,7 @@ const EthIcon = () => (
 const SolIcon = () => (
   <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0">
     <title>Solana</title>
-    <path d="M4.236.427a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533V-.001a.6.6 0 00-.128-.532.6.6 0 00-.49-.28L4.236.427zm10.02 6.046a.6.6 0 00-.532.127a.6.6 0 00-.28.491v4.54a.6.6 0 00.28.49.6.6 0 00.532.128l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.532V5.76a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12zm-4.383 6.64a.6.6 0 00-.532.127a.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533v-4.54a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12z"/>
+    <path d="M4.236.427a.6.6 0 00-.532.127a.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491a.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533V-.001a.6.6 0 00-.128-.532.6.6 0 00-.49-.28L4.236.427zm10.02 6.046a.6.6 0 00-.532.127a.6.6 0 00-.28.491v4.54a.6.6 0 00.28.49.6.6 0 00.532.128l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.532V5.76a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12zm-4.383 6.64a.6.6 0 00-.532.127a.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491a.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533v-4.54a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12z"/>
   </svg>
 );
 
@@ -99,8 +99,8 @@ const SupportLinks = ({ user, links }: { user: UserProfile, links: LinkType[] })
   if (!buyMeACoffeeLink && !eTransferLink && !hasCrypto) return null;
 
   return (
-    <div className="mt-8 w-full max-w-md mx-auto">
-      <h3 className="text-xs font-semibold uppercase text-muted-foreground text-center mb-4">Support Me</h3>
+    <div className="mt-6 w-full max-w-md mx-auto">
+      <h3 className="text-xs font-semibold uppercase text-muted-foreground text-center mb-3">Support Me</h3>
       <div className="grid grid-cols-1 gap-3">
         {buyMeACoffeeLink && (
           <a href={buyMeACoffeeLink.url} target="_blank" rel="noopener noreferrer" onClick={() => trackClick(user.uid, buyMeACoffeeLink.id)}
@@ -205,27 +205,26 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
 
 
   return (
-    <div data-theme={user.theme || 'light'} className="relative flex flex-col items-center min-h-screen pt-12 px-4 bg-background text-foreground overflow-hidden">
+    <div data-theme={user.theme || 'light'} className="relative flex flex-col items-center min-h-screen py-6 px-4 bg-background text-foreground overflow-hidden">
       {user.animatedBackground && <AnimatedBackground />}
       
-      <div className="relative w-full h-full flex-grow flex flex-col">
-        <div className="w-full max-w-md mx-auto z-10 flex-grow">
+      <main className="relative w-full max-w-md mx-auto z-10 flex flex-col flex-grow items-center">
           <div className="flex flex-col items-center text-center">
             <Avatar className="h-24 w-24 border-2 border-white/50">
               <AvatarImage src={user.photoURL || undefined} alt={user.displayName} />
               <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
             </Avatar>
-            <h1 className="text-2xl font-bold mt-4">{user.displayName}</h1>
+            <h1 className="text-2xl font-bold mt-3">{user.displayName}</h1>
             <p className="text-md text-muted-foreground">@{user.username}</p>
-            <p className="mt-4 text-sm max-w-xs text-foreground/80">{user.bio}</p>
-            <div className="flex gap-4 justify-center mt-4 text-foreground/80">
+            <p className="mt-2 text-sm max-w-xs text-foreground/80">{user.bio}</p>
+            <div className="flex gap-4 justify-center mt-3 text-foreground/80">
               {socialLinks.map(link => (
                 <button key={link.id} aria-label={`My ${link.title}`} className="hover:text-primary transition-colors" onClick={() => handleLinkClick(link)}>
                   <SocialIcon platform={link.title} />
                 </button>
               ))}
             </div>
-            <div className="mt-8 space-y-4 w-full">
+            <div className="mt-6 space-y-3 w-full">
               {regularLinks.map((link) => (
                   <button 
                       key={link.id}
@@ -238,11 +237,10 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
             </div>
             <SupportLinks user={user} links={supportLinks} />
           </div>
-        </div>
-        <footer className="mt-auto py-8 z-10 text-center">
+        <footer className="mt-6 z-10 text-center">
           <Logo />
         </footer>
-      </div>
+      </main>
 
        <iframe
           srcDoc={srcDoc}
@@ -253,3 +251,5 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     </div>
   );
 }
+
+    
