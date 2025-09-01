@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Link as LinkType, UserProfile } from '@/lib/types';
@@ -6,13 +7,12 @@ import Logo from '@/components/logo';
 import AnimatedBackground from '@/components/animated-background';
 import { Mail, Instagram, Facebook, Github, Coffee, Banknote, Bitcoin, ClipboardCopy, ClipboardCheck } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { injectEmbedHtmlSequentially } from '@/lib/botpress';
 
 declare global {
   interface Window {
-    botpressWebChat?: { init?: (cfg: any) => void; close?: () => void };
+    botpress?: { on: (event: string, callback: () => void) => void; open: () => void; };
   }
 }
 
@@ -133,12 +133,18 @@ const SupportLinks = ({ user, links }: { user: UserProfile, links: LinkType[] })
   );
 };
 
+// Extracts the Botpress config URL from the full embed script
+const getBotConfigUrl = (embedScript: string): string | null => {
+    if (!embedScript) return null;
+    const match = embedScript.match(/src="(https:\/\/files\.bpcontent\.cloud\/[^"]+\.js)"/);
+    return match ? match[1] : null;
+};
+
+
 // ---------- Main Component ----------
 
 export default function ProfileClientPage({ user, links: serverLinks }: { user: UserProfile; links: LinkType[] }) {
   const [activeLinks, setActiveLinks] = useState<LinkType[]>([]);
-  const botContainerRef = useRef<HTMLDivElement>(null);
-  const injectingRef = useRef(false);
 
   // Filter active links
   useEffect(() => {
@@ -154,51 +160,6 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     setActiveLinks(filteredLinks);
   }, [serverLinks]);
 
-  // Inject bot embed dynamically and safely
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const container = botContainerRef.current;
-    const embed = user?.bot?.embedScript?.trim();
-
-    if (!container || !embed || injectingRef.current) return;
-
-    let cancelled = false;
-    injectingRef.current = true;
-
-    const run = async () => {
-      // 1) Close any existing instance (idempotent)
-      try {
-        window.botpressWebChat?.close?.();
-      } catch {}
-
-      // 2) Clear the container (DOM)
-      container.innerHTML = '';
-
-      try {
-        // 3) Inject sequentially
-        await injectEmbedHtmlSequentially(container, embed, {
-          cacheBustKey: String(user?.uid || '1'),
-        });
-      } finally {
-        if (!cancelled) {
-          injectingRef.current = false;
-        }
-      }
-    };
-
-    run();
-
-    // Cleanup on unmount / route change
-    return () => {
-      cancelled = true;
-      injectingRef.current = false;
-      try {
-        window.botpressWebChat?.close?.();
-      } catch {}
-      if (container) container.innerHTML = '';
-    };
-  }, [user?.uid, user?.bot?.embedScript]);
-
 
   const getInitials = (name: string = '') => name.split(' ').map(n => n[0]).join('');
 
@@ -211,46 +172,95 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
   const regularLinks = activeLinks.filter(l => !l.isSocial && !l.isSupport);
   const supportLinks = activeLinks.filter(l => l.isSupport);
 
+  const botConfigUrl = user.bot?.embedScript ? getBotConfigUrl(user.bot.embedScript) : null;
+
+  const srcDoc = botConfigUrl ? `
+    <html>
+      <head>
+        <script src="https://cdn.botpress.cloud/webchat/v1/inject.js"><\/script>
+        <style>
+          html, body, #webchat, #webchat .bpWebchat {
+            position: unset !important;
+            width: 100% !important;
+            height: 100% !important;
+            max-height: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+          }
+          #webchat .bp-widget-widget {
+              display: none !important;
+          }
+        </style>
+      </head>
+      <body>
+        <script src="${botConfigUrl}" defer><\/script>
+        <script>
+          const initBotpress = () => {
+            if (window.botpress) {
+              window.botpress.on("webchat:ready", () => {
+                window.botpress.open();
+              });
+            } else {
+              setTimeout(initBotpress, 200);
+            }
+          };
+          initBotpress();
+        <\/script>
+      </body>
+    </html>` 
+  : '';
+
+
   return (
     <div data-theme={user.theme || 'light'} className="relative flex flex-col items-center min-h-screen pt-12 px-4 bg-background text-foreground overflow-hidden">
       {user.animatedBackground && <AnimatedBackground />}
-      <div className="w-full max-w-md mx-auto z-10">
-        <div className="flex flex-col items-center text-center">
-          <Avatar className="h-24 w-24 border-2 border-white/50">
-            <AvatarImage src={user.photoURL || undefined} alt={user.displayName} />
-            <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
-          </Avatar>
-          <h1 className="text-2xl font-bold mt-4">{user.displayName}</h1>
-          <p className="text-md text-muted-foreground">@{user.username}</p>
-          <p className="mt-4 text-sm max-w-xs text-foreground/80">{user.bio}</p>
-          <div className="flex gap-4 justify-center mt-4 text-foreground/80">
-            {socialLinks.map(link => (
-              <button key={link.id} aria-label={`My ${link.title}`} className="hover:text-primary transition-colors" onClick={() => handleLinkClick(link)}>
-                <SocialIcon platform={link.title} />
-              </button>
-            ))}
-          </div>
-          <div className="mt-8 space-y-4 w-full">
-            {regularLinks.map((link) => (
-                <button 
-                    key={link.id}
-                    className="w-full text-center bg-secondary text-secondary-foreground font-semibold p-4 rounded-lg shadow-md transition-transform transform hover:scale-105 active:scale-[0.98] truncate"
-                    onClick={() => handleLinkClick(link)}
-                >
-                   {link.title}
+      
+      <div className="relative w-full h-full flex-grow flex flex-col">
+        <div className="w-full max-w-md mx-auto z-10 flex-grow">
+          <div className="flex flex-col items-center text-center">
+            <Avatar className="h-24 w-24 border-2 border-white/50">
+              <AvatarImage src={user.photoURL || undefined} alt={user.displayName} />
+              <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+            </Avatar>
+            <h1 className="text-2xl font-bold mt-4">{user.displayName}</h1>
+            <p className="text-md text-muted-foreground">@{user.username}</p>
+            <p className="mt-4 text-sm max-w-xs text-foreground/80">{user.bio}</p>
+            <div className="flex gap-4 justify-center mt-4 text-foreground/80">
+              {socialLinks.map(link => (
+                <button key={link.id} aria-label={`My ${link.title}`} className="hover:text-primary transition-colors" onClick={() => handleLinkClick(link)}>
+                  <SocialIcon platform={link.title} />
                 </button>
-            ))}
+              ))}
+            </div>
+            <div className="mt-8 space-y-4 w-full">
+              {regularLinks.map((link) => (
+                  <button 
+                      key={link.id}
+                      className="w-full text-center bg-secondary text-secondary-foreground font-semibold p-4 rounded-lg shadow-md transition-transform transform hover:scale-105 active:scale-[0.98] truncate"
+                      onClick={() => handleLinkClick(link)}
+                  >
+                    {link.title}
+                  </button>
+              ))}
+            </div>
+            <SupportLinks user={user} links={supportLinks} />
           </div>
-          <SupportLinks user={user} links={supportLinks} />
         </div>
+        <footer className="mt-auto py-8 z-10 text-center">
+          <Logo />
+        </footer>
       </div>
 
-      {/* Container where the bot embed will render */}
-      <div ref={botContainerRef} id="public-bot-container" />
-
-      <footer className="mt-auto py-8 z-10">
-        <Logo />
-      </footer>
+      {botConfigUrl && (
+        <iframe
+          srcDoc={srcDoc}
+          className="absolute inset-0 w-full h-full border-0"
+          title="Chatbot"
+          sandbox="allow-scripts allow-same-origin"
+        />
+      )}
     </div>
   );
 }

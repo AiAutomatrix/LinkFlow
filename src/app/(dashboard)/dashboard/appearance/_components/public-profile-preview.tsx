@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import type { UserProfile, Link as LinkType } from "@/lib/types";
 import { Mail, Instagram, Facebook, Github, Coffee, Banknote, Bitcoin, ClipboardCopy, ClipboardCheck } from 'lucide-react';
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 
@@ -88,6 +88,13 @@ const SupportLinks = ({ links }: { links: LinkType[] }) => {
     );
 };
 
+// Extracts the Botpress config URL from the full embed script
+const getBotConfigUrl = (embedScript: string): string | null => {
+    if (!embedScript) return null;
+    const match = embedScript.match(/src="(https:\/\/files\.bpcontent\.cloud\/[^"]+\.js)"/);
+    return match ? match[1] : null;
+};
+
 export default function PublicProfilePreview({ profile, links = [], isPreview = false, embedScript }: { profile: Partial<UserProfile>; links?: LinkType[], isPreview?: boolean, embedScript?: string }) {
 
     const getInitials = (name: string = "") => {
@@ -116,18 +123,46 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
         {children}
       </div>
     );
+    
+    const botConfigUrl = embedScript ? getBotConfigUrl(embedScript) : null;
 
-    const srcDoc = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <style>body { margin: 0; padding: 0; }</style>
-      </head>
-      <body>
-        ${embedScript || ''}
-      </body>
-    </html>
-  `;
+    const srcDoc = botConfigUrl ? `
+        <html>
+        <head>
+            <script src="https://cdn.botpress.cloud/webchat/v1/inject.js"><\/script>
+            <style>
+            html, body, #webchat, #webchat .bpWebchat {
+                position: unset !important;
+                width: 100% !important;
+                height: 100% !important;
+                max-height: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+            }
+            #webchat .bp-widget-widget {
+                display: none !important;
+            }
+            </style>
+        </head>
+        <body>
+            <script src="${botConfigUrl}" defer><\/script>
+            <script>
+            const initBotpress = () => {
+                if (window.botpress) {
+                window.botpress.on("webchat:ready", () => {
+                    window.botpress.open();
+                });
+                } else {
+                setTimeout(initBotpress, 200);
+                }
+            };
+            initBotpress();
+            <\/script>
+        </body>
+        </html>`
+    : '';
 
 
   return (
@@ -135,54 +170,59 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
     <Card className={cn(isPreview ? "border-none shadow-none" : "")}>
       <CardContent className={cn(isPreview ? "p-0" : "p-4")}>
         <div 
-          data-theme={profile.theme || 'light'}
-          className="h-[700px] w-full rounded-md border bg-background flex flex-col items-center relative overflow-hidden"
+          className="relative h-[700px] w-full"
         >
-            {profile.animatedBackground && <AnimatedBackground />}
-            <div className="flex-1 w-full flex flex-col items-center pt-8 text-center overflow-y-auto p-4">
-              <Avatar className="h-24 w-24">
-                <AvatarImage src={profile.photoURL || undefined} />
-                <AvatarFallback>{getInitials(profile.displayName)}</AvatarFallback>
-              </Avatar>
-              <h1 className="text-xl font-bold mt-4 text-foreground">{profile.displayName || "Your Name"}</h1>
-              <p className="text-muted-foreground text-sm">@{profile.username || "username"}</p>
-              <p className="text-center mt-2 text-sm text-foreground/80">{profile.bio || "Your bio will appear here."}</p>
-              
-              <div className="flex gap-4 justify-center mt-4 text-foreground/80">
-                {socialLinks.map(link => (
-                    <SocialIcon key={link.id} platform={link.title} />
-                ))}
-              </div>
-              
-              <div className="mt-8 space-y-4 w-full max-w-xs mx-auto">
-                  {regularLinks.length > 0 ? (
-                    regularLinks.slice(0, 2).map((link) => (
-                      <LinkButton key={link.id}>
-                        {link.title}
-                      </LinkButton>
-                    ))
-                  ) : (
-                    <>
-                      <LinkButton>Example Link 1</LinkButton>
-                      <LinkButton>Example Link 2</LinkButton>
-                    </>
-                  )}
-                  {regularLinks.length > 2 && <p className="text-center text-sm text-muted-foreground">...</p>}
-              </div>
+            <div 
+            data-theme={profile.theme || 'light'}
+            className="h-full w-full rounded-md border bg-background flex flex-col items-center relative overflow-hidden"
+            >
+                {profile.animatedBackground && <AnimatedBackground />}
+                <div className="flex-1 w-full flex flex-col items-center pt-8 text-center overflow-y-auto p-4">
+                <Avatar className="h-24 w-24">
+                    <AvatarImage src={profile.photoURL || undefined} />
+                    <AvatarFallback>{getInitials(profile.displayName)}</AvatarFallback>
+                </Avatar>
+                <h1 className="text-xl font-bold mt-4 text-foreground">{profile.displayName || "Your Name"}</h1>
+                <p className="text-muted-foreground text-sm">@{profile.username || "username"}</p>
+                <p className="text-center mt-2 text-sm text-foreground/80">{profile.bio || "Your bio will appear here."}</p>
+                
+                <div className="flex gap-4 justify-center mt-4 text-foreground/80">
+                    {socialLinks.map(link => (
+                        <SocialIcon key={link.id} platform={link.title} />
+                    ))}
+                </div>
+                
+                <div className="mt-8 space-y-4 w-full max-w-xs mx-auto">
+                    {regularLinks.length > 0 ? (
+                        regularLinks.slice(0, 2).map((link) => (
+                        <LinkButton key={link.id}>
+                            {link.title}
+                        </LinkButton>
+                        ))
+                    ) : (
+                        <>
+                        <LinkButton>Example Link 1</LinkButton>
+                        <LinkButton>Example Link 2</LinkButton>
+                        </>
+                    )}
+                    {regularLinks.length > 2 && <p className="text-center text-sm text-muted-foreground">...</p>}
+                </div>
 
-              <SupportLinks links={supportLinks} />
+                <SupportLinks links={supportLinks} />
+                </div>
             </div>
+            {botConfigUrl && isPreview && (
+                <iframe
+                    srcDoc={srcDoc}
+                    className="absolute inset-0 w-full h-full border-0 pointer-events-auto"
+                    title="Chatbot Preview"
+                    sandbox="allow-scripts allow-same-origin"
+                />
+            )}
         </div>
       </CardContent>
     </Card>
-     {embedScript && isPreview && (
-        <iframe
-        srcDoc={srcDoc}
-        className="absolute inset-0 w-full h-full border-0"
-        title="Chatbot Preview"
-        sandbox="allow-scripts allow-same-origin"
-        />
-    )}
     </>
   );
 }
+
