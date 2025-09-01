@@ -25,18 +25,13 @@ const SocialIcon = ({ platform }: { platform: string }) => {
 };
 
 const EthIcon = () => (
-  <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0">
-    <title>Ethereum</title>
-    <path d="M11.944 17.97L4.58 13.62 11.943 24l7.365-10.38-7.364 4.35zM12.056 0L4.69 12.223l7.366-4.354 7.365 4.354L12.056 0z"/>
-  </svg>
+    <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0"><title>Ethereum</title><path d="M11.944 17.97L4.58 13.62 11.943 24l7.365-10.38-7.364 4.35zM12.056 0L4.69 12.223l7.366-4.354 7.365 4.354L12.056 0z"/></svg>
 );
 
 const SolIcon = () => (
-  <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0">
-    <title>Solana</title>
-    <path d="M4.236.427a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533V-.001a.6.6 0 00-.128-.532.6.6 0 00-.49-.28L4.236.427zm10.02 6.046a.6.6 0 00-.532.127a.6.6 0 00-.28.491v4.54a.6.6 0 00.28.49.6.6 0 00.532.128l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.532V5.76a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12zm-4.383 6.64a.6.6 0 00-.532.127a.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533v-4.54a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12z"/>
-  </svg>
+    <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0"><title>Solana</title><path d="M4.236.427a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533V-.001a.6.6 0 00-.128-.532.6.6 0 00-.49-.28L4.236.427zm10.02 6.046a.6.6 0 00-.532.127a.6.6 0 00-.28.491v4.54a.6.6 0 00.28.49.6.6 0 00.532.128l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.532V5.76a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12zm-4.383 6.64a.6.6 0 00-.532.127a.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533v-4.54a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12z"/></svg>
 );
+
 
 const toDate = (date: any): Date | null => {
   if (!date) return null;
@@ -46,7 +41,14 @@ const toDate = (date: any): Date | null => {
   return null;
 };
 
-const CryptoLog = ({ icon, name, address, onCopy }: { icon: React.ReactNode, name: string, address: string, onCopy: () => void }) => (
+type CryptoLogProps = {
+  icon: React.ReactNode;
+  name: string;
+  address: string;
+  onCopy: () => void;
+};
+
+const CryptoLog = ({ icon, name, address, onCopy }: CryptoLogProps) => (
   <div className="flex items-center justify-between gap-4 text-sm font-mono">
     <div className="flex items-center gap-2 text-muted-foreground shrink-0">
       {icon}
@@ -138,18 +140,18 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
   useEffect(() => {
     const now = new Date();
     const filteredLinks = serverLinks.filter(link => {
-        if (!link.active) {
-            return false;
-        }
-        const startDate = toDate(link.startDate);
-        const endDate = toDate(link.endDate);
-        if (startDate && now < startDate) {
-            return false;
-        }
-        if (endDate && now > endDate) {
-            return false;
-        }
-        return true;
+      if (!link.active) {
+        return false;
+      }
+      const startDate = toDate(link.startDate);
+      const endDate = toDate(link.endDate);
+      if (startDate && now < startDate) {
+        return false;
+      }
+      if (endDate && now > endDate) {
+        return false;
+      }
+      return true;
     });
     setActiveLinks(filteredLinks);
   }, [serverLinks]);
@@ -209,12 +211,14 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
   : '';
 
   const customStyles: React.CSSProperties = {};
-  if (user.theme === 'custom' && user.customThemeGradient?.from && user.customThemeGradient?.to) {
-    customStyles.backgroundImage = `linear-gradient(to bottom, ${user.customThemeGradient.from}, ${user.customThemeGradient.to})`;
-  }
-  if (user.customButtonGradient?.from && user.customButtonGradient?.to) {
-      customStyles['--btn-gradient-from'] = user.customButtonGradient.from;
-      customStyles['--btn-gradient-to'] = user.customButtonGradient.to;
+  if (user.theme === 'custom') {
+    if (user.customThemeGradient?.from && user.customThemeGradient?.to) {
+        customStyles.backgroundImage = `linear-gradient(to bottom, ${user.customThemeGradient.from}, ${user.customThemeGradient.to})`;
+    }
+    if (user.customButtonGradient?.from && user.customButtonGradient?.to) {
+        customStyles['--btn-gradient-from'] = user.customButtonGradient.from;
+        customStyles['--btn-gradient-to'] = user.customButtonGradient.to;
+    }
   }
 
   return (
