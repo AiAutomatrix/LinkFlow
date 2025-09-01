@@ -46,9 +46,10 @@ type CryptoLogProps = {
   name: string;
   address: string;
   onCopy: () => void;
+  copied: boolean;
 };
 
-const CryptoLog = ({ icon, name, address, onCopy }: CryptoLogProps) => (
+const CryptoLog = ({ icon, name, address, onCopy, copied }: CryptoLogProps) => (
   <div className="flex items-center justify-between gap-4 text-sm font-mono">
     <div className="flex items-center gap-2 text-muted-foreground shrink-0">
       {icon}
@@ -56,7 +57,7 @@ const CryptoLog = ({ icon, name, address, onCopy }: CryptoLogProps) => (
     </div>
     <p className="overflow-hidden truncate text-muted-foreground">{address}</p>
     <button onClick={onCopy} className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
-      <ClipboardCopy className="h-4 w-4" />
+        {copied ? <ClipboardCheck className="h-4 w-4" /> : <ClipboardCopy className="h-4 w-4" />}
     </button>
   </div>
 );
@@ -121,9 +122,9 @@ const SupportLinks = ({ user, links }: { user: UserProfile, links: LinkType[] })
         {hasCrypto && (
           <div className="bg-muted/50 rounded-lg p-3 space-y-3 font-mono text-sm">
             <p className="text-xs text-muted-foreground font-sans text-center">CRYPTO LOGS</p>
-            {btcLink && <CryptoLog icon={<Bitcoin className="h-5 w-5 shrink-0" />} name="BTC" address={btcLink.url} onCopy={() => handleCopy(btcLink)} />}
-            {ethLink && <CryptoLog icon={<EthIcon />} name="ETH" address={ethLink.url} onCopy={() => handleCopy(ethLink)} />}
-            {solLink && <CryptoLog icon={<SolIcon />} name="SOL" address={solLink.url} onCopy={() => handleCopy(solLink)} />}
+            {btcLink && <CryptoLog icon={<Bitcoin className="h-5 w-5 shrink-0" />} name="BTC" address={btcLink.url} onCopy={() => handleCopy(btcLink)} copied={!!copiedStates[btcLink.id]} />}
+            {ethLink && <CryptoLog icon={<EthIcon />} name="ETH" address={ethLink.url} onCopy={() => handleCopy(ethLink)} copied={!!copiedStates[ethLink.id]} />}
+            {solLink && <CryptoLog icon={<SolIcon />} name="SOL" address={solLink.url} onCopy={() => handleCopy(solLink)} copied={!!copiedStates[solLink.id]} />}
           </div>
         )}
       </div>
@@ -140,18 +141,12 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
   useEffect(() => {
     const now = new Date();
     const filteredLinks = serverLinks.filter(link => {
-      if (!link.active) {
-        return false;
-      }
+      if (!link.active) return false;
       const startDate = toDate(link.startDate);
       const endDate = toDate(link.endDate);
-      if (startDate && now < startDate) {
-        return false;
-      }
-      if (endDate && now > endDate) {
-        return false;
-      }
-      return true;
+      const isStarted = !startDate || now >= startDate;
+      const isNotEnded = !endDate || now <= endDate;
+      return isStarted && isNotEnded;
     });
     setActiveLinks(filteredLinks);
   }, [serverLinks]);
@@ -216,8 +211,8 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         customStyles.backgroundImage = `linear-gradient(to bottom, ${user.customThemeGradient.from}, ${user.customThemeGradient.to})`;
     }
     if (user.customButtonGradient?.from && user.customButtonGradient?.to) {
-        customStyles['--btn-gradient-from'] = user.customButtonGradient.from;
-        customStyles['--btn-gradient-to'] = user.customButtonGradient.to;
+        (customStyles as any)["--btn-gradient-from"] = user.customButtonGradient.from;
+        (customStyles as any)["--btn-gradient-to"] = user.customButtonGradient.to;
     }
   }
 
