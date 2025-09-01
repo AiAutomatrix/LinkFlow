@@ -111,7 +111,35 @@ body {
   [data-theme="nordic-blue"] { --background: 210 25% 15%; --foreground: 210 30% 90%; --primary: 200 80% 75%; --primary-foreground: 210 25% 15%; --secondary: 210 25% 25%; --secondary-foreground: 210 30% 90%; --muted: 210 25% 25%; --muted-foreground: 210 30% 70%; --accent: 200 80% 75%; --accent-foreground: 210 25% 15%; --border: 210 25% 35%; --input: 210 25% 35%; --ring: 200 80% 75%; }
   [data-theme="teal"] { --background: 180 50% 96%; --foreground: 180 70% 20%; --card: 180 50% 100%; --card-foreground: 180 70% 20%; --primary: 180 60% 40%; --primary-foreground: 180 50% 96%; --secondary: 180 50% 90%; --secondary-foreground: 180 70% 20%; --muted: 180 50% 90%; --muted-foreground: 180 70% 50%; --accent: 170 70% 50%; --accent-foreground: 180 70% 20%; --border: 180 50% 85%; --input: 180 50% 85%; --ring: 180 60% 40%; }
   [data-theme="beach-vibes"] { --background: 45 100% 96%; --foreground: 35 80% 30%; --card: 45 100% 98%; --card-foreground: 35 80% 30%; --primary: 200 90% 55%; --primary-foreground: 35 80% 10%; --secondary: 45 100% 90%; --secondary-foreground: 35 80% 30%; --muted: 45 100% 90%; --muted-foreground: 35 80% 50%; --accent: 25 95% 65%; --accent-foreground: 35 80% 30%; --border: 45 100% 85%; --input: 45 100% 85%; --ring: 200 90% 55%; }
+  [data-theme="custom"] {
+    --gradient-from: #FFFFFF;
+    --gradient-to: #AAAAAA;
+    --btn-gradient-from: #AAAAAA;
+    --btn-gradient-to: #FFFFFF;
+  }
+  [data-theme="custom"] {
+    --background: var(--gradient-from);
+    --foreground: #111827;
+    --card: transparent;
+    --card-foreground: #111827;
+    --popover: #FFFFFF;
+    --popover-foreground: #111827;
+    --primary: var(--gradient-to);
+    --primary-foreground: #FFFFFF;
+    --secondary: #FFFFFF30;
+    --secondary-foreground: #111827;
+    --muted: #FFFFFF50;
+    --muted-foreground: #374151;
+    --accent: #FFFFFF80;
+    --accent-foreground: #111827;
+    --border: #E5E7EB;
+    --input: #E5E7EB;
+    --ring: var(--gradient-to);
+  }
 
+  [data-theme="custom"] .bg-background {
+      background-image: linear-gradient(to bottom, var(--gradient-from), var(--gradient-to));
+  }
 }
 
 @layer base {
@@ -161,3 +189,9 @@ body {
   color: #fff;
   border: 1px solid #ffffff30;
 }
+
+[data-theme="custom"][data-style="gradient"] .link-button {
+    background-image: linear-gradient(to right, var(--btn-gradient-from), var(--btn-gradient-to));
+    border: none;
+}
+

@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -25,7 +26,7 @@ import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import PublicProfilePreview from "./_components/public-profile-preview";
 import type { Link, UserProfile } from "@/lib/types";
-import { Loader2, Sparkles, Star } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Switch } from "@/components/ui/switch";
@@ -36,10 +37,20 @@ import Loading from "@/app/loading";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 
+const hexColor = () => z.string().regex(/^#[0-9a-fA-F]{6}$/, "Must be a valid hex color");
+
 const appearanceSchema = z.object({
   theme: z.string().optional(),
   animatedBackground: z.boolean().optional(),
   buttonStyle: z.enum(['solid', 'gradient']).optional(),
+  customThemeGradient: z.object({
+    from: hexColor().optional(),
+    to: hexColor().optional(),
+  }).optional(),
+  customButtonGradient: z.object({
+    from: hexColor().optional(),
+    to: hexColor().optional(),
+  }).optional(),
 });
 
 export const themes = [
@@ -95,6 +106,7 @@ export const themes = [
     { id: 'nordic-blue', name: 'Nordic Blue', colors: ['#2e3440', '#88c0d0'] },
     { id: 'teal', name: 'Teal', colors: ['#F0FDFA', '#2DD4BF'] },
     { id: 'beach-vibes', name: 'Beach', colors: ['#FFFBEB', '#F59E0B'] },
+    { id: 'custom', name: 'Custom', colors: ['#DDDDDD', '#888888'] },
 ];
 
 export default function AppearancePage() {
@@ -102,6 +114,7 @@ export default function AppearancePage() {
   const { user, loading: authLoading, setUser } = useAuth();
   const [formLoading, setFormLoading] = useState(false);
   const [links, setLinks] = useState<Link[]>([]);
+  const [customGradientsEnabled, setCustomGradientsEnabled] = useState(false);
 
   const form = useForm<z.infer<typeof appearanceSchema>>({
     resolver: zodResolver(appearanceSchema),
@@ -109,6 +122,8 @@ export default function AppearancePage() {
       theme: "light",
       animatedBackground: false,
       buttonStyle: 'solid',
+      customThemeGradient: { from: '#FFFFFF', to: '#AAAAAA' },
+      customButtonGradient: { from: '#AAAAAA', to: '#FFFFFF' },
     },
   });
   
@@ -122,13 +137,30 @@ export default function AppearancePage() {
 
   useEffect(() => {
       if (user) {
+          const isCustom = user.theme === 'custom';
+          setCustomGradientsEnabled(isCustom);
+          if (isCustom) {
+            form.setValue('theme', 'custom');
+          }
           form.reset({
               theme: user.theme || 'light',
               animatedBackground: user.animatedBackground || false,
               buttonStyle: user.buttonStyle || 'solid',
+              customThemeGradient: user.customThemeGradient || { from: '#FFFFFF', to: '#AAAAAA' },
+              customButtonGradient: user.customButtonGradient || { from: '#AAAAAA', to: '#FFFFFF' },
           });
       }
   }, [user, form]);
+  
+  useEffect(() => {
+    if (customGradientsEnabled) {
+      form.setValue('theme', 'custom');
+    } else {
+      if(form.getValues('theme') === 'custom') {
+        form.setValue('theme', user?.theme !== 'custom' ? user?.theme || 'light' : 'light');
+      }
+    }
+  }, [customGradientsEnabled, form, user?.theme]);
 
   useEffect(() => {
     if (!user) return;
@@ -145,8 +177,11 @@ export default function AppearancePage() {
     setFormLoading(true);
     try {
         const userRef = doc(db, "users", user.uid);
-        await updateDoc(userRef, values);
-        setUser((prevUser) => prevUser ? { ...prevUser, ...values } : null);
+        await updateDoc(userRef, {
+            ...values,
+            theme: customGradientsEnabled ? 'custom' : values.theme,
+        });
+        setUser((prevUser) => prevUser ? { ...prevUser, ...values, theme: customGradientsEnabled ? 'custom' : values.theme } : null);
         toast({ title: "Appearance updated successfully!" });
     } catch (error: any) {
         toast({ variant: 'destructive', title: "Error", description: error.message });
@@ -201,7 +236,7 @@ export default function AppearancePage() {
                       >
                         <CarouselContent>
                           {themes.map((theme) => (
-                            <CarouselItem key={theme.id} className="basis-1/3 sm:basis-1/4 md:basis-1/5">
+                            <CarouselItem key={theme.id} className={cn("basis-1/3 sm:basis-1/4 md:basis-1/5", theme.id === 'custom' && !customGradientsEnabled ? 'hidden' : '')}>
                               <div className="p-1">
                                   <button 
                                       type="button"
@@ -294,23 +329,81 @@ export default function AppearancePage() {
                 <CardHeader className="flex-row items-center justify-between">
                     <div className="space-y-1">
                         <CardTitle>Custom Gradients</CardTitle>
-                        <CardDescription>Create your own unique gradients.</CardDescription>
+                        <CardDescription>Create your own unique gradients. Select the 'Custom' theme to apply.</CardDescription>
                     </div>
-                     <Button variant="outline" size="sm" disabled>
-                        <Star className="mr-2 h-4 w-4" />
-                        Upgrade
-                    </Button>
+                     <Switch
+                        checked={customGradientsEnabled}
+                        onCheckedChange={setCustomGradientsEnabled}
+                     />
                 </CardHeader>
-                <CardContent className="opacity-50">
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium">Theme Gradient</p>
-                            <div className="h-8 w-24 rounded-md bg-gradient-to-r from-muted to-muted/50" />
-                        </div>
-                         <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium">Button Gradient</p>
-                            <div className="h-8 w-24 rounded-md bg-gradient-to-r from-muted to-muted/50" />
-                        </div>
+                <CardContent className={cn("space-y-4", !customGradientsEnabled && "opacity-50 pointer-events-none")}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                       <FormField
+                        control={form.control}
+                        name="customThemeGradient.from"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Theme From</FormLabel>
+                             <div className="relative">
+                              <FormControl>
+                                <Input {...field} className="pl-10" />
+                              </FormControl>
+                              <Input type="color" value={field.value} onChange={field.onChange} className="absolute left-1 top-1/2 -translate-y-1/2 h-8 w-8 p-1 bg-transparent border-none cursor-pointer" />
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                        />
+                         <FormField
+                        control={form.control}
+                        name="customThemeGradient.to"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Theme To</FormLabel>
+                             <div className="relative">
+                              <FormControl>
+                                <Input {...field} className="pl-10" />
+                              </FormControl>
+                              <Input type="color" value={field.value} onChange={field.onChange} className="absolute left-1 top-1/2 -translate-y-1/2 h-8 w-8 p-1 bg-transparent border-none cursor-pointer" />
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                        />
+                    </div>
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                       <FormField
+                        control={form.control}
+                        name="customButtonGradient.from"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Button From</FormLabel>
+                            <div className="relative">
+                              <FormControl>
+                                <Input {...field} className="pl-10" />
+                              </FormControl>
+                              <Input type="color" value={field.value} onChange={field.onChange} className="absolute left-1 top-1/2 -translate-y-1/2 h-8 w-8 p-1 bg-transparent border-none cursor-pointer" />
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                        />
+                         <FormField
+                        control={form.control}
+                        name="customButtonGradient.to"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Button To</FormLabel>
+                            <div className="relative">
+                              <FormControl>
+                                <Input {...field} className="pl-10" />
+                              </FormControl>
+                              <Input type="color" value={field.value} onChange={field.onChange} className="absolute left-1 top-1/2 -translate-y-1/2 h-8 w-8 p-1 bg-transparent border-none cursor-pointer" />
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                        />
                     </div>
                 </CardContent>
             </Card>

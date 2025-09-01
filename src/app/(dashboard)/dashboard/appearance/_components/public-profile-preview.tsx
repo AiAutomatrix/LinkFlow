@@ -162,6 +162,15 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
         </html>`
     : '';
 
+  const themeStyle = profile.theme === 'custom' && profile.customThemeGradient?.from && profile.customThemeGradient?.to ? {
+    '--gradient-from': profile.customThemeGradient.from,
+    '--gradient-to': profile.customThemeGradient.to,
+  } as React.CSSProperties : {};
+
+  const buttonStyle = profile.theme === 'custom' && profile.customButtonGradient?.from && profile.customButtonGradient?.to ? {
+    '--btn-gradient-from': profile.customButtonGradient.from,
+    '--btn-gradient-to': profile.customButtonGradient.to,
+  } as React.CSSProperties : {};
 
   return (
     <>
@@ -169,6 +178,7 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
       <CardContent className={cn(isPreview ? "p-0" : "p-4")}>
         <div 
           className="relative h-[700px] w-full"
+          style={{ ...themeStyle, ...buttonStyle }}
         >
             <div 
                 data-theme={profile.theme || 'light'}
