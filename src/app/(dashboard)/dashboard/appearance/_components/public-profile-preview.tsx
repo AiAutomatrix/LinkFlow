@@ -88,10 +88,9 @@ const SupportLinks = ({ links }: { links: LinkType[] }) => {
     );
 };
 
-// Extracts the Botpress config URL from the full embed script
 const getBotConfigUrl = (embedScript: string): string | null => {
     if (!embedScript) return null;
-    const match = embedScript.match(/src="(https:\/\/files\.bpcontent\.cloud\/[^"]+\.js)"/);
+    const match = embedScript.match(/src="([^"]+)"/);
     return match ? match[1] : null;
 };
 
@@ -211,19 +210,18 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
                 <SupportLinks links={supportLinks} />
                 </div>
             </div>
-            {botConfigUrl && isPreview && (
-                <iframe
-                    srcDoc={srcDoc}
-                    className="absolute inset-0 w-full h-full border-0 pointer-events-auto"
-                    title="Chatbot Preview"
-                    sandbox="allow-scripts allow-same-origin"
-                />
-            )}
+            <iframe
+                srcDoc={srcDoc}
+                className={cn(
+                    "absolute inset-0 w-full h-full border-0 pointer-events-auto",
+                    !botConfigUrl || !isPreview ? "hidden" : ""
+                )}
+                title="Chatbot Preview"
+                sandbox="allow-scripts allow-same-origin"
+            />
         </div>
       </CardContent>
     </Card>
     </>
   );
 }
-
-    
