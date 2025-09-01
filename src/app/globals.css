@@ -113,6 +113,8 @@ body {
   [data-theme="beach-vibes"] { --background: 45 100% 96%; --foreground: 35 80% 30%; --card: 45 100% 98%; --card-foreground: 35 80% 30%; --primary: 200 90% 55%; --primary-foreground: 35 80% 10%; --secondary: 45 100% 90%; --secondary-foreground: 35 80% 30%; --muted: 45 100% 90%; --muted-foreground: 35 80% 50%; --accent: 25 95% 65%; --accent-foreground: 35 80% 30%; --border: 45 100% 85%; --input: 45 100% 85%; --ring: 200 90% 55%; }
   
   [data-theme="custom"] {
+    --background: transparent;
+    background-image: linear-gradient(to bottom, var(--background-gradient-from, #FFFFFF), var(--background-gradient-to, #AAAAAA));
     --foreground: #111827;
     --card: transparent;
     --card-foreground: #111827;
@@ -184,4 +186,9 @@ body {
 [data-theme="custom"][data-style="gradient"] .link-button {
     background-image: linear-gradient(to right, var(--btn-gradient-from), var(--btn-gradient-to));
     border: none;
+}
+
+/* This is needed for the main page background to be transparent when a custom gradient is active */
+[data-theme="custom"] > .bg-background {
+    background-color: transparent;
 }
