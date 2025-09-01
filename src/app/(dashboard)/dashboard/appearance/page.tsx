@@ -192,6 +192,25 @@ export default function AppearancePage() {
       return <Loading />;
   }
   
+  const ColorPickerInput = ({ field, label }: { field: any, label: string }) => (
+    <FormItem>
+      <FormLabel>{label}</FormLabel>
+      <div className="flex items-center gap-2 rounded-md border border-input p-1 pr-2">
+        <div className="relative h-8 w-10 shrink-0">
+          <FormControl>
+            <Input type="color" {...field} className="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
+          </FormControl>
+          <div
+            className="h-full w-full rounded-sm"
+            style={{ backgroundColor: field.value }}
+          />
+        </div>
+        <span className="font-mono text-sm uppercase text-muted-foreground">{field.value}</span>
+      </div>
+      <FormMessage />
+    </FormItem>
+  );
+  
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
       <div className="lg:sticky lg:top-6 space-y-6">
@@ -337,70 +356,26 @@ export default function AppearancePage() {
                 <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                        <FormField
-                        control={form.control}
-                        name="customThemeGradient.from"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Theme From</FormLabel>
-                             <div className="relative">
-                              <FormControl>
-                                <Input {...field} className="pl-10" />
-                              </FormControl>
-                              <Input type="color" value={field.value} onChange={field.onChange} className="absolute left-1 top-1/2 -translate-y-1/2 h-8 w-8 p-1 bg-transparent border-none cursor-pointer" />
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                          control={form.control}
+                          name="customThemeGradient.from"
+                          render={({ field }) => <ColorPickerInput field={field} label="Theme From" />}
                         />
                          <FormField
-                        control={form.control}
-                        name="customThemeGradient.to"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Theme To</FormLabel>
-                             <div className="relative">
-                              <FormControl>
-                                <Input {...field} className="pl-10" />
-                              </FormControl>
-                              <Input type="color" value={field.value} onChange={field.onChange} className="absolute left-1 top-1/2 -translate-y-1/2 h-8 w-8 p-1 bg-transparent border-none cursor-pointer" />
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                          control={form.control}
+                          name="customThemeGradient.to"
+                          render={({ field }) => <ColorPickerInput field={field} label="Theme To" />}
                         />
                     </div>
                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                        <FormField
-                        control={form.control}
-                        name="customButtonGradient.from"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Button From</FormLabel>
-                            <div className="relative">
-                              <FormControl>
-                                <Input {...field} className="pl-10" />
-                              </FormControl>
-                              <Input type="color" value={field.value} onChange={field.onChange} className="absolute left-1 top-1/2 -translate-y-1/2 h-8 w-8 p-1 bg-transparent border-none cursor-pointer" />
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                          control={form.control}
+                          name="customButtonGradient.from"
+                          render={({ field }) => <ColorPickerInput field={field} label="Button From" />}
                         />
                          <FormField
-                        control={form.control}
-                        name="customButtonGradient.to"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Button To</FormLabel>
-                            <div className="relative">
-                              <FormControl>
-                                <Input {...field} className="pl-10" />
-                              </FormControl>
-                              <Input type="color" value={field.value} onChange={field.onChange} className="absolute left-1 top-1/2 -translate-y-1/2 h-8 w-8 p-1 bg-transparent border-none cursor-pointer" />
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                          control={form.control}
+                          name="customButtonGradient.to"
+                          render={({ field }) => <ColorPickerInput field={field} label="Button To" />}
                         />
                     </div>
                 </CardContent>
@@ -417,5 +392,3 @@ export default function AppearancePage() {
     </div>
   );
 }
-
-    
