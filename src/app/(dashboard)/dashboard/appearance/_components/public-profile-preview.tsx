@@ -113,7 +113,7 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
 
     const LinkButton = ({ children }: { children: React.ReactNode }) => (
       <div
-        className="w-full text-center bg-secondary text-secondary-foreground font-semibold p-4 rounded-lg shadow-md transition-transform transform hover:scale-105 active:scale-[0.98] cursor-pointer"
+        className="w-full text-center bg-secondary text-secondary-foreground font-semibold p-4 rounded-lg shadow-md transition-transform transform hover:scale-105 active:scale-[0.98] cursor-pointer link-button"
       >
         {children}
       </div>
@@ -171,8 +171,9 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
           className="relative h-[700px] w-full"
         >
             <div 
-            data-theme={profile.theme || 'light'}
-            className="h-full w-full rounded-md border bg-background flex flex-col items-center relative overflow-hidden"
+                data-theme={profile.theme || 'light'}
+                data-style={profile.buttonStyle || 'solid'}
+                className="h-full w-full rounded-md border bg-background flex flex-col items-center relative overflow-hidden"
             >
                 {profile.animatedBackground && <AnimatedBackground />}
                 <div className="flex-1 w-full flex flex-col items-center pt-8 text-center overflow-y-auto p-4">
@@ -224,3 +225,5 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
     </>
   );
 }
+
+    

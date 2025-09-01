@@ -10,6 +10,7 @@ import { Timestamp } from 'firebase/firestore';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { unescapeHtml } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 // ---------- Helper Components ----------
 
@@ -204,11 +205,15 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
 
 
   return (
-    <div data-theme={user.theme || 'light'} className="h-full">
-        <div className="relative flex flex-col items-center p-4 bg-background text-foreground h-full overflow-auto">
+    <div 
+        data-theme={user.theme || 'light'}
+        data-style={user.buttonStyle || 'solid'}
+        className="h-full"
+    >
+        <div className="relative flex flex-col p-4 bg-background text-foreground h-full overflow-auto">
         {user.animatedBackground && <AnimatedBackground />}
         
-        <div className="relative w-full max-w-md mx-auto z-10 flex flex-col items-center flex-grow justify-start pt-12">
+        <div className="relative w-full max-w-md mx-auto z-10 flex flex-col flex-grow justify-start pt-12">
             <div className="flex flex-col items-center text-center">
                 <Avatar className="h-24 w-24 border-2 border-white/50">
                     <AvatarImage src={user.photoURL || undefined} alt={user.displayName} />
@@ -228,7 +233,10 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
                     {regularLinks.map((link) => (
                         <button 
                             key={link.id}
-                            className="w-full text-center bg-secondary text-secondary-foreground font-semibold p-4 rounded-lg shadow-md transition-transform transform hover:scale-105 active:scale-[0.98] truncate"
+                            className={cn(
+                                "w-full text-center bg-secondary text-secondary-foreground font-semibold p-4 rounded-lg shadow-md transition-transform transform hover:scale-105 active:scale-[0.98] truncate",
+                                "link-button"
+                            )}
                             onClick={() => handleLinkClick(link)}
                         >
                         {link.title}
@@ -239,7 +247,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
             </div>
         </div>
         
-        <footer className="w-full mt-4 text-center z-10 py-2">
+        <footer className="w-full text-center z-10 py-2">
             <Logo />
         </footer>
 
@@ -255,3 +263,4 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
   );
 }
 
+    

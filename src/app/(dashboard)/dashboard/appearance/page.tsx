@@ -25,7 +25,7 @@ import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import PublicProfilePreview from "./_components/public-profile-preview";
 import type { Link, UserProfile } from "@/lib/types";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Switch } from "@/components/ui/switch";
@@ -33,48 +33,55 @@ import { useAuth } from "@/contexts/auth-context";
 import { doc, updateDoc, collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Loading from "@/app/loading";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const appearanceSchema = z.object({
   theme: z.string().optional(),
   animatedBackground: z.boolean().optional(),
+  buttonStyle: z.enum(['solid', 'gradient']).optional(),
 });
 
 export const themes = [
-    { id: 'light', name: 'Light', colors: ['#FFFFFF', '#E2E8F0'], cssVars: { background: '220 40% 98%', foreground: '220 15% 20%', primary: '220 90% 60%', primaryForeground: '220 15% 20%', secondary: '220 15% 90%', secondaryForeground: '220 15% 20%' } },
-    { id: 'dark', name: 'Dark', colors: ['#1A202C', '#4A5568'], cssVars: { background: '220 20% 10%', foreground: '220 20% 95%', primary: '210 90% 65%', primaryForeground: '220 20% 95%', secondary: '220 20% 20%', secondaryForeground: '220 20% 95%' } },
-    { id: 'neon-green', name: 'Neon Green', colors: ['#0F172A', '#34D399'], cssVars: { background: '300 5% 8%', foreground: '120 100% 80%', primary: '120 100% 50%', primaryForeground: '120 100% 80%', secondary: '120 95% 15%', secondaryForeground: '120 100% 80%' } },
-    { id: 'neon-pink', name: 'Neon Pink', colors: ['#1E1B4B', '#F472B6'], cssVars: { background: '300 10% 10%', foreground: '320 100% 85%', primary: '320 100% 60%', primaryForeground: '320 100% 85%', secondary: '320 100% 18%', secondaryForeground: '320 100% 85%' } },
-    { id: 'gradient-sunset', name: 'Sunset', colors: ['#FECACA', '#F9A8D4'], cssVars: { background: '20 100% 98%', foreground: '20 80% 20%', primary: '340 90% 60%', primaryForeground: '20 80% 20%', secondary: '20 90% 92%', secondaryForeground: '20 80% 20%' } },
-    { id: 'ocean-blue', name: 'Ocean Blue', colors: ['#E0F2FE', '#38BDF8'], cssVars: { background: '210 100% 98%', foreground: '215 80% 25%', primary: '210 90% 55%', primaryForeground: '215 80% 25%', secondary: '210 95% 90%', secondaryForeground: '215 80% 25%' } },
-    { id: 'forest-green', name: 'Forest Green', colors: ['#F0FDF4', '#4ADE80'], cssVars: { background: '120 20% 98%', foreground: '120 60% 20%', primary: '120 50% 40%', primaryForeground: '120 60% 20%', secondary: '120 40% 90%', secondaryForeground: '120 60% 20%' } },
-    { id: 'royal-purple', name: 'Royal Purple', colors: ['#F5F3FF', '#A78BFA'], cssVars: { background: '270 50% 98%', foreground: '270 50% 20%', primary: '270 60% 60%', primaryForeground: '270 50% 20%', secondary: '270 50% 92%', secondaryForeground: '270 50% 20%' } },
-    { id: 'crimson-red', name: 'Crimson Red', colors: ['#FEF2F2', '#F87171'], cssVars: { background: '0 50% 98%', foreground: '0 60% 25%', primary: '0 70% 55%', primaryForeground: '0 60% 25%', secondary: '0 60% 94%', secondaryForeground: '0 60% 25%' } },
-    { id: 'goldenrod', name: 'Goldenrod', colors: ['#FEFCE8', '#FACC15'], cssVars: { background: '45 100% 97%', foreground: '40 80% 20%', primary: '45 100% 50%', primaryForeground: '40 80% 10%', secondary: '45 90% 90%', secondaryForeground: '40 80% 20%' } },
-    { id: 'minty-fresh', name: 'Minty Fresh', colors: ['#F0FDF4', '#6EE7B7'], cssVars: { background: '150 70% 97%', foreground: '150 50% 25%', primary: '150 55% 50%', primaryForeground: '150 50% 25%', secondary: '150 60% 92%', secondaryForeground: '150 50% 25%' } },
-    { id: 'charcoal', name: 'Charcoal', colors: ['#334155', '#94A3B8'], cssVars: { background: '220 10% 20%', foreground: '220 10% 90%', primary: '220 15% 70%', primaryForeground: '220 10% 90%', secondary: '220 10% 30%', secondaryForeground: '220 10% 90%' } },
-    { id: 'lavender', name: 'Lavender', colors: ['#F5F3FF', '#C4B5FD'], cssVars: { background: '250 80% 98%', foreground: '250 40% 30%', primary: '250 60% 70%', primaryForeground: '250 40% 30%', secondary: '250 70% 95%', secondaryForeground: '250 40% 30%' } },
-    { id: 'mocha', name: 'Mocha', colors: ['#FDF4E6', '#D4A574'], cssVars: { background: '30 25% 95%', foreground: '30 40% 20%', primary: '30 40% 50%', primaryForeground: '30 40% 20%', secondary: '30 30% 90%', secondaryForeground: '30 40% 20%' } },
-    { id: 'teal', name: 'Teal', colors: ['#F0FDFA', '#2DD4BF'], cssVars: { background: '180 50% 96%', foreground: '180 70% 20%', primary: '180 60% 40%', primaryForeground: '180 70% 20%', secondary: '180 50% 90%', secondaryForeground: '180 70% 20%' } },
-    { id: 'coral', name: 'Coral', colors: ['#FFF1F2', '#FB7185'], cssVars: { background: '10 100% 97%', foreground: '10 80% 30%', primary: '10 90% 65%', primaryForeground: '10 80% 30%', secondary: '10 90% 94%', secondaryForeground: '10 80% 30%' } },
-    { id: 'indigo', name: 'Indigo', colors: ['#283593', '#818CF8'], cssVars: { background: '240 60% 15%', foreground: '240 50% 90%', primary: '240 70% 75%', primaryForeground: '240 50% 90%', secondary: '240 50% 30%', secondaryForeground: '240 50% 90%' } },
-    { id: 'olive', name: 'Olive', colors: ['#F4FCE8', '#A3CC4A'], cssVars: { background: '80 20% 96%', foreground: '80 40% 20%', primary: '80 30% 45%', primaryForeground: '80 40% 20%', secondary: '80 25% 90%', secondaryForeground: '80 40% 20%' } },
-    { id: 'rose-gold', name: 'Rose Gold', colors: ['#FFF1F2', '#F4C4C4'], cssVars: { background: '25 80% 96%', foreground: '25 50% 30%', primary: '350 70% 75%', primaryForeground: '25 50% 15%', secondary: '25 70% 92%', secondaryForeground: '25 50% 30%' } },
-    { id: 'slate', name: 'Slate', colors: ['#475569', '#E2E8F0'], cssVars: { background: '220 30% 25%', foreground: '220 20% 95%', primary: '210 40% 75%', primaryForeground: '220 20% 95%', secondary: '220 30% 40%', secondaryForeground: '220 20% 95%' } },
-    { id: 'sky-blue', name: 'Sky Blue', colors: ['#EFF6FF', '#60A5FA'], cssVars: { background: '220 100% 98%', foreground: '220 80% 25%', primary: '220 90% 60%', primaryForeground: '220 80% 25%', secondary: '220 100% 94%', secondaryForeground: '220 80% 25%' } },
-    { id: 'candy-floss', name: 'Candy Floss', colors: ['#FCE7F3', '#F9A8D4'], cssVars: { background: '330 80% 98%', foreground: '330 60% 25%', primary: '330 85% 75%', primaryForeground: '330 60% 25%', secondary: '330 80% 95%', secondaryForeground: '330 60% 25%' } },
-    { id: 'cyberpunk', name: 'Cyberpunk', colors: ['#0d0221', '#00f6ff'], cssVars: { background: '272 90% 7%', foreground: '182 100% 80%', primary: '182 100% 50%', primaryForeground: '272 90% 7%', secondary: '272 90% 15%', secondaryForeground: '182 100% 80%' } },
-    { id: 'vintage-paper', name: 'Vintage Paper', colors: ['#FDFBF6', '#D4CFCB'], cssVars: { background: '30 20% 97%', foreground: '30 10% 30%', primary: '30 15% 55%', primaryForeground: '30 20% 97%', secondary: '30 10% 90%', secondaryForeground: '30 10% 30%' } },
-    { id: 'gothic', name: 'Gothic', colors: ['#171717', '#737373'], cssVars: { background: '0 0% 9%', foreground: '0 0% 85%', primary: '0 0% 60%', primaryForeground: '0 0% 9%', secondary: '0 0% 20%', secondaryForeground: '0 0% 85%' } },
-    { id: 'beach-vibes', name: 'Beach Vibes', colors: ['#FFFBEB', '#F59E0B'], cssVars: { background: '45 100% 96%', foreground: '35 80% 30%', primary: '200 90% 55%', primaryForeground: '35 80% 30%', secondary: '45 100% 90%', secondaryForeground: '35 80% 30%' } },
-    { id: 'earthy-tones', name: 'Earthy Tones', colors: ['#FEFCE8', '#854d0e'], cssVars: { background: '45 30% 90%', foreground: '35 80% 20%', primary: '35 80% 30%', primaryForeground: '45 30% 90%', secondary: '45 25% 80%', secondaryForeground: '35 80% 20%' } },
-    { id: 'monochrome-cool', name: 'Monochrome Cool', colors: ['#F3F4F6', '#4B5563'], cssVars: { background: '220 10% 96%', foreground: '220 10% 25%', primary: '220 10% 45%', primaryForeground: '220 10% 96%', secondary: '220 10% 85%', secondaryForeground: '220 10% 25%' } },
-    { id: 'sunrise-orange', name: 'Sunrise Orange', colors: ['#FFF7ED', '#FB923C'], cssVars: { background: '30 100% 97%', foreground: '25 80% 30%', primary: '25 90% 60%', primaryForeground: '25 80% 30%', secondary: '30 100% 92%', secondaryForeground: '25 80% 30%' } },
-    { id: 'deep-space', name: 'Deep Space', colors: ['#030712', '#3B82F6'], cssVars: { background: '220 90% 5%', foreground: '220 80% 90%', primary: '220 90% 60%', primaryForeground: '220 80% 90%', secondary: '220 90% 15%', secondaryForeground: '220 80% 90%' } },
-    { id: 'bubblegum', name: 'Bubblegum', colors: ['#FDF2F8', '#EC4899'], cssVars: { background: '330 80% 98%', foreground: '330 80% 30%', primary: '330 80% 60%', primaryForeground: '330 80% 98%', secondary: '330 80% 94%', secondaryForeground: '330 80% 30%' } },
-    { id: 'sandstone', name: 'Sandstone', colors: ['#FDF6E3', '#B8860B'], cssVars: { background: '40 80% 95%', foreground: '40 80% 20%', primary: '40 90% 40%', primaryForeground: '40 80% 95%', secondary: '40 80% 85%', secondaryForeground: '40 80% 20%' } },
-    { id: 'velvet', name: 'Velvet', colors: ['#1E1B26', '#9D4EDD'], cssVars: { background: '270 20% 10%', foreground: '270 80% 85%', primary: '270 70% 65%', primaryForeground: '270 80% 85%', secondary: '270 20% 20%', secondaryForeground: '270 80% 85%' } },
-    { id: 'jungle', name: 'Jungle', colors: ['#F0FFF4', '#10B981'], cssVars: { background: '150 20% 97%', foreground: '150 80% 20%', primary: '150 80% 40%', primaryForeground: '150 20% 97%', secondary: '150 20% 90%', secondaryForeground: '150 80% 20%' } },
-    { id: 'retro-wave', name: 'Retro Wave', colors: ['#2A0944', '#F86CF5'], cssVars: { background: '270 70% 15%', foreground: '300 90% 80%', primary: '300 90% 70%', primaryForeground: '270 70% 15%', secondary: '270 70% 25%', secondaryForeground: '300 90% 80%' } },
+    { id: 'light', name: 'Light', colors: ['#FFFFFF', '#E2E8F0'], cssVars: {} },
+    { id: 'dark', name: 'Dark', colors: ['#1A202C', '#4A5568'], cssVars: {} },
+    { id: 'neon-green', name: 'Neon Green', colors: ['#0F172A', '#34D399'], cssVars: {} },
+    { id: 'neon-pink', name: 'Neon Pink', colors: ['#1E1B4B', '#F472B6'], cssVars: {} },
+    { id: 'gradient-sunset', name: 'Sunset', colors: ['#FECACA', '#F9A8D4'], cssVars: {} },
+    { id: 'ocean-blue', name: 'Ocean Blue', colors: ['#E0F2FE', '#38BDF8'], cssVars: {} },
+    { id: 'forest-green', name: 'Forest Green', colors: ['#F0FDF4', '#4ADE80'], cssVars: {} },
+    { id: 'royal-purple', name: 'Royal Purple', colors: ['#F5F3FF', '#A78BFA'], cssVars: {} },
+    { id: 'crimson-red', name: 'Crimson Red', colors: ['#FEF2F2', '#F87171'], cssVars: {} },
+    { id: 'goldenrod', name: 'Goldenrod', colors: ['#FEFCE8', '#FACC15'], cssVars: {} },
+    { id: 'minty-fresh', name: 'Minty Fresh', colors: ['#F0FDF4', '#6EE7B7'], cssVars: {} },
+    { id: 'charcoal', name: 'Charcoal', colors: ['#334155', '#94A3B8'], cssVars: {} },
+    { id: 'lavender', name: 'Lavender', colors: ['#F5F3FF', '#C4B5FD'], cssVars: {} },
+    { id: 'mocha', name: 'Mocha', colors: ['#FDF4E6', '#D4A574'], cssVars: {} },
+    { id: 'teal', name: 'Teal', colors: ['#F0FDFA', '#2DD4BF'], cssVars: {} },
+    { id: 'coral', name: 'Coral', colors: ['#FFF1F2', '#FB7185'], cssVars: {} },
+    { id: 'indigo', name: 'Indigo', colors: ['#283593', '#818CF8'], cssVars: {} },
+    { id: 'olive', name: 'Olive', colors: ['#F4FCE8', '#A3CC4A'], cssVars: {} },
+    { id: 'rose-gold', name: 'Rose Gold', colors: ['#FFF1F2', '#F4C4C4'], cssVars: {} },
+    { id: 'slate', name: 'Slate', colors: ['#475569', '#E2E8F0'], cssVars: {} },
+    { id: 'sky-blue', name: 'Sky Blue', colors: ['#EFF6FF', '#60A5FA'], cssVars: {} },
+    { id: 'candy-floss', name: 'Candy Floss', colors: ['#FCE7F3', '#F9A8D4'], cssVars: {} },
+    { id: 'cyberpunk', name: 'Cyberpunk', colors: ['#0d0221', '#00f6ff'], cssVars: {} },
+    { id: 'vintage-paper', name: 'Vintage Paper', colors: ['#FDFBF6', '#D4CFCB'], cssVars: {} },
+    { id: 'gothic', name: 'Gothic', colors: ['#171717', '#737373'], cssVars: {} },
+    { id: 'beach-vibes', name: 'Beach Vibes', colors: ['#FFFBEB', '#F59E0B'], cssVars: {} },
+    { id: 'earthy-tones', name: 'Earthy Tones', colors: ['#FEFCE8', '#854d0e'], cssVars: {} },
+    { id: 'monochrome-cool', name: 'Monochrome Cool', colors: ['#F3F4F6', '#4B5563'], cssVars: {} },
+    { id: 'sunrise-orange', name: 'Sunrise Orange', colors: ['#FFF7ED', '#FB923C'], cssVars: {} },
+    { id: 'deep-space', name: 'Deep Space', colors: ['#030712', '#3B82F6'], cssVars: {} },
+    { id: 'bubblegum', name: 'Bubblegum', colors: ['#FDF2F8', '#EC4899'], cssVars: {} },
+    { id: 'sandstone', name: 'Sandstone', colors: ['#FDF6E3', '#B8860B'], cssVars: {} },
+    { id: 'velvet', name: 'Velvet', colors: ['#1E1B26', '#9D4EDD'], cssVars: {} },
+    { id: 'jungle', name: 'Jungle', colors: ['#F0FFF4', '#10B981'], cssVars: {} },
+    { id: 'retro-wave', name: 'Retro Wave', colors: ['#2A0944', '#F86CF5'], cssVars: {} },
+    { id: 'amethyst', name: 'Amethyst', colors: ['#241933', '#e0c3fc'], cssVars: {} },
+    { id: 'cherry-blossom', name: 'Cherry Blossom', colors: ['#fdebf3', '#fbb1d3'], cssVars: {} },
+    { id: 'seafoam', name: 'Seafoam', colors: ['#e6fcf5', '#96f2d7'], cssVars: {} },
+    { id: 'copper', name: 'Copper', colors: ['#4a2c2a', '#da8a67'], cssVars: {} },
+    { id: 'nordic-blue', name: 'Nordic Blue', colors: ['#2e3440', '#88c0d0'], cssVars: {} },
   ];
 
 export default function AppearancePage() {
@@ -88,6 +95,7 @@ export default function AppearancePage() {
     defaultValues: {
       theme: "light",
       animatedBackground: false,
+      buttonStyle: 'solid',
     },
   });
   
@@ -104,6 +112,7 @@ export default function AppearancePage() {
           form.reset({
               theme: user.theme || 'light',
               animatedBackground: user.animatedBackground || false,
+              buttonStyle: user.buttonStyle || 'solid',
           });
       }
   }, [user, form]);
@@ -227,6 +236,74 @@ export default function AppearancePage() {
               </CardContent>
             </Card>
 
+            <Card>
+                <CardHeader>
+                    <CardTitle>Button Style</CardTitle>
+                    <CardDescription>Choose the appearance of your profile links.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <FormField
+                      control={form.control}
+                      name="buttonStyle"
+                      render={({ field }) => (
+                        <FormItem className="space-y-3">
+                          <FormControl>
+                            <RadioGroup
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                              className="flex flex-col space-y-1"
+                            >
+                              <FormItem className="flex items-center space-x-3 space-y-0">
+                                <FormControl>
+                                  <RadioGroupItem value="solid" />
+                                </FormControl>
+                                <FormLabel className="font-normal">
+                                  Solid
+                                </FormLabel>
+                              </FormItem>
+                              <FormItem className="flex items-center space-x-3 space-y-0">
+                                <FormControl>
+                                  <RadioGroupItem value="gradient" />
+                                </FormControl>
+                                <FormLabel className="font-normal">
+                                  Gradient
+                                </FormLabel>
+                              </FormItem>
+                            </RadioGroup>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                </CardContent>
+            </Card>
+            
+            <Card>
+                <CardHeader className="flex-row items-center justify-between">
+                    <div className="space-y-1">
+                        <CardTitle>Custom Gradients</CardTitle>
+                        <CardDescription>Create your own unique gradients.</CardDescription>
+                    </div>
+                     <Button variant="outline" size="sm" disabled>
+                        <Star className="mr-2 h-4 w-4" />
+                        Upgrade
+                    </Button>
+                </CardHeader>
+                <CardContent className="opacity-50">
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <p className="text-sm font-medium">Theme Gradient</p>
+                            <div className="h-8 w-24 rounded-md bg-gradient-to-r from-muted to-muted/50" />
+                        </div>
+                         <div className="flex items-center justify-between">
+                            <p className="text-sm font-medium">Button Gradient</p>
+                            <div className="h-8 w-24 rounded-md bg-gradient-to-r from-muted to-muted/50" />
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+
             <Button type="submit" disabled={formLoading}>
                 {formLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Update Appearance
@@ -237,3 +314,5 @@ export default function AppearancePage() {
     </div>
   );
 }
+
+    

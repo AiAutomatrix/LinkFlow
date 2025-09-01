@@ -11,6 +11,7 @@ export interface UserProfile {
   plan: 'free' | 'pro';
   theme: string;
   animatedBackground: boolean;
+  buttonStyle: 'solid' | 'gradient';
   bot: {
     embedScript: string;
     autoOpen?: boolean;
@@ -31,3 +32,5 @@ export interface Link {
   startDate?: Timestamp | Date | string;
   endDate?: Timestamp | Date | string;
 }
+
+    
