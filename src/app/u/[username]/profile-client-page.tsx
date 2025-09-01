@@ -138,16 +138,21 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
   useEffect(() => {
     const now = new Date();
     const filteredLinks = serverLinks.filter(link => {
-      if (!link.active) return false;
+      if (!link.active) {
+        return false;
+      }
       const startDate = toDate(link.startDate);
       const endDate = toDate(link.endDate);
-      if (startDate && now < startDate) return false;
-      if (endDate && now > endDate) return false;
+      if (startDate && now < startDate) {
+        return false;
+      }
+      if (endDate && now > endDate) {
+        return false;
+      }
       return true;
     });
     setActiveLinks(filteredLinks);
   }, [serverLinks]);
-
 
   const getInitials = (name: string = '') => name.split(' ').map(n => n[0]).join('');
 
@@ -157,7 +162,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
   };
 
   const socialLinks = activeLinks.filter(l => l.isSocial);
-  const regularLinks = activeLinks.filter(l => !l.isSocial && l.isSupport !== true);
+  const regularLinks = activeLinks.filter(l => !l.isSocial && !l.isSupport);
   const supportLinks = activeLinks.filter(l => l.isSupport);
   
   const rawEmbedScript = user.bot?.embedScript || '';
@@ -205,7 +210,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
 
   const customStyles: React.CSSProperties = {};
   if (user.theme === 'custom' && user.customThemeGradient?.from && user.customThemeGradient?.to) {
-      customStyles.backgroundImage = `linear-gradient(to bottom, ${user.customThemeGradient.from}, ${user.customThemeGradient.to})`;
+    customStyles.backgroundImage = `linear-gradient(to bottom, ${user.customThemeGradient.from}, ${user.customThemeGradient.to})`;
   }
   if (user.customButtonGradient?.from && user.customButtonGradient?.to) {
       customStyles['--btn-gradient-from'] = user.customButtonGradient.from;
@@ -272,3 +277,5 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     </div>
   );
 }
+
+    
