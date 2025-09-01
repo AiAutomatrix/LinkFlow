@@ -121,11 +121,24 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
     
     const rawEmbedScript = profile.bot?.embedScript || '';
     const embedScript = unescapeHtml(rawEmbedScript);
+    const autoOpenScript = profile.bot?.autoOpen ? `
+        <script>
+        const initBotpress = () => {
+            if (window.botpress) {
+            window.botpress.on("webchat:ready", () => {
+                window.botpress.open();
+            });
+            } else {
+            setTimeout(initBotpress, 200);
+            }
+        };
+        initBotpress();
+        <\/script>
+    ` : '';
 
     const srcDoc = embedScript ? `
         <html>
         <head>
-            ${embedScript}
             <style>
             html, body, #webchat, #webchat .bpWebchat {
                 position: unset !important;
@@ -138,23 +151,13 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
                 overflow: hidden !important;
             }
             #webchat .bp-widget-widget {
-                display: none !important;
+                display: ${profile.bot?.autoOpen ? 'none !important' : 'block !important'};
             }
             </style>
+            ${embedScript}
         </head>
         <body>
-            <script>
-            const initBotpress = () => {
-                if (window.botpress) {
-                window.botpress.on("webchat:ready", () => {
-                    window.botpress.open();
-                });
-                } else {
-                setTimeout(initBotpress, 200);
-                }
-            };
-            initBotpress();
-            <\/script>
+            ${autoOpenScript}
         </body>
         </html>`
     : '';

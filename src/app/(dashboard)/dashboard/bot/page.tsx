@@ -31,11 +31,13 @@ import { db } from "@/lib/firebase";
 import Loading from "@/app/loading";
 import type { Link, UserProfile } from "@/lib/types";
 import PublicProfilePreview from "@/app/(dashboard)/dashboard/appearance/_components/public-profile-preview";
+import { Switch } from "@/components/ui/switch";
 
 const botSchema = z.object({
   embedScript: z.string().refine((val) => val.trim() === '' || (val.includes("<script") && (val.includes("botpress.cloud") || val.includes("bpcdn.cloud") || val.includes("bpcontent.cloud"))), {
     message: "Embed code must be a valid Botpress script or be empty.",
   }).optional(),
+  autoOpen: z.boolean().optional(),
 });
 
 
@@ -49,22 +51,25 @@ export default function BotPage() {
     resolver: zodResolver(botSchema),
     defaultValues: {
       embedScript: "",
+      autoOpen: false,
     },
   });
   
-  const watchedEmbedScript = form.watch("embedScript");
+  const watchedValues = form.watch();
 
   const previewProfile: Partial<UserProfile> = {
     ...user,
     bot: {
-      embedScript: watchedEmbedScript || '',
+      embedScript: watchedValues.embedScript || '',
+      autoOpen: watchedValues.autoOpen,
     },
   };
 
   useEffect(() => {
     if (user) {
         form.reset({
-            embedScript: user.bot?.embedScript || ''
+            embedScript: user.bot?.embedScript || '',
+            autoOpen: user.bot?.autoOpen || false
         });
     }
   }, [user, form]);
@@ -84,10 +89,15 @@ export default function BotPage() {
     setFormLoading(true);
     try {
         const userRef = doc(db, "users", user.uid);
-        const botData = { bot: { embedScript: values.embedScript || "" } };
+        const botData = { 
+            bot: { 
+                embedScript: values.embedScript || "",
+                autoOpen: values.autoOpen || false,
+            } 
+        };
         await updateDoc(userRef, botData);
         setUser((prevUser) => prevUser ? { ...prevUser, ...botData } : null);
-        toast({ title: "Bot embed script updated successfully!" });
+        toast({ title: "Bot settings updated successfully!" });
     } catch (error: any) {
         toast({ variant: 'destructive', title: "Error", description: error.message });
     } finally {
@@ -112,12 +122,35 @@ export default function BotPage() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Card>
             <CardHeader>
-                <CardTitle>Bot Embed Code</CardTitle>
+                <CardTitle>Bot Settings</CardTitle>
                 <CardDescription>
                     Paste the full embed code snippet from your bot provider (e.g., Botpress).
                 </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="autoOpen"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">
+                          Auto-open Webchat
+                        </FormLabel>
+                        <FormDescription>
+                          Automatically open the webchat when a visitor lands on your profile.
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          disabled={!watchedValues.embedScript}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
                 <FormField
                 control={form.control}
                 name="embedScript"
@@ -143,7 +176,7 @@ export default function BotPage() {
             
             <Button type="submit" disabled={formLoading}>
                 {formLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Save Bot Embed
+                Save Bot Settings
             </Button>
         </form>
         </Form>

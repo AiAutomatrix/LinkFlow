@@ -13,6 +13,7 @@ export interface UserProfile {
   animatedBackground: boolean;
   bot: {
     embedScript: string;
+    autoOpen?: boolean;
   };
   createdAt: Timestamp | FieldValue; 
 }

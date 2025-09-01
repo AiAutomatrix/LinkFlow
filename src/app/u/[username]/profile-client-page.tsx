@@ -162,11 +162,24 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
   
   const rawEmbedScript = user.bot?.embedScript || '';
   const embedScript = unescapeHtml(rawEmbedScript);
+  const autoOpenScript = user.bot?.autoOpen ? `
+    <script>
+      const initBotpress = () => {
+        if (window.botpress) {
+          window.botpress.on("webchat:ready", () => {
+            window.botpress.open();
+          });
+        } else {
+          setTimeout(initBotpress, 200);
+        }
+      };
+      initBotpress();
+    <\/script>
+  ` : '';
 
   const srcDoc = embedScript ? `
     <html>
       <head>
-        ${embedScript}
         <style>
           html, body, #webchat, #webchat .bpWebchat {
             position: unset !important;
@@ -179,23 +192,13 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
             overflow: hidden !important;
           }
           #webchat .bp-widget-widget {
-              display: none !important;
+             display: ${user.bot?.autoOpen ? 'none !important' : 'block !important'};
           }
         </style>
+        ${embedScript}
       </head>
       <body>
-        <script>
-          const initBotpress = () => {
-            if (window.botpress) {
-              window.botpress.on("webchat:ready", () => {
-                window.botpress.open();
-              });
-            } else {
-              setTimeout(initBotpress, 200);
-            }
-          };
-          initBotpress();
-        <\/script>
+        ${autoOpenScript}
       </body>
     </html>` 
   : '';

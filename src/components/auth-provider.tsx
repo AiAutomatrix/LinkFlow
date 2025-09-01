@@ -53,7 +53,7 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
             plan: 'free',
             theme: 'light',
             animatedBackground: false,
-            bot: { embedScript: '' },
+            bot: { embedScript: '', autoOpen: false },
             createdAt: serverTimestamp(),
           };
 
@@ -114,7 +114,7 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
       plan: 'free',
       theme: 'light',
       animatedBackground: false,
-      bot: { embedScript: '' },
+      bot: { embedScript: '', autoOpen: false },
     };
     // The onAuthStateChanged listener will handle creating the profile doc
     await setDoc(userDocRef, { ...newUserProfile, createdAt: serverTimestamp() });
