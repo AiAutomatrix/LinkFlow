@@ -148,7 +148,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     const rawEmbedScript = user.bot?.embedScript || '';
     const embedScript = unescapeHtml(rawEmbedScript);
     
-    const autoOpenScript = user.bot?.autoOpen ? `
+    const autoOpenScript = user.bot?.autoOpen ? \`
         <script>
         const initBotpress = () => {
             if (window.botpress) {
@@ -161,9 +161,9 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         };
         initBotpress();
         <\/script>
-    ` : '';
+    \` : '';
     
-    const newSrcDoc = embedScript ? `
+    const newSrcDoc = embedScript ? \`
         <html>
         <head>
             <style>
@@ -178,15 +178,15 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
                 overflow: hidden !important;
             }
             #webchat .bp-widget-widget {
-                display: ${user.bot?.autoOpen ? 'none !important' : 'block !important'};
+                display: \${user.bot?.autoOpen ? 'none !important' : 'block !important'};
             }
             </style>
-            ${embedScript}
+            \${embedScript}
         </head>
         <body>
-            ${autoOpenScript}
+            \${autoOpenScript}
         </body>
-        </html>`
+        </html>\`
     : '';
     setSrcDoc(newSrcDoc);
   }, [user.bot?.embedScript, user.bot?.autoOpen]);
@@ -248,7 +248,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
               <p className="mt-2 text-sm max-w-xs text-foreground/80">{user.bio}</p>
               <div className="flex gap-4 justify-center mt-3 text-foreground/80">
                 {socialLinks.map(link => (
-                  <button key={link.id} aria-label={`My ${link.title}`} className="hover:text-primary transition-colors" onClick={() => handleLinkClick(link)}>
+                  <button key={link.id} aria-label={`My \${link.title}`} className="hover:text-primary transition-colors" onClick={() => handleLinkClick(link)}>
                     <SocialIcon platform={link.title} />
                   </button>
                 ))}
@@ -278,7 +278,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
           <iframe
             srcDoc={srcDoc}
             className={cn(
-              "absolute inset-0 w-full h-full border-0 pointer-events-none",
+              "absolute inset-0 w-full h-full border-0 pointer-events-auto",
               !srcDoc && "hidden"
             )}
             title="Chatbot"
