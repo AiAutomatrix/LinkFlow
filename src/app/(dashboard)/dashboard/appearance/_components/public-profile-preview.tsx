@@ -6,9 +6,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import type { UserProfile, Link as LinkType } from "@/lib/types";
 import { Mail, Instagram, Facebook, Github, Coffee, Banknote, Bitcoin, ClipboardCopy, ClipboardCheck } from 'lucide-react';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { unescapeHtml } from "@/lib/utils";
 
 
 const EthIcon = () => (
@@ -19,7 +18,7 @@ const SolIcon = () => (
 );
 
 
-const CryptoLog = ({ icon, name, address, onCopy }: { icon: React.ReactNode, name: string, address: string, onCopy: (text: string) => void }) => {
+const CryptoLog = ({ icon, name, address, onCopy, copied }: { icon: React.ReactNode, name: string, address: string, onCopy: (text: string) => void, copied: boolean }) => {
     return (
         <div className="flex items-center justify-between gap-4 text-sm font-mono">
             <div className="flex items-center gap-2 text-muted-foreground shrink-0">
@@ -28,7 +27,7 @@ const CryptoLog = ({ icon, name, address, onCopy }: { icon: React.ReactNode, nam
             </div>
             <p className="overflow-hidden truncate text-muted-foreground">{address}</p>
             <button onClick={() => onCopy(address)} className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
-                <ClipboardCopy className="h-4 w-4" />
+                 {copied ? <ClipboardCheck className="h-4 w-4" /> : <ClipboardCopy className="h-4 w-4" />}
             </button>
         </div>
     )
@@ -79,9 +78,9 @@ const SupportLinks = ({ links }: { links: LinkType[] }) => {
                 {hasCrypto && (
                     <div className="bg-muted/50 rounded-lg p-3 space-y-3 font-mono text-sm">
                         <p className="text-xs text-muted-foreground font-sans text-center">CRYPTO LOGS</p>
-                        {btcLink && <CryptoLog icon={<Bitcoin className="h-5 w-5 shrink-0" />} name="BTC" address={btcLink.url} onCopy={(text) => handleCopy(text, btcLink.id)} />}
-                        {ethLink && <CryptoLog icon={<EthIcon />} name="ETH" address={ethLink.url} onCopy={(text) => handleCopy(text, ethLink.id)} />}
-                        {solLink && <SolIcon />} name="SOL" address={solLink.url} onCopy={(text) => handleCopy(text, solLink.id)} />
+                        {btcLink && <CryptoLog icon={<Bitcoin className="h-5 w-5 shrink-0" />} name="BTC" address={btcLink.url} onCopy={(text) => handleCopy(text, btcLink.id)} copied={!!copiedStates[btcLink.id]} />}
+                        {ethLink && <CryptoLog icon={<EthIcon />} name="ETH" address={ethLink.url} onCopy={(text) => handleCopy(text, ethLink.id)} copied={!!copiedStates[ethLink.id]} />}
+                        {solLink && <CryptoLog icon={<SolIcon />} name="SOL" address={solLink.url} onCopy={(text) => handleCopy(text, solLink.id)} copied={!!copiedStates[solLink.id]} />}
                     </div>
                 )}
             </div>
@@ -91,6 +90,64 @@ const SupportLinks = ({ links }: { links: LinkType[] }) => {
 
 
 export default function PublicProfilePreview({ profile, links = [], isPreview = false, showBot = false }: { profile: Partial<UserProfile>; links?: LinkType[], isPreview?: boolean, showBot?: boolean }) {
+    const [srcDoc, setSrcDoc] = useState('');
+
+    useEffect(() => {
+        const rawEmbedScript = profile.bot?.embedScript || '';
+        
+        // This browser-only logic is now safely inside a useEffect hook.
+        const unescapeHtml = (html: string) => {
+            if (!html) return html;
+            const ta = document.createElement("textarea");
+            ta.innerHTML = html;
+            return ta.value;
+        }
+
+        const embedScript = unescapeHtml(rawEmbedScript);
+        
+        const autoOpenScript = profile.bot?.autoOpen ? `
+            <script>
+            const initBotpress = () => {
+                if (window.botpress) {
+                window.botpress.on("webchat:ready", () => {
+                    window.botpress.open();
+                });
+                } else {
+                setTimeout(initBotpress, 200);
+                }
+            };
+            initBotpress();
+            <\/script>
+        ` : '';
+
+        const newSrcDoc = embedScript ? `
+            <html>
+            <head>
+                <style>
+                html, body, #webchat, #webchat .bpWebchat {
+                    position: unset !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                    max-height: 100% !important;
+                    max-width: 100% !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    overflow: hidden !important;
+                }
+                #webchat .bp-widget-widget {
+                    display: ${profile.bot?.autoOpen ? 'none !important' : 'block !important'};
+                }
+                </style>
+                ${embedScript}
+            </head>
+            <body>
+                ${autoOpenScript}
+            </body>
+            </html>`
+        : '';
+        setSrcDoc(newSrcDoc);
+    }, [profile.bot?.embedScript, profile.bot?.autoOpen]);
+
 
     const getInitials = (name: string = "") => {
         return name.split(" ").map((n) => n[0]).join("");
@@ -118,58 +175,16 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
         {children}
       </div>
     );
-    
-    const rawEmbedScript = profile.bot?.embedScript || '';
-    const embedScript = unescapeHtml(rawEmbedScript);
-    const autoOpenScript = profile.bot?.autoOpen ? `
-        <script>
-        const initBotpress = () => {
-            if (window.botpress) {
-            window.botpress.on("webchat:ready", () => {
-                window.botpress.open();
-            });
-            } else {
-            setTimeout(initBotpress, 200);
-            }
-        };
-        initBotpress();
-        <\/script>
-    ` : '';
-
-    const srcDoc = embedScript ? `
-        <html>
-        <head>
-            <style>
-            html, body, #webchat, #webchat .bpWebchat {
-                position: unset !important;
-                width: 100% !important;
-                height: 100% !important;
-                max-height: 100% !important;
-                max-width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                overflow: hidden !important;
-            }
-            #webchat .bp-widget-widget {
-                display: ${profile.bot?.autoOpen ? 'none !important' : 'block !important'};
-            }
-            </style>
-            ${embedScript}
-        </head>
-        <body>
-            ${autoOpenScript}
-        </body>
-        </html>`
-    : '';
 
   const customStyles: React.CSSProperties = {};
   if (profile.theme === 'custom') {
     if (profile.customThemeGradient?.from && profile.customThemeGradient?.to) {
-        customStyles.backgroundImage = `linear-gradient(to bottom, ${profile.customThemeGradient.from}, ${profile.customThemeGradient.to})`;
+        (customStyles as any)['--background-gradient-from'] = profile.customThemeGradient.from;
+        (customStyles as any)['--background-gradient-to'] = profile.customThemeGradient.to;
     }
     if (profile.customButtonGradient?.from && profile.customButtonGradient?.to) {
-        customStyles['--btn-gradient-from'] = profile.customButtonGradient.from;
-        customStyles['--btn-gradient-to'] = profile.customButtonGradient.to;
+        (customStyles as any)['--btn-gradient-from'] = profile.customButtonGradient.from;
+        (customStyles as any)['--btn-gradient-to'] = profile.customButtonGradient.to;
     }
   }
 
@@ -237,5 +252,3 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
     </>
   );
 }
-
-    
