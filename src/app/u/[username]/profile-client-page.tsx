@@ -7,7 +7,6 @@ import { Mail, Instagram, Facebook, Github, Coffee, Banknote, Bitcoin, Clipboard
 import { Timestamp } from 'firebase/firestore';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { unescapeHtml } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 
 // ---------- Helper Components ----------
@@ -136,6 +135,61 @@ const SupportLinks = ({ user, links }: { user: UserProfile, links: LinkType[] })
 // ---------- Main Component ----------
 export default function ProfileClientPage({ user, links: serverLinks }: { user: UserProfile; links: LinkType[] }) {
   const [activeLinks, setActiveLinks] = useState<LinkType[]>([]);
+  const [srcDoc, setSrcDoc] = useState('');
+
+  useEffect(() => {
+    const unescapeHtml = (html: string) => {
+        if (typeof window === 'undefined' || !html) return html;
+        const ta = document.createElement("textarea");
+        ta.innerHTML = html;
+        return ta.value;
+    }
+
+    const rawEmbedScript = user.bot?.embedScript || '';
+    const embedScript = unescapeHtml(rawEmbedScript);
+    
+    const autoOpenScript = user.bot?.autoOpen ? `
+        <script>
+        const initBotpress = () => {
+            if (window.botpress) {
+            window.botpress.on("webchat:ready", () => {
+                window.botpress.open();
+            });
+            } else {
+            setTimeout(initBotpress, 200);
+            }
+        };
+        initBotpress();
+        <\/script>
+    ` : '';
+    
+    const newSrcDoc = embedScript ? `
+        <html>
+        <head>
+            <style>
+            html, body, #webchat, #webchat .bpWebchat {
+                position: unset !important;
+                width: 100% !important;
+                height: 100% !important;
+                max-height: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+            }
+            #webchat .bp-widget-widget {
+                display: ${user.bot?.autoOpen ? 'none !important' : 'block !important'};
+            }
+            </style>
+            ${embedScript}
+        </head>
+        <body>
+            ${autoOpenScript}
+        </body>
+        </html>`
+    : '';
+    setSrcDoc(newSrcDoc);
+  }, [user.bot?.embedScript, user.bot?.autoOpen]);
 
   useEffect(() => {
     const now = new Date();
@@ -160,53 +214,11 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
   const regularLinks = activeLinks.filter(l => !l.isSocial && !l.isSupport);
   const supportLinks = activeLinks.filter(l => l.isSupport);
 
-  const rawEmbedScript = user.bot?.embedScript || '';
-  const embedScript = unescapeHtml(rawEmbedScript);
-  const autoOpenScript = user.bot?.autoOpen ? `
-    <script>
-      const initBotpress = () => {
-        if (window.botpress) {
-          window.botpress.on("webchat:ready", () => {
-            window.botpress.open();
-          });
-        } else {
-          setTimeout(initBotpress, 200);
-        }
-      };
-      initBotpress();
-    <\/script>
-  ` : '';
-
-  const srcDoc = embedScript ? `
-    <html>
-      <head>
-        <style>
-          html, body, #webchat, #webchat .bpWebchat {
-            position: unset !important;
-            width: 100% !important;
-            height: 100% !important;
-            max-height: 100% !important;
-            max-width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            overflow: hidden !important;
-          }
-          #webchat .bp-widget-widget {
-             display: ${user.bot?.autoOpen ? 'none !important' : 'block !important'};
-          }
-        </style>
-        ${embedScript}
-      </head>
-      <body>
-        ${autoOpenScript}
-      </body>
-    </html>` : '';
-
   const customStyles: React.CSSProperties = {};
   if (user.theme === 'custom') {
     if (user.customThemeGradient?.from && user.customThemeGradient?.to) {
-      (customStyles as any)['--background-gradient-from'] = user.customThemeGradient.from;
-      (customStyles as any)['--background-gradient-to'] = user.customThemeGradient.to;
+        (customStyles as any)['--background-gradient-from'] = user.customThemeGradient.from;
+        (customStyles as any)['--background-gradient-to'] = user.customThemeGradient.to;
     }
     if (user.customButtonGradient?.from && user.customButtonGradient?.to) {
       (customStyles as any)["--btn-gradient-from"] = user.customButtonGradient.from;
@@ -224,9 +236,11 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
       <div className="h-full w-full bg-background">
         <div className="relative flex flex-col p-4 bg-background text-foreground h-full overflow-auto">
           {user.animatedBackground && <AnimatedBackground />}
-
-          <div className="relative w-full max-w-md mx-auto z-10 flex flex-col flex-grow justify-start pt-12">
-            <div className="flex flex-col items-center text-center">
+          
+          {/* Main content container */}
+          <div className="relative w-full max-w-md mx-auto z-10 flex flex-col flex-grow">
+            {/* Profile info and links */}
+            <div className="flex-grow flex flex-col items-center text-center pt-12">
               <Avatar className="h-24 w-24 border-2 border-white/50">
                 <AvatarImage src={user.photoURL || undefined} alt={user.displayName} />
                 <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
@@ -257,14 +271,20 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
               </div>
               <SupportLinks user={user} links={supportLinks} />
             </div>
+
+            {/* Footer */}
+            <footer className="w-full text-center py-2 shrink-0">
+              <Logo />
+            </footer>
           </div>
 
-          <footer className="w-full text-center z-10 py-2">
-            <Logo />
-          </footer>
+          {/* Iframe with higher z-index */}
           <iframe
             srcDoc={srcDoc}
-            className={srcDoc ? "absolute inset-0 w-full h-full border-0" : "hidden"}
+            className={cn(
+              "absolute inset-0 w-full h-full border-0 z-20", // Added z-20
+              !srcDoc && "hidden"
+            )}
             title="Chatbot"
             sandbox="allow-scripts allow-same-origin"
           />
