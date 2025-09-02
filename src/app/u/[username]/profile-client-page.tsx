@@ -237,9 +237,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         <div className="relative flex flex-col p-4 bg-background text-foreground h-full overflow-auto">
           {user.animatedBackground && <AnimatedBackground />}
           
-          {/* Main content container */}
           <div className="relative w-full max-w-md mx-auto z-10 flex flex-col flex-grow">
-            {/* Profile info and links */}
             <div className="flex-grow flex flex-col items-center text-center pt-12">
               <Avatar className="h-24 w-24 border-2 border-white/50">
                 <AvatarImage src={user.photoURL || undefined} alt={user.displayName} />
@@ -272,17 +270,15 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
               <SupportLinks user={user} links={supportLinks} />
             </div>
 
-            {/* Footer */}
             <footer className="w-full text-center py-2 shrink-0">
               <Logo />
             </footer>
           </div>
 
-          {/* Iframe with higher z-index */}
           <iframe
             srcDoc={srcDoc}
             className={cn(
-              "absolute inset-0 w-full h-full border-0 z-20", // Added z-20
+              "absolute inset-0 w-full h-full border-0 pointer-events-none",
               !srcDoc && "hidden"
             )}
             title="Chatbot"
