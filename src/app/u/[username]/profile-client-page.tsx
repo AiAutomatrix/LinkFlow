@@ -375,7 +375,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     // --- Main Page Content ---
     const pageContent = (
       <>
-        {user.animatedBackground && <div className="absolute inset-0 z-0"><AnimatedBackground /></div>}
+        <div className="absolute inset-0 z-0">{user.animatedBackground && <AnimatedBackground />}</div>
         <div className="relative z-10 flex-grow overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             <div
                 className="w-full flex flex-col items-center pt-12 text-center p-4 min-h-full"
@@ -451,10 +451,10 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
             id="root"
             data-theme="${user.theme || 'light'}"
             data-style="${user.buttonStyle || 'solid'}"
-            class="bg-background relative"
-            style="display: flex; flex-direction: column; min-height: 100%; ${user.theme === 'custom' ? `--background-gradient-from: ${user.customThemeGradient?.from}; --background-gradient-to: ${user.customThemeGradient?.to}; --btn-gradient-from: ${user.customButtonGradient?.from}; --btn-gradient-to: ${user.customButtonGradient?.to};` : ''}"
+            class="bg-background relative flex flex-col"
+            style="min-height: 100vh; ${user.theme === 'custom' ? `--background-gradient-from: ${user.customThemeGradient?.from}; --background-gradient-to: ${user.customThemeGradient?.to}; --btn-gradient-from: ${user.customButtonGradient?.from}; --btn-gradient-to: ${user.customButtonGradient?.to};` : ''}"
           >
-            ${ReactDOMServer.renderToString(pageContent)}
+            ${ReactDOMServer.renderToStaticMarkup(pageContent)}
           </div>
           <script>
             ${actionHandlerScript}
@@ -466,7 +466,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
 
     setSrcDoc(finalHtml);
 
-  }, [user, serverLinks]);
+  }, [user, serverLinks, toast]);
 
   return (
     <iframe
@@ -477,4 +477,3 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     />
   );
 }
-
