@@ -92,17 +92,6 @@ const SupportLinks = ({ links }: { links: LinkType[] }) => {
 
 export default function PublicProfilePreview({ profile, links = [], isPreview = false, showBot = false }: { profile: Partial<UserProfile>; links?: LinkType[], isPreview?: boolean, showBot?: boolean }) {
     const [srcDoc, setSrcDoc] = useState('');
-    const [isBotOpen, setIsBotOpen] = useState(false);
-
-    const toggleBot = () => {
-        if (!srcDoc) return;
-        const iframe = document.getElementById("chatbot-preview") as HTMLIFrameElement;
-        iframe?.contentWindow?.postMessage(
-            { type: isBotOpen ? "CLOSE_BOT" : "OPEN_BOT" },
-            "*" // In production, use a specific origin
-        );
-        setIsBotOpen(!isBotOpen);
-    };
 
     useEffect(() => {
         const rawEmbedScript = profile.bot?.embedScript || '';
@@ -116,21 +105,12 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
 
         const embedScript = unescapeHtml(rawEmbedScript);
         
-        const botControlScript = `
+        const autoOpenScript = `
             const initBotpress = () => {
                 if (window.botpress) {
-                    window.addEventListener("message", (event) => {
-                        if (event.data?.type === "OPEN_BOT") {
-                            window.botpress.open();
-                        } else if (event.data?.type === "CLOSE_BOT") {
-                            window.botpress.close();
-                        }
-                    });
-                    
                     if (${!!profile.bot?.autoOpen}) {
                         window.botpress.on("webchat:ready", () => {
                            window.botpress.open();
-                           // We don't want to auto-set the React state, as the user should control the toggle
                         });
                     }
                 } else {
@@ -158,7 +138,7 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
                 ${embedScript}
             </head>
             <body>
-                <script>${botControlScript}<\/script>
+                <script>${autoOpenScript}<\/script>
             </body>
             </html>`
         : '';
@@ -268,14 +248,6 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
                     sandbox="allow-scripts allow-same-origin"
                 />
             </div>
-            {showBot && srcDoc && (
-                <Button
-                    onClick={toggleBot}
-                    className="absolute bottom-4 right-4 z-20"
-                >
-                    {isBotOpen ? "Close" : "Open"} Chat Preview
-                </Button>
-            )}
         </div>
       </CardContent>
     </Card>
