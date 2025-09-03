@@ -332,60 +332,51 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
       </div>
     ) : null;
 
-    // --- Main Page Structure ---
+    // --- Main Page Content ---
     const pageContent = (
-      <div
-        data-theme={user.theme || 'light'}
-        data-style={user.buttonStyle || 'solid'}
-        className="w-full bg-background flex flex-col" // Use flex-col to structure content
-        style={user.theme === 'custom' ? {
-            '--background-gradient-from': user.customThemeGradient?.from,
-            '--background-gradient-to': user.customThemeGradient?.to,
-            '--btn-gradient-from': user.customButtonGradient?.from,
-            '--btn-gradient-to': user.customButtonGradient?.to,
-        } as any : {}}
-      >
-        {user.animatedBackground && <AnimatedBackground />}
-        
-        <div className="flex-grow w-full max-w-md mx-auto flex flex-col items-center text-center p-4 pt-12 overflow-y-auto">
-            <Avatar className="h-24 w-24 border-2 border-white/50">
-                <AvatarImage src={user.photoURL || undefined} alt={user.displayName} />
-                <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
-            </Avatar>
-            <h1 className="text-2xl font-bold mt-3">{user.displayName}</h1>
-            <p className="text-md text-muted-foreground">@{user.username}</p>
-            <p className="mt-2 text-sm max-w-xs text-foreground/80">{user.bio}</p>
-            <div className="flex gap-4 justify-center mt-3 text-foreground/80">
-                {socialLinks.map(link => (
-                <a href={link.url} target="_blank" rel="noopener noreferrer" key={link.id} aria-label={`My ${link.title}`} className="hover:text-primary transition-colors" onClick={() => trackClick(user.uid, link.id)}>
-                    <SocialIcon platform={link.title} />
-                </a>
-                ))}
+      <>
+        <div style={{ flexGrow: 1, overflowY: 'auto', paddingBottom: '70px' }}>
+            <div
+                className="w-full h-full flex flex-col items-center pt-12 text-center p-4"
+            >
+                <Avatar className="h-24 w-24 border-2 border-white/50">
+                    <AvatarImage src={user.photoURL || undefined} alt={user.displayName} />
+                    <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+                </Avatar>
+                <h1 className="text-2xl font-bold mt-3 text-foreground">{user.displayName}</h1>
+                <p className="text-md text-muted-foreground">@{user.username}</p>
+                <p className="mt-2 text-sm max-w-xs text-foreground/80">{user.bio}</p>
+                <div className="flex gap-4 justify-center mt-3 text-foreground/80">
+                    {socialLinks.map(link => (
+                    <a href={link.url} target="_blank" rel="noopener noreferrer" key={link.id} aria-label={`My ${link.title}`} className="hover:text-primary transition-colors" onClick={() => trackClick(user.uid, link.id)}>
+                        <SocialIcon platform={link.title} />
+                    </a>
+                    ))}
+                </div>
+                <div className="mt-6 space-y-3 w-full max-w-xs mx-auto">
+                    {regularLinks.map((link) => (
+                    <a
+                        key={link.id}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn(
+                        "block w-full text-center bg-secondary text-secondary-foreground font-semibold p-4 rounded-lg shadow-md transition-transform transform hover:scale-105 active:scale-[0.98] truncate",
+                        "link-button"
+                        )}
+                        onClick={() => trackClick(user.uid, link.id)}
+                    >
+                        {link.title}
+                    </a>
+                    ))}
+                </div>
+                {supportLinksComponent}
             </div>
-            <div className="mt-6 space-y-3 w-full">
-                {regularLinks.map((link) => (
-                <a
-                    key={link.id}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={cn(
-                      "block w-full text-center bg-secondary text-secondary-foreground font-semibold p-4 rounded-lg shadow-md transition-transform transform hover:scale-105 active:scale-[0.98] truncate",
-                      "link-button"
-                    )}
-                    onClick={() => trackClick(user.uid, link.id)}
-                >
-                    {link.title}
-                </a>
-                ))}
-            </div>
-            {supportLinksComponent}
         </div>
-        
-        <footer className="w-full text-center py-4 shrink-0">
+        <footer className="w-full text-center py-4 shrink-0 text-foreground">
             <Logo />
         </footer>
-      </div>
+      </>
     );
     
     // --- Construct the final srcDoc ---
@@ -415,8 +406,17 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
           <style>${globalCSS}</style>
           ${embedScript}
         </head>
-        <body style="height: 100%; margin: 0; display: flex; flex-direction: column;">
-          <div id="root" style="flex-grow: 1; display: flex; flex-direction: column;">${ReactDOMServer.renderToString(pageContent)}</div>
+        <body style="height: 100%; margin: 0;">
+          <div
+            id="root"
+            data-theme="${user.theme || 'light'}"
+            data-style="${user.buttonStyle || 'solid'}"
+            class="bg-background"
+            style="display: flex; flex-direction: column; min-height: 100%; ${user.theme === 'custom' ? `--background-gradient-from: ${user.customThemeGradient?.from}; --background-gradient-to: ${user.customThemeGradient?.to}; --btn-gradient-from: ${user.customButtonGradient?.from}; --btn-gradient-to: ${user.customButtonGradient?.to};` : ''}"
+          >
+            ${user.animatedBackground ? ReactDOMServer.renderToString(<AnimatedBackground />) : ''}
+            ${ReactDOMServer.renderToString(pageContent)}
+          </div>
           <script>${trackClickScript}</script>
           <script>${autoOpenScript}</script>
         </body>
@@ -436,5 +436,3 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     />
   );
 }
-
-    
