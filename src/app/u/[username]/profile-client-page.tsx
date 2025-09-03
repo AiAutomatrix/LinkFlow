@@ -229,7 +229,7 @@ const EthIcon = () => (
 const SolIcon = () => (
   <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0">
     <title>Solana</title>
-    <path d="M4.236.427a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533V-.001a.6.6 0 00-.128-.532.6.6 0 00-.49-.28L4.236.427zm10.02 6.046a.6.6 0 00-.532.127a.6.6 0 00-.28.491v4.54a.6.6 0 00.28.49.6.6 0 00.532.128l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.532V5.76a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12zm-4.383 6.64a.6.6 0 00-.532.127a.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533v-4.54a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12z" />
+    <path d="M4.236.427a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533V-.001a.6.6 0 00-.128-.532.6.6 0 00-.49-.28L4.236.427zm10.02 6.046a.6.6 0 00-.532.127a.6.6 0 00-.28.491v4.54a.6.6 0 00.28.49.6.6 0 00.532.128l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.532V5.76a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12zm-4.383 6.64a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533v-4.54a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12z" />
   </svg>
 );
 
@@ -337,7 +337,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
       <div
         data-theme={user.theme || 'light'}
         data-style={user.buttonStyle || 'solid'}
-        className="h-full w-full bg-background"
+        className="h-full w-full bg-background flex flex-col" // Use flex-col to structure content
         style={user.theme === 'custom' ? {
             '--background-gradient-from': user.customThemeGradient?.from,
             '--background-gradient-to': user.customThemeGradient?.to,
@@ -347,46 +347,44 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
       >
         {user.animatedBackground && <AnimatedBackground />}
         
-        <div className="relative flex h-full flex-col text-foreground">
-            <div className="flex-grow w-full max-w-md mx-auto flex flex-col items-center text-center p-4 pt-12 overflow-y-auto">
-                <Avatar className="h-24 w-24 border-2 border-white/50">
-                    <AvatarImage src={user.photoURL || undefined} alt={user.displayName} />
-                    <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
-                </Avatar>
-                <h1 className="text-2xl font-bold mt-3">{user.displayName}</h1>
-                <p className="text-md text-muted-foreground">@{user.username}</p>
-                <p className="mt-2 text-sm max-w-xs text-foreground/80">{user.bio}</p>
-                <div className="flex gap-4 justify-center mt-3 text-foreground/80">
-                    {socialLinks.map(link => (
-                    <a href={link.url} target="_blank" rel="noopener noreferrer" key={link.id} aria-label={`My ${link.title}`} className="hover:text-primary transition-colors" onClick={() => trackClick(user.uid, link.id)}>
-                        <SocialIcon platform={link.title} />
-                    </a>
-                    ))}
-                </div>
-                <div className="mt-6 space-y-3 w-full">
-                    {regularLinks.map((link) => (
-                    <a
-                        key={link.id}
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={cn(
-                          "block w-full text-center bg-secondary text-secondary-foreground font-semibold p-4 rounded-lg shadow-md transition-transform transform hover:scale-105 active:scale-[0.98] truncate",
-                          "link-button"
-                        )}
-                        onClick={() => trackClick(user.uid, link.id)}
-                    >
-                        {link.title}
-                    </a>
-                    ))}
-                </div>
-                {supportLinksComponent}
+        <div className="relative flex-grow w-full max-w-md mx-auto flex flex-col items-center text-center p-4 pt-12 overflow-y-auto">
+            <Avatar className="h-24 w-24 border-2 border-white/50">
+                <AvatarImage src={user.photoURL || undefined} alt={user.displayName} />
+                <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+            </Avatar>
+            <h1 className="text-2xl font-bold mt-3">{user.displayName}</h1>
+            <p className="text-md text-muted-foreground">@{user.username}</p>
+            <p className="mt-2 text-sm max-w-xs text-foreground/80">{user.bio}</p>
+            <div className="flex gap-4 justify-center mt-3 text-foreground/80">
+                {socialLinks.map(link => (
+                <a href={link.url} target="_blank" rel="noopener noreferrer" key={link.id} aria-label={`My ${link.title}`} className="hover:text-primary transition-colors" onClick={() => trackClick(user.uid, link.id)}>
+                    <SocialIcon platform={link.title} />
+                </a>
+                ))}
             </div>
-            
-            <footer className="w-full text-center py-2 shrink-0">
-                <Logo />
-            </footer>
+            <div className="mt-6 space-y-3 w-full">
+                {regularLinks.map((link) => (
+                <a
+                    key={link.id}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn(
+                      "block w-full text-center bg-secondary text-secondary-foreground font-semibold p-4 rounded-lg shadow-md transition-transform transform hover:scale-105 active:scale-[0.98] truncate",
+                      "link-button"
+                    )}
+                    onClick={() => trackClick(user.uid, link.id)}
+                >
+                    {link.title}
+                </a>
+                ))}
+            </div>
+            {supportLinksComponent}
         </div>
+        
+        <footer className="w-full text-center py-4 shrink-0">
+            <Logo />
+        </footer>
       </div>
     );
     
@@ -408,7 +406,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     ` : '';
     
     const finalHtml = `
-      <html>
+      <html style="height: 100%;">
         <head>
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -417,8 +415,8 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
           <style>${globalCSS}</style>
           ${embedScript}
         </head>
-        <body>
-          <div id="root">${ReactDOMServer.renderToString(pageContent)}</div>
+        <body style="height: 100%; margin: 0;">
+          <div id="root" style="height: 100%;">${ReactDOMServer.renderToString(pageContent)}</div>
           <script>${trackClickScript}</script>
           <script>${autoOpenScript}</script>
         </body>
@@ -438,5 +436,3 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     />
   );
 }
-
-    
