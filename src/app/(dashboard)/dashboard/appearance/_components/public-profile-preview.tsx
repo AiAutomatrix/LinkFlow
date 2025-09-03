@@ -83,11 +83,15 @@ const SupportLinks = ({ links }: { links: LinkType[] }) => {
   );
 };
 
-export default function PublicProfilePreview({ profile, links = [], isPreview = false }: { profile: Partial<UserProfile>; links?: LinkType[], isPreview?: boolean }) {
+export default function PublicProfilePreview({ profile, links = [], isPreview = false, showBot = false }: { profile: Partial<UserProfile>; links?: LinkType[], isPreview?: boolean, showBot?: boolean }) {
   const [srcDoc, setSrcDoc] = useState('');
-  const [isBotOpen, setIsBotOpen] = useState(false);
 
   useEffect(() => {
+    if (!showBot) {
+      setSrcDoc('');
+      return;
+    };
+
     const rawEmbedScript = profile.bot?.embedScript || '';
 
     const unescapeHtml = (html: string) => {
@@ -102,50 +106,15 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
     const newSrcDoc = embedScript ? `
       <html>
       <head>
-        <style>
-          html, body, #webchat, #webchat .bpWebchat {
-            position: unset !important;
-            width: 100% !important;
-            height: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            overflow: hidden !important;
-          }
-        </style>
         ${embedScript}
       </head>
       <body>
-        <script>
-          const initBotpress = () => {
-            if (window.botpress) {
-              window.addEventListener("message", (event) => {
-                if (event.data?.type === "OPEN_BOT") {
-                  window.botpress.open();
-                } else if (event.data?.type === "CLOSE_BOT") {
-                  window.botpress.close();
-                }
-              });
-            } else {
-              setTimeout(initBotpress, 200);
-            }
-          };
-          initBotpress();
-        <\/script>
       </body>
       </html>
     ` : '';
 
     setSrcDoc(newSrcDoc);
-  }, [profile.bot?.embedScript]);
-
-  const toggleBot = () => {
-    const iframe = document.getElementById("chatbot-preview") as HTMLIFrameElement;
-    iframe?.contentWindow?.postMessage(
-      { type: isBotOpen ? "CLOSE_BOT" : "OPEN_BOT" },
-      "*"
-    );
-    setIsBotOpen(!isBotOpen);
-  };
+  }, [profile.bot?.embedScript, showBot]);
 
   const getInitials = (name: string = "") => {
     return name.split(" ").map((n) => n[0]).join("");
@@ -227,15 +196,6 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
                 </div>
                 <SupportLinks links={supportLinks} />
               </div>
-
-              {srcDoc && (
-                <button
-                  onClick={toggleBot}
-                  className="absolute bottom-4 right-4 z-20 bg-primary text-white px-4 py-2 rounded-full shadow-md"
-                >
-                  {isBotOpen ? "Close Chat" : "Open Chat"}
-                </button>
-              )}
             </div>
 
             <iframe

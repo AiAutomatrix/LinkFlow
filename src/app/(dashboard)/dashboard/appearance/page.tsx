@@ -143,7 +143,7 @@ export default function AppearancePage() {
             customButtonGradient: user.customButtonGradient || { from: '#AAAAAA', to: '#FFFFFF' },
         });
     }
-  }, [user]);
+  }, [user, form]);
   
   useEffect(() => {
     const currentTheme = form.getValues('theme');
