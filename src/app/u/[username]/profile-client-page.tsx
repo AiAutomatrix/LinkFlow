@@ -161,7 +161,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
             }
         };
         initBotpress();
-        </script>
+        <\/script>
     ` : '';
     
     const newSrcDoc = embedScript ? `
@@ -237,51 +237,52 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
       style={customStyles}
     >
       <div className="relative h-full w-full bg-background">
-        <div className="absolute inset-0 flex flex-col p-4 bg-background text-foreground h-full z-10">
-            {user.animatedBackground && <AnimatedBackground />}
-            
-            <div className="relative w-full max-w-md mx-auto z-10 flex flex-col flex-grow">
-                <div className="flex-grow flex flex-col items-center text-center pt-12 overflow-y-auto">
-                    <Avatar className="h-24 w-24 border-2 border-white/50">
-                        <AvatarImage src={user.photoURL || undefined} alt={user.displayName} />
-                        <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
-                    </Avatar>
-                    <h1 className="text-2xl font-bold mt-3">{user.displayName}</h1>
-                    <p className="text-md text-muted-foreground">@{user.username}</p>
-                    <p className="mt-2 text-sm max-w-xs text-foreground/80">{user.bio}</p>
-                    <div className="flex gap-4 justify-center mt-3 text-foreground/80">
-                        {socialLinks.map(link => (
-                        <button key={link.id} aria-label={`My ${link.title}`} className="hover:text-primary transition-colors" onClick={() => handleLinkClick(link)}>
-                            <SocialIcon platform={link.title} />
-                        </button>
-                        ))}
-                    </div>
-                    <div className="mt-6 space-y-3 w-full">
-                        {regularLinks.map((link) => (
-                        <button
-                            key={link.id}
-                            className={cn(
-                            "w-full text-center bg-secondary text-secondary-foreground font-semibold p-4 rounded-lg shadow-md transition-transform transform hover:scale-105 active:scale-[0.98] truncate",
-                            "link-button"
-                            )}
-                            onClick={() => handleLinkClick(link)}
-                        >
-                            {link.title}
-                        </button>
-                        ))}
-                    </div>
-                    <SupportLinks user={user} links={supportLinks} />
+        {user.animatedBackground && <AnimatedBackground />}
+        
+        {/* Main page content with a lower z-index */}
+        <div className="relative z-10 flex flex-col p-4 text-foreground h-full">
+            <div className="w-full max-w-md mx-auto flex-grow flex flex-col items-center text-center pt-12 overflow-y-auto">
+                <Avatar className="h-24 w-24 border-2 border-white/50">
+                    <AvatarImage src={user.photoURL || undefined} alt={user.displayName} />
+                    <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+                </Avatar>
+                <h1 className="text-2xl font-bold mt-3">{user.displayName}</h1>
+                <p className="text-md text-muted-foreground">@{user.username}</p>
+                <p className="mt-2 text-sm max-w-xs text-foreground/80">{user.bio}</p>
+                <div className="flex gap-4 justify-center mt-3 text-foreground/80">
+                    {socialLinks.map(link => (
+                    <button key={link.id} aria-label={`My ${link.title}`} className="hover:text-primary transition-colors" onClick={() => handleLinkClick(link)}>
+                        <SocialIcon platform={link.title} />
+                    </button>
+                    ))}
                 </div>
-
-                <footer className="w-full text-center py-2 shrink-0">
-                    <Logo />
-                </footer>
+                <div className="mt-6 space-y-3 w-full">
+                    {regularLinks.map((link) => (
+                    <button
+                        key={link.id}
+                        className={cn(
+                        "w-full text-center bg-secondary text-secondary-foreground font-semibold p-4 rounded-lg shadow-md transition-transform transform hover:scale-105 active:scale-[0.98] truncate",
+                        "link-button"
+                        )}
+                        onClick={() => handleLinkClick(link)}
+                    >
+                        {link.title}
+                    </button>
+                    ))}
+                </div>
+                <SupportLinks user={user} links={supportLinks} />
             </div>
+
+            <footer className="w-full text-center py-2 shrink-0">
+                <Logo />
+            </footer>
         </div>
+        
+        {/* Full-screen iframe with a higher z-index and pointer-events disabled */}
         <iframe
             srcDoc={srcDoc}
             className={cn(
-              "absolute inset-x-0 bottom-0 w-full h-[120px] border-0 z-20",
+              "absolute inset-0 w-full h-full border-0 z-20 pointer-events-none",
               !srcDoc && "hidden"
             )}
             title="Chatbot"
@@ -291,5 +292,3 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     </div>
   );
 }
-
-    
