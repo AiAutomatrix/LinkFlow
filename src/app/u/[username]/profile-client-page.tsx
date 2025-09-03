@@ -18,6 +18,12 @@ const globalCSS = `
 
 body {
   font-family: 'Inter', sans-serif;
+  overflow-x: hidden; /* Prevent horizontal scroll */
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+body::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
 }
 
 @layer base {
@@ -239,8 +245,46 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
   const [srcDoc, setSrcDoc] = useState('');
   const { toast } = useToast();
 
+  // This effect handles messages from the iframe for clipboard/mailto actions
   useEffect(() => {
-    // This logic now runs on the client to build the entire iframe content
+    const handleMessage = (event: MessageEvent) => {
+      // Basic security: check the origin of the message
+      if (event.origin !== "null") { // iframes with srcDoc have a null origin
+        return;
+      }
+      
+      const { type, payload } = event.data;
+
+      if (type === 'copy') {
+        navigator.clipboard.writeText(payload.text);
+        toast({ title: "Copied to clipboard!" });
+      } else if (type === 'mailto') {
+        window.location.href = `mailto:${payload.email}`;
+      } else if (type === 'trackClick' && payload) {
+        // Track clicks via API
+        const data = { userId: payload.userId, linkId: payload.linkId };
+         try {
+            if (navigator.sendBeacon) {
+                navigator.sendBeacon('/api/clicks', JSON.stringify(data));
+            } else {
+                fetch('/api/clicks', {
+                    method: 'POST',
+                    body: JSON.stringify(data),
+                    keepalive: true,
+                });
+            }
+        } catch (e) {
+            console.error("Error tracking click: ", e);
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [toast]);
+
+
+  useEffect(() => {
     const toDate = (date: any): Date | null => {
         if (!date) return null;
         if (date instanceof Date) return date;
@@ -266,28 +310,24 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         return ta.value;
     }
     
-    const trackClickScript = `
-        function trackClick(userId, linkId) {
-            const data = { userId, linkId };
-            try {
-                if (navigator.sendBeacon) {
-                    navigator.sendBeacon('/api/clicks', JSON.stringify(data));
-                } else {
-                    fetch('/api/clicks', {
-                        method: 'POST',
-                        body: JSON.stringify(data),
-                        keepalive: true,
-                    });
-                }
-            } catch (e) {
-                console.error("Error tracking click: ", e);
-            }
+    // Scripts to be injected into the iframe
+    const actionHandlerScript = `
+        function postParentMessage(type, payload) {
+            window.parent.postMessage({ type, payload }, '*');
         }
+
+        function trackClick(userId, linkId) {
+            postParentMessage('trackClick', { userId, linkId });
+        }
+        
         function handleCopy(text, userId, linkId) {
-            navigator.clipboard.writeText(text);
             trackClick(userId, linkId);
-            // This is a simplified version of the toast for the iframe
-            alert('Copied to clipboard!');
+            postParentMessage('copy', { text });
+        }
+
+        function handleMailTo(email, userId, linkId) {
+             trackClick(userId, linkId);
+             postParentMessage('mailto', { email });
         }
     `;
 
@@ -315,7 +355,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
             </a>
           )}
           {etLink && (
-            <button onClick={() => handleCopy(etLink.url.replace('mailto:',''), user.uid, etLink.id)}
+            <button onClick={() => handleMailTo(etLink.url.replace('mailto:',''), user.uid, etLink.id)}
               className="w-full text-center bg-secondary text-secondary-foreground font-semibold p-3 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:scale-105 transition-transform">
               <Banknote className="h-5 w-5" /> E-Transfer
             </button>
@@ -335,9 +375,10 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     // --- Main Page Content ---
     const pageContent = (
       <>
-        <div style={{ flexGrow: 1, overflowY: 'auto', paddingBottom: '70px' }}>
+        {user.animatedBackground && <div className="absolute inset-0 z-0"><AnimatedBackground /></div>}
+        <div className="relative z-10 flex-grow overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             <div
-                className="w-full h-full flex flex-col items-center pt-12 text-center p-4"
+                className="w-full flex flex-col items-center pt-12 text-center p-4 min-h-full"
             >
                 <Avatar className="h-24 w-24 border-2 border-white/50">
                     <AvatarImage src={user.photoURL || undefined} alt={user.displayName} />
@@ -373,13 +414,12 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
                 {supportLinksComponent}
             </div>
         </div>
-        <footer className="w-full text-center py-4 shrink-0 text-foreground">
+        <footer className="w-full text-center py-4 shrink-0 text-foreground relative z-10">
             <Logo />
         </footer>
       </>
     );
     
-    // --- Construct the final srcDoc ---
     const rawEmbedScript = user.bot?.embedScript || '';
     const embedScript = unescapeHtml(rawEmbedScript);
     
@@ -397,7 +437,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     ` : '';
     
     const finalHtml = `
-      <html style="height: 100vh;">
+      <html style="height: 100vh; overflow: hidden;">
         <head>
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -406,26 +446,27 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
           <style>${globalCSS}</style>
           ${embedScript}
         </head>
-        <body style="height: 100%; margin: 0;">
+        <body style="height: 100%; margin: 0; background-color: transparent;">
           <div
             id="root"
             data-theme="${user.theme || 'light'}"
             data-style="${user.buttonStyle || 'solid'}"
-            class="bg-background"
+            class="bg-background relative"
             style="display: flex; flex-direction: column; min-height: 100%; ${user.theme === 'custom' ? `--background-gradient-from: ${user.customThemeGradient?.from}; --background-gradient-to: ${user.customThemeGradient?.to}; --btn-gradient-from: ${user.customButtonGradient?.from}; --btn-gradient-to: ${user.customButtonGradient?.to};` : ''}"
           >
-            ${user.animatedBackground ? ReactDOMServer.renderToString(<AnimatedBackground />) : ''}
             ${ReactDOMServer.renderToString(pageContent)}
           </div>
-          <script>${trackClickScript}</script>
-          <script>${autoOpenScript}</script>
+          <script>
+            ${actionHandlerScript}
+            ${autoOpenScript}
+          </script>
         </body>
       </html>
     `;
 
     setSrcDoc(finalHtml);
 
-  }, [user, serverLinks, toast]);
+  }, [user, serverLinks]);
 
   return (
     <iframe
@@ -436,3 +477,4 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     />
   );
 }
+
