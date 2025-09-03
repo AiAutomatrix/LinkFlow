@@ -137,6 +137,7 @@ const SupportLinks = ({ user, links }: { user: UserProfile, links: LinkType[] })
 // ---------- Main Component ----------
 export default function ProfileClientPage({ user, links: serverLinks }: { user: UserProfile; links: LinkType[] }) {
   const [activeLinks, setActiveLinks] = useState<LinkType[]>([]);
+  const [srcDoc, setSrcDoc] = useState('');
 
   useEffect(() => {
     // Filter active links based on current time and date settings
@@ -153,66 +154,47 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
   }, [serverLinks]);
 
   useEffect(() => {
-    // This function must run on the client because it uses `document`.
     const unescapeHtml = (html: string) => {
         if (typeof window === 'undefined' || !html) return html;
         const ta = document.createElement("textarea");
         ta.innerHTML = html;
         return ta.value;
     }
-
+    
     const rawEmbedScript = user.bot?.embedScript || '';
-    if (!rawEmbedScript) return;
+    if (!rawEmbedScript) {
+        setSrcDoc('');
+        return;
+    };
     
     const embedScript = unescapeHtml(rawEmbedScript);
-    const scriptTag = document.createElement('script');
     
-    // Extract src from the original script tag
-    const srcMatch = embedScript.match(/src=['"]([^'"]+)['"]/);
-    if (srcMatch && srcMatch[1]) {
-        scriptTag.src = srcMatch[1];
-        scriptTag.async = true;
-        
-        // Append the script to the body to execute it
-        document.body.appendChild(scriptTag);
-    }
-    
-    // Auto-open logic if enabled
-    if (user.bot?.autoOpen) {
-        const autoOpenScriptTag = document.createElement('script');
-        autoOpenScriptTag.innerHTML = `
-            const initBotpress = () => {
-                if (window.botpress) {
-                    window.botpress.on("webchat:ready", () => {
-                        window.botpress.open();
-                    });
-                } else {
-                    setTimeout(initBotpress, 200);
-                }
-            };
-            initBotpress();
-        `;
-        document.body.appendChild(autoOpenScriptTag);
-
-        // Cleanup the auto-open script
-        return () => {
-            if (scriptTag.parentNode) {
-                scriptTag.parentNode.removeChild(scriptTag);
-            }
-            if (autoOpenScriptTag.parentNode) {
-                autoOpenScriptTag.parentNode.removeChild(autoOpenScriptTag);
+    const autoOpenScript = user.bot?.autoOpen ? `
+        <script>
+        const initBotpress = () => {
+            if (window.botpress) {
+            window.botpress.on("webchat:ready", () => {
+                window.botpress.open();
+            });
+            } else {
+            setTimeout(initBotpress, 200);
             }
         };
-    }
+        initBotpress();
+        </script>
+    ` : '';
 
-    // Cleanup function to remove the script when the component unmounts
-    return () => {
-        if (scriptTag.parentNode) {
-            scriptTag.parentNode.removeChild(scriptTag);
-        }
-    };
-  }, [user.bot?.embedScript, user.bot?.autoOpen]);
-
+    const newSrcDoc = `
+        <html>
+        <head>
+            ${embedScript}
+        </head>
+        <body>
+            ${autoOpenScript}
+        </body>
+        </html>`;
+    setSrcDoc(newSrcDoc);
+}, [user.bot?.embedScript, user.bot?.autoOpen]);
 
   const getInitials = (name: string = '') => name.split(' ').map(n => n[0]).join('');
   const handleLinkClick = (link: LinkType) => {
@@ -246,8 +228,8 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         {user.animatedBackground && <AnimatedBackground />}
         
         {/* Main Content */}
-        <div className="relative z-10 flex h-full flex-col p-4 text-foreground">
-            <div className="w-full max-w-md mx-auto flex-grow flex flex-col items-center text-center pt-12 overflow-y-auto">
+        <div className="relative z-10 flex h-full flex-col text-foreground">
+            <div className="flex-grow w-full max-w-md mx-auto flex flex-col items-center text-center p-4 pt-12 overflow-y-auto">
                 <Avatar className="h-24 w-24 border-2 border-white/50">
                     <AvatarImage src={user.photoURL || undefined} alt={user.displayName} />
                     <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
@@ -278,12 +260,20 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
                 </div>
                 <SupportLinks user={user} links={supportLinks} />
             </div>
-            <footer className="w-full text-center py-2 shrink-0">
+            
+            <footer className="w-full text-center py-2 shrink-0 z-0">
                 <Logo />
             </footer>
         </div>
+
+        {srcDoc && (
+            <iframe
+                srcDoc={srcDoc}
+                className="fixed inset-0 w-full h-full border-0 z-20 pointer-events-none"
+                sandbox="allow-scripts allow-same-origin"
+                title="Chatbot"
+            />
+        )}
     </div>
   );
 }
-
-    
