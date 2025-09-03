@@ -139,6 +139,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
   const [srcDoc, setSrcDoc] = useState('');
 
   useEffect(() => {
+    // This function must run on the client because it uses `document`.
     const unescapeHtml = (html: string) => {
         if (typeof window === 'undefined' || !html) return html;
         const ta = document.createElement("textarea");
@@ -180,6 +181,8 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
             }
             #webchat .bp-widget-widget {
                 display: ${user.bot?.autoOpen ? 'none !important' : 'block !important'};
+                /* This re-enables clicks for the bot bubble */
+                pointer-events: auto;
             }
             </style>
             ${embedScript}
@@ -237,8 +240,21 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
       <div className="relative h-full w-full">
         {user.animatedBackground && <AnimatedBackground />}
         
-        {/* Main Content (Links, Bio, etc.) - Top Layer */}
-        <div className="relative z-20 flex h-full flex-col p-4 text-foreground">
+        {/* Chatbot Iframe Container - Sits on top, but is click-through */}
+        <div className={cn(
+            "absolute inset-0 z-20 pointer-events-none",
+            !srcDoc && "hidden"
+        )}>
+            <iframe
+                srcDoc={srcDoc}
+                className="h-full w-full border-0"
+                title="Chatbot"
+                sandbox="allow-scripts allow-same-origin"
+            />
+        </div>
+
+        {/* Main Content (Links, Bio, etc.) - Sits underneath the iframe */}
+        <div className="relative z-10 flex h-full flex-col p-4 text-foreground">
             <div className="w-full max-w-md mx-auto flex-grow flex flex-col items-center text-center pt-12 overflow-y-auto">
                 <Avatar className="h-24 w-24 border-2 border-white/50">
                     <AvatarImage src={user.photoURL || undefined} alt={user.displayName} />
@@ -270,27 +286,11 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
                 </div>
                 <SupportLinks user={user} links={supportLinks} />
             </div>
-            {/* The footer is now separate from the main content to control its z-index independently */}
+            <footer className="w-full text-center py-2 shrink-0">
+                <Logo />
+            </footer>
         </div>
-        
-        {/* Chatbot Iframe - Middle Layer */}
-        <iframe
-            srcDoc={srcDoc}
-            className={cn(
-              "absolute inset-0 z-10 h-full w-full border-0",
-              !srcDoc && "hidden"
-            )}
-            title="Chatbot"
-            sandbox="allow-scripts allow-same-origin"
-        />
-
-        {/* Footer - Bottom Layer */}
-        <footer className="absolute bottom-0 z-0 w-full text-center py-2">
-            <Logo />
-        </footer>
       </div>
     </div>
   );
 }
-
-    
