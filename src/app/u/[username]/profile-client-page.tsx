@@ -180,6 +180,8 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
             }
             #webchat .bp-widget-widget {
                 display: ${user.bot?.autoOpen ? 'none !important' : 'block !important'};
+                /* This allows pointer events only on the chatbot button */
+                pointer-events: auto;
             }
             </style>
             ${embedScript}
@@ -239,7 +241,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
             {user.animatedBackground && <AnimatedBackground />}
             
             <div className="relative w-full max-w-md mx-auto z-10 flex flex-col flex-grow">
-                <div className="flex-grow flex flex-col items-center text-center pt-12">
+                <div className="flex-grow flex flex-col items-center text-center pt-12 overflow-y-auto">
                     <Avatar className="h-24 w-24 border-2 border-white/50">
                         <AvatarImage src={user.photoURL || undefined} alt={user.displayName} />
                         <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
@@ -275,17 +277,19 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
                     <Logo />
                 </footer>
             </div>
-          <iframe
+        </div>
+        <iframe
             srcDoc={srcDoc}
             className={cn(
-              "absolute inset-0 w-full h-full border-0 pointer-events-none",
-              srcDoc && "pointer-events-auto"
+              "absolute inset-0 w-full h-full border-0 pointer-events-none z-20",
+              !srcDoc && "hidden"
             )}
             title="Chatbot"
             sandbox="allow-scripts allow-same-origin"
           />
-        </div>
       </div>
     </div>
   );
 }
+
+    
