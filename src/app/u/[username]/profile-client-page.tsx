@@ -9,6 +9,7 @@ import { Timestamp } from 'firebase/firestore';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import Script from 'next/script';
 
 // ---------- Helper Components ----------
 const SocialIcon = ({ platform }: { platform: string }) => {
@@ -136,66 +137,9 @@ const SupportLinks = ({ user, links }: { user: UserProfile, links: LinkType[] })
 // ---------- Main Component ----------
 export default function ProfileClientPage({ user, links: serverLinks }: { user: UserProfile; links: LinkType[] }) {
   const [activeLinks, setActiveLinks] = useState<LinkType[]>([]);
-  const [srcDoc, setSrcDoc] = useState('');
 
   useEffect(() => {
-    // This function must run on the client because it uses `document`.
-    const unescapeHtml = (html: string) => {
-        if (typeof window === 'undefined' || !html) return html;
-        const ta = document.createElement("textarea");
-        ta.innerHTML = html;
-        return ta.value;
-    }
-
-    const rawEmbedScript = user.bot?.embedScript || '';
-    const embedScript = unescapeHtml(rawEmbedScript);
-    
-    const autoOpenScript = user.bot?.autoOpen ? `
-        <script>
-        const initBotpress = () => {
-            if (window.botpress) {
-            window.botpress.on("webchat:ready", () => {
-                window.botpress.open();
-            });
-            } else {
-            setTimeout(initBotpress, 200);
-            }
-        };
-        initBotpress();
-        </script>
-    ` : '';
-    
-    const newSrcDoc = embedScript ? `
-        <html>
-        <head>
-            <style>
-            html, body, #webchat, #webchat .bpWebchat {
-                position: unset !important;
-                width: 100% !important;
-                height: 100% !important;
-                max-height: 100% !important;
-                max-width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                overflow: hidden !important;
-            }
-            #webchat .bp-widget-widget {
-                display: ${user.bot?.autoOpen ? 'none !important' : 'block !important'};
-                /* This re-enables clicks for the bot bubble */
-                pointer-events: auto;
-            }
-            </style>
-            ${embedScript}
-        </head>
-        <body>
-            ${autoOpenScript}
-        </body>
-        </html>`
-    : '';
-    setSrcDoc(newSrcDoc);
-  }, [user.bot?.embedScript, user.bot?.autoOpen]);
-
-  useEffect(() => {
+    // Filter active links based on current time and date settings
     const now = new Date();
     const filteredLinks = serverLinks.filter(link => {
       if (!link.active) return false;
@@ -207,6 +151,68 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     });
     setActiveLinks(filteredLinks);
   }, [serverLinks]);
+
+  useEffect(() => {
+    // This function must run on the client because it uses `document`.
+    const unescapeHtml = (html: string) => {
+        if (typeof window === 'undefined' || !html) return html;
+        const ta = document.createElement("textarea");
+        ta.innerHTML = html;
+        return ta.value;
+    }
+
+    const rawEmbedScript = user.bot?.embedScript || '';
+    if (!rawEmbedScript) return;
+    
+    const embedScript = unescapeHtml(rawEmbedScript);
+    const scriptTag = document.createElement('script');
+    
+    // Extract src from the original script tag
+    const srcMatch = embedScript.match(/src=['"]([^'"]+)['"]/);
+    if (srcMatch && srcMatch[1]) {
+        scriptTag.src = srcMatch[1];
+        scriptTag.async = true;
+        
+        // Append the script to the body to execute it
+        document.body.appendChild(scriptTag);
+    }
+    
+    // Auto-open logic if enabled
+    if (user.bot?.autoOpen) {
+        const autoOpenScriptTag = document.createElement('script');
+        autoOpenScriptTag.innerHTML = `
+            const initBotpress = () => {
+                if (window.botpress) {
+                    window.botpress.on("webchat:ready", () => {
+                        window.botpress.open();
+                    });
+                } else {
+                    setTimeout(initBotpress, 200);
+                }
+            };
+            initBotpress();
+        `;
+        document.body.appendChild(autoOpenScriptTag);
+
+        // Cleanup the auto-open script
+        return () => {
+            if (scriptTag.parentNode) {
+                scriptTag.parentNode.removeChild(scriptTag);
+            }
+            if (autoOpenScriptTag.parentNode) {
+                autoOpenScriptTag.parentNode.removeChild(autoOpenScriptTag);
+            }
+        };
+    }
+
+    // Cleanup function to remove the script when the component unmounts
+    return () => {
+        if (scriptTag.parentNode) {
+            scriptTag.parentNode.removeChild(scriptTag);
+        }
+    };
+  }, [user.bot?.embedScript, user.bot?.autoOpen]);
+
 
   const getInitials = (name: string = '') => name.split(' ').map(n => n[0]).join('');
   const handleLinkClick = (link: LinkType) => {
@@ -237,23 +243,9 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
       className="h-full w-full bg-background"
       style={customStyles}
     >
-      <div className="relative h-full w-full">
         {user.animatedBackground && <AnimatedBackground />}
         
-        {/* Chatbot Iframe Container - Sits on top, but is click-through */}
-        <div className={cn(
-            "absolute inset-0 z-20 pointer-events-none",
-            !srcDoc && "hidden"
-        )}>
-            <iframe
-                srcDoc={srcDoc}
-                className="h-full w-full border-0"
-                title="Chatbot"
-                sandbox="allow-scripts allow-same-origin"
-            />
-        </div>
-
-        {/* Main Content (Links, Bio, etc.) - Sits underneath the iframe */}
+        {/* Main Content */}
         <div className="relative z-10 flex h-full flex-col p-4 text-foreground">
             <div className="w-full max-w-md mx-auto flex-grow flex flex-col items-center text-center pt-12 overflow-y-auto">
                 <Avatar className="h-24 w-24 border-2 border-white/50">
@@ -290,7 +282,8 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
                 <Logo />
             </footer>
         </div>
-      </div>
     </div>
   );
 }
+
+    
