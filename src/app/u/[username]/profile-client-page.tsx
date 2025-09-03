@@ -236,8 +236,8 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
       className="h-full w-full"
       style={customStyles}
     >
-      <div className="h-full w-full bg-background">
-        <div className="relative flex flex-col p-4 bg-background text-foreground h-full">
+      <div className="relative h-full w-full bg-background">
+        <div className="absolute inset-0 flex flex-col p-4 bg-background text-foreground h-full z-10">
             {user.animatedBackground && <AnimatedBackground />}
             
             <div className="relative w-full max-w-md mx-auto z-10 flex flex-col flex-grow">
@@ -281,7 +281,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         <iframe
             srcDoc={srcDoc}
             className={cn(
-              "absolute inset-0 w-full h-full border-0 pointer-events-none z-20",
+              "absolute inset-x-0 bottom-0 w-full h-[120px] border-0 z-20",
               !srcDoc && "hidden"
             )}
             title="Chatbot"
