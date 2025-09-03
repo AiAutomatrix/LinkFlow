@@ -1,4 +1,3 @@
-
 "use client";
 import AnimatedBackground from "@/components/animated-background";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -7,6 +6,7 @@ import type { UserProfile, Link as LinkType } from "@/lib/types";
 import { Mail, Instagram, Facebook, Github, Coffee, Banknote, Bitcoin, ClipboardCopy, ClipboardCheck } from 'lucide-react';
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 const EthIcon = () => (
   <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0"><title>Ethereum</title><path d="M11.944 17.97L4.58 13.62 11.943 24l7.365-10.38-7.364 4.35zM12.056 0L4.69 12.223l7.366-4.354 7.365 4.354L12.056 0z"/></svg>
@@ -202,7 +202,7 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
               id="chatbot-preview"
               srcDoc={srcDoc}
               className={cn(
-                "absolute bottom-0 right-0 w-0 h-0 border-0",
+                "absolute inset-0 w-full h-full border-0",
                 !srcDoc ? "hidden" : ""
               )}
               title="Chatbot Preview"
