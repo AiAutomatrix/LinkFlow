@@ -1,3 +1,4 @@
+
 "use client";
 import type { Link as LinkType, UserProfile } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -148,7 +149,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     const rawEmbedScript = user.bot?.embedScript || '';
     const embedScript = unescapeHtml(rawEmbedScript);
     
-    const autoOpenScript = user.bot?.autoOpen ? \`
+    const autoOpenScript = user.bot?.autoOpen ? `
         <script>
         const initBotpress = () => {
             if (window.botpress) {
@@ -160,10 +161,10 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
             }
         };
         initBotpress();
-        <\/script>
-    \` : '';
+        </script>
+    ` : '';
     
-    const newSrcDoc = embedScript ? \`
+    const newSrcDoc = embedScript ? `
         <html>
         <head>
             <style>
@@ -178,15 +179,15 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
                 overflow: hidden !important;
             }
             #webchat .bp-widget-widget {
-                display: \${user.bot?.autoOpen ? 'none !important' : 'block !important'};
+                display: ${user.bot?.autoOpen ? 'none !important' : 'block !important'};
             }
             </style>
-            \${embedScript}
+            ${embedScript}
         </head>
         <body>
-            \${autoOpenScript}
+            ${autoOpenScript}
         </body>
-        </html>\`
+        </html>`
     : '';
     setSrcDoc(newSrcDoc);
   }, [user.bot?.embedScript, user.bot?.autoOpen]);
@@ -234,52 +235,51 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
       style={customStyles}
     >
       <div className="h-full w-full bg-background">
-        <div className="relative flex flex-col p-4 bg-background text-foreground h-full overflow-auto">
-          {user.animatedBackground && <AnimatedBackground />}
-          
-          <div className="relative w-full max-w-md mx-auto z-10 flex flex-col flex-grow">
-            <div className="flex-grow flex flex-col items-center text-center pt-12">
-              <Avatar className="h-24 w-24 border-2 border-white/50">
-                <AvatarImage src={user.photoURL || undefined} alt={user.displayName} />
-                <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
-              </Avatar>
-              <h1 className="text-2xl font-bold mt-3">{user.displayName}</h1>
-              <p className="text-md text-muted-foreground">@{user.username}</p>
-              <p className="mt-2 text-sm max-w-xs text-foreground/80">{user.bio}</p>
-              <div className="flex gap-4 justify-center mt-3 text-foreground/80">
-                {socialLinks.map(link => (
-                  <button key={link.id} aria-label={`My \${link.title}`} className="hover:text-primary transition-colors" onClick={() => handleLinkClick(link)}>
-                    <SocialIcon platform={link.title} />
-                  </button>
-                ))}
-              </div>
-              <div className="mt-6 space-y-3 w-full">
-                {regularLinks.map((link) => (
-                  <button
-                    key={link.id}
-                    className={cn(
-                      "w-full text-center bg-secondary text-secondary-foreground font-semibold p-4 rounded-lg shadow-md transition-transform transform hover:scale-105 active:scale-[0.98] truncate",
-                      "link-button"
-                    )}
-                    onClick={() => handleLinkClick(link)}
-                  >
-                    {link.title}
-                  </button>
-                ))}
-              </div>
-              <SupportLinks user={user} links={supportLinks} />
+        <div className="relative flex flex-col p-4 bg-background text-foreground h-full">
+            {user.animatedBackground && <AnimatedBackground />}
+            
+            <div className="relative w-full max-w-md mx-auto z-10 flex flex-col flex-grow">
+                <div className="flex-grow flex flex-col items-center text-center pt-12">
+                    <Avatar className="h-24 w-24 border-2 border-white/50">
+                        <AvatarImage src={user.photoURL || undefined} alt={user.displayName} />
+                        <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+                    </Avatar>
+                    <h1 className="text-2xl font-bold mt-3">{user.displayName}</h1>
+                    <p className="text-md text-muted-foreground">@{user.username}</p>
+                    <p className="mt-2 text-sm max-w-xs text-foreground/80">{user.bio}</p>
+                    <div className="flex gap-4 justify-center mt-3 text-foreground/80">
+                        {socialLinks.map(link => (
+                        <button key={link.id} aria-label={`My ${link.title}`} className="hover:text-primary transition-colors" onClick={() => handleLinkClick(link)}>
+                            <SocialIcon platform={link.title} />
+                        </button>
+                        ))}
+                    </div>
+                    <div className="mt-6 space-y-3 w-full">
+                        {regularLinks.map((link) => (
+                        <button
+                            key={link.id}
+                            className={cn(
+                            "w-full text-center bg-secondary text-secondary-foreground font-semibold p-4 rounded-lg shadow-md transition-transform transform hover:scale-105 active:scale-[0.98] truncate",
+                            "link-button"
+                            )}
+                            onClick={() => handleLinkClick(link)}
+                        >
+                            {link.title}
+                        </button>
+                        ))}
+                    </div>
+                    <SupportLinks user={user} links={supportLinks} />
+                </div>
+
+                <footer className="w-full text-center py-2 shrink-0">
+                    <Logo />
+                </footer>
             </div>
-
-            <footer className="w-full text-center py-2 shrink-0">
-              <Logo />
-            </footer>
-          </div>
-
           <iframe
             srcDoc={srcDoc}
             className={cn(
-              "absolute inset-0 w-full h-full border-0 pointer-events-auto",
-              !srcDoc && "hidden"
+              "absolute inset-0 w-full h-full border-0 pointer-events-none",
+              srcDoc && "pointer-events-auto"
             )}
             title="Chatbot"
             sandbox="allow-scripts allow-same-origin"
