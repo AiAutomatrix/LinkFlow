@@ -255,11 +255,15 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
       
       const { type, payload } = event.data;
 
-      if (type === 'copy') {
-        navigator.clipboard.writeText(payload.text);
-        toast({ title: "Copied to clipboard!" });
-      } else if (type === 'mailto') {
-        window.location.href = `mailto:${payload.email}`;
+      if (type === 'copy' && payload?.text) {
+        navigator.clipboard.writeText(payload.text)
+          .then(() => {
+            toast({ title: "Copied to clipboard!" });
+          })
+          .catch(err => {
+            console.error("Failed to copy text: ", err);
+            toast({ variant: "destructive", title: "Copy Failed", description: "Could not copy text to clipboard." });
+          });
       } else if (type === 'trackClick' && payload) {
         // Track clicks via API
         const data = { userId: payload.userId, linkId: payload.linkId };
@@ -320,14 +324,9 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
             postParentMessage('trackClick', { userId, linkId });
         }
         
-        function handleCopy(text, userId, linkId) {
+        function handleCopy(textToCopy, userId, linkId) {
             trackClick(userId, linkId);
-            postParentMessage('copy', { text });
-        }
-
-        function handleMailTo(email, userId, linkId) {
-             trackClick(userId, linkId);
-             postParentMessage('mailto', { email });
+            postParentMessage('copy', { text: textToCopy });
         }
     `;
 
@@ -355,7 +354,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
             </a>
           )}
           {etLink && (
-            <button onClick={() => handleMailTo(etLink.url.replace('mailto:',''), user.uid, etLink.id)}
+            <button onClick={() => handleCopy(etLink.url.replace('mailto:',''), user.uid, etLink.id)}
               className="w-full text-center bg-secondary text-secondary-foreground font-semibold p-3 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:scale-105 transition-transform">
               <Banknote className="h-5 w-5" /> E-Transfer
             </button>
@@ -375,44 +374,42 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     // --- Main Page Content ---
     const pageContent = (
       <>
-        <div className="absolute inset-0 z-0">{user.animatedBackground && <AnimatedBackground />}</div>
-        <div className="relative z-10 flex-grow overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            <div
-                className="w-full flex flex-col items-center pt-12 text-center p-4 min-h-full"
-            >
-                <Avatar className="h-24 w-24 border-2 border-white/50">
-                    <AvatarImage src={user.photoURL || undefined} alt={user.displayName} />
-                    <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
-                </Avatar>
-                <h1 className="text-2xl font-bold mt-3 text-foreground">{user.displayName}</h1>
-                <p className="text-md text-muted-foreground">@{user.username}</p>
-                <p className="mt-2 text-sm max-w-xs text-foreground/80">{user.bio}</p>
-                <div className="flex gap-4 justify-center mt-3 text-foreground/80">
-                    {socialLinks.map(link => (
-                    <a href={link.url} target="_blank" rel="noopener noreferrer" key={link.id} aria-label={`My ${link.title}`} className="hover:text-primary transition-colors" onClick={() => trackClick(user.uid, link.id)}>
-                        <SocialIcon platform={link.title} />
-                    </a>
-                    ))}
-                </div>
-                <div className="mt-6 space-y-3 w-full max-w-xs mx-auto">
-                    {regularLinks.map((link) => (
-                    <a
-                        key={link.id}
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={cn(
-                        "block w-full text-center bg-secondary text-secondary-foreground font-semibold p-4 rounded-lg shadow-md transition-transform transform hover:scale-105 active:scale-[0.98] truncate",
-                        "link-button"
-                        )}
-                        onClick={() => trackClick(user.uid, link.id)}
-                    >
-                        {link.title}
-                    </a>
-                    ))}
-                </div>
-                {supportLinksComponent}
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
+            {user.animatedBackground && <AnimatedBackground />}
+        </div>
+        <div style={{ position: 'relative', zIndex: 10, flexGrow: 1, overflowY: 'auto', backgroundColor: 'transparent' }} className="w-full flex flex-col items-center pt-12 text-center p-4">
+            <Avatar className="h-24 w-24 border-2 border-white/50">
+                <AvatarImage src={user.photoURL || undefined} alt={user.displayName} />
+                <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+            </Avatar>
+            <h1 className="text-2xl font-bold mt-3 text-foreground">{user.displayName}</h1>
+            <p className="text-md text-muted-foreground">@{user.username}</p>
+            <p className="mt-2 text-sm max-w-xs text-foreground/80">{user.bio}</p>
+            <div className="flex gap-4 justify-center mt-3 text-foreground/80">
+                {socialLinks.map(link => (
+                <a href={link.url} target="_blank" rel="noopener noreferrer" key={link.id} aria-label={`My ${link.title}`} className="hover:text-primary transition-colors" onClick={() => trackClick(user.uid, link.id)}>
+                    <SocialIcon platform={link.title} />
+                </a>
+                ))}
             </div>
+            <div className="mt-6 space-y-3 w-full max-w-xs mx-auto">
+                {regularLinks.map((link) => (
+                <a
+                    key={link.id}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn(
+                    "block w-full text-center bg-secondary text-secondary-foreground font-semibold p-4 rounded-lg shadow-md transition-transform transform hover:scale-105 active:scale-[0.98] truncate",
+                    "link-button"
+                    )}
+                    onClick={() => trackClick(user.uid, link.id)}
+                >
+                    {link.title}
+                </a>
+                ))}
+            </div>
+            {supportLinksComponent}
         </div>
         <footer className="w-full text-center py-4 shrink-0 text-foreground relative z-10">
             <Logo />
@@ -451,7 +448,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
             id="root"
             data-theme="${user.theme || 'light'}"
             data-style="${user.buttonStyle || 'solid'}"
-            class="bg-background relative flex flex-col"
+            class="relative flex flex-col bg-background"
             style="min-height: 100vh; ${user.theme === 'custom' ? `--background-gradient-from: ${user.customThemeGradient?.from}; --background-gradient-to: ${user.customThemeGradient?.to}; --btn-gradient-from: ${user.customButtonGradient?.from}; --btn-gradient-to: ${user.customButtonGradient?.to};` : ''}"
           >
             ${ReactDOMServer.renderToStaticMarkup(pageContent)}
@@ -477,3 +474,4 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     />
   );
 }
+
