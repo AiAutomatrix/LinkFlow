@@ -256,7 +256,7 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
                     <SupportLinks links={supportLinks} />
                 </div>
             </div>
-             <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute inset-0 pointer-events-none">
                 <iframe
                     id="chatbot-preview"
                     srcDoc={srcDoc}
@@ -282,7 +282,3 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
     </>
   );
 }
-
-    
-
-    
