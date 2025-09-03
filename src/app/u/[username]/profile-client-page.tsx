@@ -214,7 +214,7 @@ body::-webkit-scrollbar {
 `;
 
 
-// ---------- Helper Components (must be self-contained for server-side rendering) ----------
+// ---------- Helper Components ----------
 const SocialIcon = ({ platform }: { platform: string }) => {
   switch (platform.toLowerCase()) {
     case 'email': return <Mail className="h-6 w-6" />;
@@ -240,53 +240,119 @@ const SolIcon = () => (
 );
 
 
+const CryptoLog = ({ icon, name, address, onCopy }: { icon: React.ReactNode, name: string, address: string, onCopy: (text: string) => void }) => {
+    const [copied, setCopied] = useState(false);
+    
+    const handleCopy = () => {
+        onCopy(address);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    }
+
+    return (
+        <div className="flex items-center justify-between gap-4 text-sm font-mono">
+            <div className="flex items-center gap-2 text-muted-foreground shrink-0">
+                {icon}
+                <span className="font-sans font-medium text-foreground">{name}</span>
+            </div>
+            <p className="overflow-hidden truncate text-muted-foreground">{address}</p>
+            <button onClick={handleCopy} className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
+                 {copied ? <ClipboardCheck className="h-4 w-4" /> : <ClipboardCopy className="h-4 w-4" />}
+            </button>
+        </div>
+    )
+}
+
+const SupportLinks = ({ links, onTrackClick, onCopy }: { links: LinkType[], onTrackClick: (linkId: string) => void, onCopy: (text: string, linkId: string) => void }) => {
+    const [copiedEtransfer, setCopiedEtransfer] = useState(false);
+
+    const bmcLink = links.find(l => l.title === 'Buy Me A Coffee');
+    const etLink = links.find(l => l.title === 'E-Transfer');
+    const btcLink = links.find(l => l.title === 'BTC');
+    const ethLink = links.find(l => l.title === 'ETH');
+    const solLink = links.find(l => l.title === 'SOL');
+
+    const handleEtransferCopy = () => {
+        if (!etLink) return;
+        const email = etLink.url.replace('mailto:', '');
+        onCopy(email, etLink.id);
+        setCopiedEtransfer(true);
+        setTimeout(() => setCopiedEtransfer(false), 2000);
+    }
+    
+    const hasCrypto = btcLink || ethLink || solLink;
+
+    if (!bmcLink && !etLink && !hasCrypto) {
+        return null;
+    }
+
+    return (
+        <div className="mt-6 w-full max-w-md mx-auto z-20 relative px-4">
+            <h3 className="text-xs font-semibold uppercase text-muted-foreground text-center mb-3">Support Me</h3>
+            <div className="grid grid-cols-1 gap-3">
+                {bmcLink && (
+                    <a href={bmcLink.url} target="_blank" rel="noopener noreferrer" onClick={() => onTrackClick(bmcLink.id)}
+                    className="w-full text-center bg-yellow-400 text-black font-semibold p-3 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:scale-105 transition-transform">
+                        <Coffee className="h-5 w-5" /> Buy Me a Coffee
+                    </a>
+                )}
+                {etLink && (
+                    <button onClick={handleEtransferCopy}
+                    className="w-full text-center bg-secondary text-secondary-foreground font-semibold p-3 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:scale-105 transition-transform">
+                         {copiedEtransfer ? <ClipboardCheck className="h-5 w-5" /> : <Banknote className="h-5 w-5" />}
+                         {copiedEtransfer ? "Copied E-Transfer Email" : "E-Transfer"}
+                    </button>
+                )}
+                {hasCrypto && (
+                    <div className="bg-muted/50 rounded-lg p-3 space-y-3 font-mono text-sm">
+                        <p className="text-xs text-muted-foreground font-sans text-center">CRYPTO LOGS</p>
+                        {btcLink && <CryptoLog icon={<Bitcoin className="h-5 w-5 shrink-0" />} name="BTC" address={btcLink.url} onCopy={(text) => onCopy(text, btcLink.id)} />}
+                        {ethLink && <CryptoLog icon={<EthIcon />} name="ETH" address={ethLink.url} onCopy={(text) => onCopy(text, ethLink.id)} />}
+                        {solLink && <CryptoLog icon={<SolIcon />} name="SOL" address={solLink.url} onCopy={(text) => onCopy(text, solLink.id)} />}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+
+
 // ---------- Main Component ----------
 export default function ProfileClientPage({ user, links: serverLinks }: { user: UserProfile; links: LinkType[] }) {
   const [srcDoc, setSrcDoc] = useState('');
   const { toast } = useToast();
+  
+  // This state holds only the active support links to be rendered outside the iframe
+  const [activeSupportLinks, setActiveSupportLinks] = useState<LinkType[]>([]);
 
-  // This effect handles messages from the iframe for clipboard/mailto actions
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      // Basic security: check the origin of the message
-      if (event.origin !== "null") { // iframes with srcDoc have a null origin
-        return;
-      }
-      
-      const { type, payload } = event.data;
 
-      if (type === 'copy' && payload?.text) {
-        navigator.clipboard.writeText(payload.text)
-          .then(() => {
-            toast({ title: "Copied to clipboard!" });
-          })
-          .catch(err => {
-            console.error("Failed to copy text: ", err);
-            toast({ variant: "destructive", title: "Copy Failed", description: "Could not copy text to clipboard." });
-          });
-      } else if (type === 'trackClick' && payload) {
-        // Track clicks via API
-        const data = { userId: payload.userId, linkId: payload.linkId };
-         try {
-            if (navigator.sendBeacon) {
-                navigator.sendBeacon('/api/clicks', JSON.stringify(data));
-            } else {
-                fetch('/api/clicks', {
-                    method: 'POST',
-                    body: JSON.stringify(data),
-                    keepalive: true,
-                });
-            }
-        } catch (e) {
-            console.error("Error tracking click: ", e);
+  const trackClick = (linkId: string) => {
+    const data = { userId: user.uid, linkId };
+     try {
+        if (navigator.sendBeacon) {
+            navigator.sendBeacon('/api/clicks', JSON.stringify(data));
+        } else {
+            fetch('/api/clicks', {
+                method: 'POST',
+                body: JSON.stringify(data),
+                keepalive: true,
+            });
         }
-      }
-    };
+    } catch (e) {
+        console.error("Error tracking click: ", e);
+    }
+  }
 
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [toast]);
-
+  const handleCopyToClipboard = (text: string, linkId: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+        toast({ title: "Copied to clipboard!" });
+        trackClick(linkId);
+    }).catch(err => {
+        console.error("Failed to copy: ", err);
+        toast({ title: "Failed to copy", variant: "destructive" });
+    });
+  }
 
   useEffect(() => {
     const toDate = (date: any): Date | null => {
@@ -306,6 +372,12 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
       if (endDate && now > endDate) return false;
       return true;
     });
+    
+    // Separate support links from the rest
+    const supportLinks = activeLinks.filter(l => l.isSupport);
+    const otherLinks = activeLinks.filter(l => !l.isSupport);
+    
+    setActiveSupportLinks(supportLinks);
 
     const unescapeHtml = (html: string) => {
         if (typeof window === 'undefined' || !html) return html;
@@ -314,64 +386,30 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         return ta.value;
     }
     
-    // Scripts to be injected into the iframe
-    const actionHandlerScript = `
-        function postParentMessage(type, payload) {
-            window.parent.postMessage({ type, payload }, '*');
-        }
-
+    const trackClickScript = `
         function trackClick(userId, linkId) {
-            postParentMessage('trackClick', { userId, linkId });
-        }
-        
-        function handleCopy(textToCopy, userId, linkId) {
-            trackClick(userId, linkId);
-            postParentMessage('copy', { text: textToCopy });
+            const data = { userId, linkId };
+            try {
+                if (navigator.sendBeacon) {
+                    navigator.sendBeacon('/api/clicks', JSON.stringify(data));
+                } else {
+                    fetch('/api/clicks', {
+                        method: 'POST',
+                        body: JSON.stringify(data),
+                        keepalive: true,
+                    });
+                }
+            } catch (e) {
+                console.error("Error tracking click: ", e);
+            }
         }
     `;
 
     const getInitials = (name: string = '') => name.split(' ').map(n => n[0]).join('');
     
-    const socialLinks = activeLinks.filter(l => l.isSocial);
-    const regularLinks = activeLinks.filter(l => !l.isSocial && !l.isSupport);
-    const supportLinks = activeLinks.filter(l => l.isSupport);
-
-    // --- SUPPORT LINKS COMPONENT ---
-    const bmcLink = supportLinks.find(l => l.title === 'Buy Me A Coffee');
-    const etLink = supportLinks.find(l => l.title === 'E-Transfer');
-    const btcLink = supportLinks.find(l => l.title === 'BTC');
-    const ethLink = supportLinks.find(l => l.title === 'ETH');
-    const solLink = supportLinks.find(l => l.title === 'SOL');
-
-    const supportLinksComponent = (bmcLink || etLink || btcLink || ethLink || solLink) ? (
-      <div className="mt-6 w-full max-w-md mx-auto">
-        <h3 className="text-xs font-semibold uppercase text-muted-foreground text-center mb-3">Support Me</h3>
-        <div className="grid grid-cols-1 gap-3">
-          {bmcLink && (
-            <a href={bmcLink.url} target="_blank" rel="noopener noreferrer" onClick={() => trackClick(user.uid, bmcLink.id)}
-              className="w-full text-center bg-yellow-400 text-black font-semibold p-3 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:scale-105 transition-transform">
-              <Coffee className="h-5 w-5" /> Buy Me a Coffee
-            </a>
-          )}
-          {etLink && (
-            <button onClick={() => handleCopy(etLink.url.replace('mailto:',''), user.uid, etLink.id)}
-              className="w-full text-center bg-secondary text-secondary-foreground font-semibold p-3 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:scale-105 transition-transform">
-              <Banknote className="h-5 w-5" /> E-Transfer
-            </button>
-          )}
-          {(btcLink || ethLink || solLink) && (
-             <div className="bg-muted/50 rounded-lg p-3 space-y-3 font-mono text-sm">
-                <p className="text-xs text-muted-foreground font-sans text-center">CRYPTO LOGS</p>
-                {btcLink && <div className="flex items-center justify-between gap-4 text-sm font-mono"><div className="flex items-center gap-2 text-muted-foreground shrink-0"><Bitcoin className="h-5 w-5 shrink-0" /><span className="font-sans font-medium text-foreground">BTC</span></div><p className="overflow-hidden truncate text-muted-foreground">{btcLink.url}</p><button onClick={() => handleCopy(btcLink.url, user.uid, btcLink.id)} className="text-muted-foreground hover:text-foreground transition-colors shrink-0"><ClipboardCopy className="h-4 w-4" /></button></div>}
-                {ethLink && <div className="flex items-center justify-between gap-4 text-sm font-mono"><div className="flex items-center gap-2 text-muted-foreground shrink-0"><EthIcon /><span className="font-sans font-medium text-foreground">ETH</span></div><p className="overflow-hidden truncate text-muted-foreground">{ethLink.url}</p><button onClick={() => handleCopy(ethLink.url, user.uid, ethLink.id)} className="text-muted-foreground hover:text-foreground transition-colors shrink-0"><ClipboardCopy className="h-4 w-4" /></button></div>}
-                {solLink && <div className="flex items-center justify-between gap-4 text-sm font-mono"><div className="flex items-center gap-2 text-muted-foreground shrink-0"><SolIcon /><span className="font-sans font-medium text-foreground">SOL</span></div><p className="overflow-hidden truncate text-muted-foreground">{solLink.url}</p><button onClick={() => handleCopy(solLink.url, user.uid, solLink.id)} className="text-muted-foreground hover:text-foreground transition-colors shrink-0"><ClipboardCopy className="h-4 w-4" /></button></div>}
-            </div>
-          )}
-        </div>
-      </div>
-    ) : null;
-
-    // --- Main Page Content ---
+    const socialLinks = otherLinks.filter(l => l.isSocial);
+    const regularLinks = otherLinks.filter(l => !l.isSocial);
+    
     const pageContent = (
       <>
         <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
@@ -409,7 +447,6 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
                 </a>
                 ))}
             </div>
-            {supportLinksComponent}
         </div>
         <footer className="w-full text-center py-4 shrink-0 text-foreground relative z-10">
             <Logo />
@@ -454,7 +491,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
             ${ReactDOMServer.renderToStaticMarkup(pageContent)}
           </div>
           <script>
-            ${actionHandlerScript}
+            ${trackClickScript}
             ${autoOpenScript}
           </script>
         </body>
@@ -463,15 +500,39 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
 
     setSrcDoc(finalHtml);
 
-  }, [user, serverLinks, toast]);
+  }, [user, serverLinks]);
 
   return (
-    <iframe
-      srcDoc={srcDoc}
-      className="w-full h-full border-0"
-      sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-      title={user.displayName}
-    />
+    <div 
+        className="relative w-full h-full"
+        data-theme={user.theme || 'light'}
+        style={{
+            '--background': 'transparent', // Make the parent div background transparent
+            ...(user.theme === 'custom' ? {
+                '--background-gradient-from': user.customThemeGradient?.from,
+                '--background-gradient-to': user.customThemeGradient?.to,
+                '--btn-gradient-from': user.customButtonGradient?.from,
+                '--btn-gradient-to': user.customButtonGradient?.to
+            } : {})
+        } as React.CSSProperties}
+    >
+        {/* The iframe is the base layer */}
+        <iframe
+            srcDoc={srcDoc}
+            className="absolute inset-0 w-full h-full border-0 z-10"
+            sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+            title={user.displayName}
+        />
+        {/* The SupportLinks are rendered on top of the iframe */}
+        <div className='absolute inset-x-0 bottom-0 pb-20 z-20 pointer-events-none'>
+            <div className="pointer-events-auto">
+                <SupportLinks 
+                    links={activeSupportLinks}
+                    onTrackClick={trackClick}
+                    onCopy={handleCopyToClipboard}
+                />
+            </div>
+        </div>
+    </div>
   );
 }
-
