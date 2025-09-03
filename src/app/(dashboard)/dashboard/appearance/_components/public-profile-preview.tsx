@@ -202,11 +202,16 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
               id="chatbot-preview"
               srcDoc={srcDoc}
               className={cn(
-                "absolute inset-0 w-full h-full border-0 pointer-events-auto",
+                "absolute bottom-0 right-0 w-0 h-0 border-0",
                 !srcDoc ? "hidden" : ""
               )}
               title="Chatbot Preview"
               sandbox="allow-scripts allow-same-origin"
+              allow="clipboard-write"
+              style={{
+                background: "transparent",
+                pointerEvents: "none",
+              }}
             />
           </div>
         </CardContent>
