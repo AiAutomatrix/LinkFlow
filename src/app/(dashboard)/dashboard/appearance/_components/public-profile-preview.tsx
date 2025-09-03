@@ -202,39 +202,41 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
                 className="h-full w-full rounded-md border bg-background flex flex-col items-center relative overflow-hidden"
                 style={customStyles}
             >
-                {profile.animatedBackground && <AnimatedBackground />}
-                <div className="flex-1 w-full flex flex-col items-center pt-12 text-center overflow-y-auto p-4">
-                <Avatar className="h-24 w-24">
-                    <AvatarImage src={profile.photoURL || undefined} />
-                    <AvatarFallback>{getInitials(profile.displayName)}</AvatarFallback>
-                </Avatar>
-                <h1 className="text-xl font-bold mt-4 text-foreground">{profile.displayName || "Your Name"}</h1>
-                <p className="text-muted-foreground text-sm">@{profile.username || "username"}</p>
-                <p className="text-center mt-2 text-sm text-foreground/80">{profile.bio || "Your bio will appear here."}</p>
-                
-                <div className="flex gap-4 justify-center mt-4 text-foreground/80">
-                    {socialLinks.map(link => (
-                        <SocialIcon key={link.id} platform={link.title} />
-                    ))}
+                <div className="absolute inset-0 z-0">
+                    {profile.animatedBackground && <AnimatedBackground />}
                 </div>
-                
-                <div className="mt-8 space-y-4 w-full max-w-xs mx-auto">
-                    {regularLinks.length > 0 ? (
-                        regularLinks.slice(0, 2).map((link) => (
-                        <LinkButton key={link.id}>
-                            {link.title}
-                        </LinkButton>
-                        ))
-                    ) : (
-                        <>
-                        <LinkButton>Example Link 1</LinkButton>
-                        <LinkButton>Example Link 2</LinkButton>
-                        </>
-                    )}
-                    {regularLinks.length > 2 && <p className="text-center text-sm text-muted-foreground">...</p>}
-                </div>
+                <div className="relative z-10 flex-1 w-full flex flex-col items-center pt-12 text-center overflow-y-auto p-4 bg-transparent">
+                    <Avatar className="h-24 w-24">
+                        <AvatarImage src={profile.photoURL || undefined} />
+                        <AvatarFallback>{getInitials(profile.displayName)}</AvatarFallback>
+                    </Avatar>
+                    <h1 className="text-xl font-bold mt-4 text-foreground">{profile.displayName || "Your Name"}</h1>
+                    <p className="text-muted-foreground text-sm">@{profile.username || "username"}</p>
+                    <p className="text-center mt-2 text-sm text-foreground/80">{profile.bio || "Your bio will appear here."}</p>
+                    
+                    <div className="flex gap-4 justify-center mt-4 text-foreground/80">
+                        {socialLinks.map(link => (
+                            <SocialIcon key={link.id} platform={link.title} />
+                        ))}
+                    </div>
+                    
+                    <div className="mt-8 space-y-4 w-full max-w-xs mx-auto">
+                        {regularLinks.length > 0 ? (
+                            regularLinks.slice(0, 2).map((link) => (
+                            <LinkButton key={link.id}>
+                                {link.title}
+                            </LinkButton>
+                            ))
+                        ) : (
+                            <>
+                            <LinkButton>Example Link 1</LinkButton>
+                            <LinkButton>Example Link 2</LinkButton>
+                            </>
+                        )}
+                        {regularLinks.length > 2 && <p className="text-center text-sm text-muted-foreground">...</p>}
+                    </div>
 
-                <SupportLinks links={supportLinks} />
+                    <SupportLinks links={supportLinks} />
                 </div>
             </div>
             <iframe
