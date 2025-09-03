@@ -1,3 +1,4 @@
+
 "use client";
 import AnimatedBackground from "@/components/animated-background";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -210,7 +211,6 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
               allow="clipboard-write"
               style={{
                 background: "transparent",
-                pointerEvents: "none",
               }}
             />
           </div>
