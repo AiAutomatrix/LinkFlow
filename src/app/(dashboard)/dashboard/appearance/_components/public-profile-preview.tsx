@@ -8,6 +8,7 @@ import type { UserProfile, Link as LinkType } from "@/lib/types";
 import { Mail, Instagram, Facebook, Github, Coffee, Banknote, Bitcoin, ClipboardCopy, ClipboardCheck } from 'lucide-react';
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 
 const EthIcon = () => (
@@ -91,11 +92,21 @@ const SupportLinks = ({ links }: { links: LinkType[] }) => {
 
 export default function PublicProfilePreview({ profile, links = [], isPreview = false, showBot = false }: { profile: Partial<UserProfile>; links?: LinkType[], isPreview?: boolean, showBot?: boolean }) {
     const [srcDoc, setSrcDoc] = useState('');
+    const [isBotOpen, setIsBotOpen] = useState(false);
+
+    const toggleBot = () => {
+        if (!srcDoc) return;
+        const iframe = document.getElementById("chatbot-preview") as HTMLIFrameElement;
+        iframe?.contentWindow?.postMessage(
+            { type: isBotOpen ? "CLOSE_BOT" : "OPEN_BOT" },
+            "*" // In production, use a specific origin
+        );
+        setIsBotOpen(!isBotOpen);
+    };
 
     useEffect(() => {
         const rawEmbedScript = profile.bot?.embedScript || '';
         
-        // This browser-only logic is now safely inside a useEffect hook.
         const unescapeHtml = (html: string) => {
             if (!html) return html;
             const ta = document.createElement("textarea");
@@ -105,20 +116,29 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
 
         const embedScript = unescapeHtml(rawEmbedScript);
         
-        const autoOpenScript = profile.bot?.autoOpen ? `
-            <script>
+        const botControlScript = `
             const initBotpress = () => {
                 if (window.botpress) {
-                window.botpress.on("webchat:ready", () => {
-                    window.botpress.open();
-                });
+                    window.addEventListener("message", (event) => {
+                        if (event.data?.type === "OPEN_BOT") {
+                            window.botpress.open();
+                        } else if (event.data?.type === "CLOSE_BOT") {
+                            window.botpress.close();
+                        }
+                    });
+                    
+                    if (${!!profile.bot?.autoOpen}) {
+                        window.botpress.on("webchat:ready", () => {
+                           window.botpress.open();
+                           // We don't want to auto-set the React state, as the user should control the toggle
+                        });
+                    }
                 } else {
-                setTimeout(initBotpress, 200);
+                    setTimeout(initBotpress, 200);
                 }
             };
             initBotpress();
-            <\/script>
-        ` : '';
+        `;
 
         const newSrcDoc = embedScript ? `
             <html>
@@ -134,14 +154,11 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
                     padding: 0 !important;
                     overflow: hidden !important;
                 }
-                #webchat .bp-widget-widget {
-                    display: ${profile.bot?.autoOpen ? 'none !important' : 'block !important'};
-                }
                 </style>
                 ${embedScript}
             </head>
             <body>
-                ${autoOpenScript}
+                <script>${botControlScript}<\/script>
             </body>
             </html>`
         : '';
@@ -199,10 +216,10 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
             <div 
                 data-theme={profile.theme || 'light'}
                 data-style={profile.buttonStyle || 'solid'}
-                className="h-full w-full rounded-md border bg-background flex flex-col items-center relative overflow-hidden"
+                className="h-full w-full rounded-md border flex flex-col items-center relative overflow-hidden"
                 style={customStyles}
             >
-                <div className="absolute inset-0 z-0">
+                <div className="absolute inset-0 z-0 bg-background">
                     {profile.animatedBackground && <AnimatedBackground />}
                 </div>
                 <div className="relative z-10 flex-1 w-full flex flex-col items-center pt-12 text-center overflow-y-auto p-4 bg-transparent">
@@ -239,20 +256,33 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
                     <SupportLinks links={supportLinks} />
                 </div>
             </div>
-            <iframe
-                srcDoc={srcDoc}
-                className={cn(
-                    "absolute inset-0 w-full h-full border-0 pointer-events-auto",
-                    !srcDoc || !showBot ? "hidden" : ""
-                )}
-                title="Chatbot Preview"
-                sandbox="allow-scripts allow-same-origin"
-            />
+             <div className="absolute inset-0 pointer-events-none">
+                <iframe
+                    id="chatbot-preview"
+                    srcDoc={srcDoc}
+                    className={cn(
+                        "w-full h-full border-0 pointer-events-auto",
+                        !srcDoc || !showBot ? "hidden" : ""
+                    )}
+                    title="Chatbot Preview"
+                    sandbox="allow-scripts allow-same-origin"
+                />
+            </div>
+            {showBot && srcDoc && (
+                <Button
+                    onClick={toggleBot}
+                    className="absolute bottom-4 right-4 z-20"
+                >
+                    {isBotOpen ? "Close" : "Open"} Chat Preview
+                </Button>
+            )}
         </div>
       </CardContent>
     </Card>
     </>
   );
 }
+
+    
 
     
