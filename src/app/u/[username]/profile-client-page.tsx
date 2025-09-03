@@ -161,7 +161,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
             }
         };
         initBotpress();
-        <\/script>
+        </script>
     ` : '';
     
     const newSrcDoc = embedScript ? `
@@ -180,8 +180,6 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
             }
             #webchat .bp-widget-widget {
                 display: ${user.bot?.autoOpen ? 'none !important' : 'block !important'};
-                /* This allows pointer events only on the chatbot button */
-                pointer-events: auto;
             }
             </style>
             ${embedScript}
@@ -233,14 +231,14 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     <div
       data-theme={user.theme || 'light'}
       data-style={user.buttonStyle || 'solid'}
-      className="h-full w-full"
+      className="h-full w-full bg-background"
       style={customStyles}
     >
-      <div className="relative h-full w-full bg-background">
+      <div className="relative h-full w-full">
         {user.animatedBackground && <AnimatedBackground />}
         
-        {/* Main page content with a lower z-index */}
-        <div className="relative z-10 flex flex-col p-4 text-foreground h-full">
+        {/* Main Content (Links, Bio, etc.) - Top Layer */}
+        <div className="relative z-20 flex h-full flex-col p-4 text-foreground">
             <div className="w-full max-w-md mx-auto flex-grow flex flex-col items-center text-center pt-12 overflow-y-auto">
                 <Avatar className="h-24 w-24 border-2 border-white/50">
                     <AvatarImage src={user.photoURL || undefined} alt={user.displayName} />
@@ -272,23 +270,27 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
                 </div>
                 <SupportLinks user={user} links={supportLinks} />
             </div>
-
-            <footer className="w-full text-center py-2 shrink-0">
-                <Logo />
-            </footer>
+            {/* The footer is now separate from the main content to control its z-index independently */}
         </div>
         
-        {/* Full-screen iframe with a higher z-index and pointer-events disabled */}
+        {/* Chatbot Iframe - Middle Layer */}
         <iframe
             srcDoc={srcDoc}
             className={cn(
-              "absolute inset-0 w-full h-full border-0 z-20 pointer-events-none",
+              "absolute inset-0 z-10 h-full w-full border-0",
               !srcDoc && "hidden"
             )}
             title="Chatbot"
             sandbox="allow-scripts allow-same-origin"
-          />
+        />
+
+        {/* Footer - Bottom Layer */}
+        <footer className="absolute bottom-0 z-0 w-full text-center py-2">
+            <Logo />
+        </footer>
       </div>
     </div>
   );
 }
+
+    
