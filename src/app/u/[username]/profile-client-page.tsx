@@ -419,7 +419,8 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
             <p className="mt-2 text-sm max-w-xs text-foreground/80">{user.bio}</p>
             <div className="flex gap-4 justify-center mt-3 text-foreground/80">
                 {socialLinks.map(link => (
-                <a href={link.url} target="_blank" rel="noopener noreferrer" key={link.id} aria-label={`My ${link.title}`} className="hover:text-primary transition-colors" dangerouslySetInnerHTML={{__html: `<span onclick="trackClick('${link.id}')">${ReactDOMServer.renderToStaticMarkup(<SocialIcon platform={link.title} />)}</span>`}}>
+                <a href={link.url} target="_blank" rel="noopener noreferrer" key={link.id} aria-label={`My ${link.title}`} className="hover:text-primary transition-colors" onClick={() => trackClick(link.id)}>
+                  <SocialIcon platform={link.title} />
                 </a>
                 ))}
             </div>
