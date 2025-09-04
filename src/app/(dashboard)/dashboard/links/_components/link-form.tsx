@@ -72,10 +72,15 @@ export default function LinkForm({ onSubmit, onCancel, initialData, isSocial = f
     },
   });
 
-  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
+  const handleSubmit = (values: z.infer<typeof formSchema>) => {
     setLoading(true);
-    await onSubmit(values.title, values.url, values.startDate, values.endDate);
-    setLoading(false);
+    try {
+      onSubmit(values.title, values.url, values.startDate, values.endDate);
+    } catch (e) {
+      // Error will be handled by parent toast
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

@@ -37,7 +37,7 @@ import {
 import LinkForm from "./_components/link-form";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
-import { collection, onSnapshot, query, orderBy, addDoc, updateDoc, doc, writeBatch, deleteDoc } from "firebase/firestore";
+import { collection, onSnapshot, query, orderBy, addDoc, updateDoc, doc, writeBatch, deleteDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Loading from "@/app/loading";
 
@@ -217,7 +217,7 @@ export default function LinksPage() {
                     order: config.order,
                     active: true,
                     clicks: 0,
-                    createdAt: new Date(),
+                    createdAt: serverTimestamp(),
                     isSocial: config.isSocial,
                     isSupport: config.isSupport,
                 });
@@ -263,15 +263,15 @@ export default function LinksPage() {
     const maxOrder = links.filter(l => !l.isSocial && !l.isSupport)
                            .reduce((max, link) => Math.max(max, link.order), -1);
 
-    const newLink: Omit<Link, 'id'> = {
+    const newLink = {
         title,
         url,
         order: maxOrder + 1,
         active: true,
         clicks: 0,
-        createdAt: new Date(),
-        startDate: startDate || undefined,
-        endDate: endDate || undefined,
+        createdAt: serverTimestamp(),
+        startDate: startDate || null,
+        endDate: endDate || null,
         isSocial: false,
         isSupport: false,
     };
@@ -280,6 +280,7 @@ export default function LinksPage() {
         toast({ title: "Link added successfully!" });
         setAddLinkDialogOpen(false);
     } catch (error: any) {
+         console.error("Failed to add link:", error);
          toast({ variant: 'destructive', title: "Error", description: "Failed to add link." });
     }
   };

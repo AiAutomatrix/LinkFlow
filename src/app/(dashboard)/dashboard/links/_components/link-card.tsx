@@ -134,7 +134,7 @@ export default function LinkCard({ link, index, totalLinks, onUpdate, onDelete, 
                             onSubmit={handleFormSubmit}
                             onCancel={() => setEditOpen(false)}
                             initialData={link}
-                            isSocial={link.isSocial}
+                            isSocial={link.isSocial || link.isSupport}
                         />
                     </DialogContent>
                 </Dialog>
