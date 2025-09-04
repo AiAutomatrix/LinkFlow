@@ -72,7 +72,7 @@ export default function LinksPage() {
   const [loading, setLoading] = useState(true);
   const [loadingSocial, setLoadingSocial] = useState(false);
   const [loadingSupport, setLoadingSupport] = useState(false);
-  const [isDialogOpen, setDialogOpen] = useState(false);
+  const [isAddLinkDialogOpen, setAddLinkDialogOpen] = useState(false);
 
   const socialForm = useForm<z.infer<typeof socialLinksSchema>>({
     resolver: zodResolver(socialLinksSchema),
@@ -275,7 +275,7 @@ export default function LinksPage() {
     try {
         await addDoc(collection(db, `users/${user.uid}/links`), newLink);
         toast({ title: "Link added successfully!" });
-        setDialogOpen(false);
+        setAddLinkDialogOpen(false);
     } catch (error: any) {
          toast({ variant: 'destructive', title: "Error", description: "Failed to add link." });
     }
@@ -350,7 +350,7 @@ export default function LinksPage() {
               <Button variant="outline" onClick={handleShare}>
                   <Share2 className="mr-2 h-4 w-4" /> Share
               </Button>
-              <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
+              <Dialog open={isAddLinkDialogOpen} onOpenChange={setAddLinkDialogOpen}>
               <DialogTrigger asChild>
                   <Button>
                   <Plus className="mr-2 h-4 w-4" /> Add Link
@@ -363,7 +363,7 @@ export default function LinksPage() {
                     Add a new link to your profile. You can schedule it to appear at a later date.
                   </DialogDescription>
                   </DialogHeader>
-                  <LinkForm onSubmit={handleAddLink} onCancel={() => setDialogOpen(false)} />
+                  <LinkForm onSubmit={handleAddLink} onCancel={() => setAddLinkDialogOpen(false)} />
               </DialogContent>
               </Dialog>
           </div>
@@ -657,3 +657,5 @@ export default function LinksPage() {
     </>
   );
 }
+
+    
