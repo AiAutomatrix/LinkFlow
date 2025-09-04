@@ -162,15 +162,18 @@ const ThemeCardContent = memo(function ThemeCardContent({ selectedTheme, onTheme
 
 const CustomStylesCard = memo(function CustomStylesCard({ form }: { form: any }) {
   const isCustomActive = form.watch('theme') === 'custom';
+  const [lastSelectedTheme, setLastSelectedTheme] = useState('light');
 
   const setButtonStyle = (style: 'solid' | 'gradient') => {
       form.setValue('buttonStyle', style, { shouldDirty: true });
       if (style === 'gradient') {
+          const currentTheme = form.getValues('theme');
+          if (currentTheme !== 'custom') {
+            setLastSelectedTheme(currentTheme);
+          }
           form.setValue('theme', 'custom', { shouldDirty: true });
       } else {
-          if (form.getValues('theme') === 'custom') {
-              form.setValue('theme', 'light', { shouldDirty: true });
-          }
+          form.setValue('theme', lastSelectedTheme, { shouldDirty: true });
       }
   };
 
@@ -385,10 +388,12 @@ export default function AppearancePage() {
         <div className="w-full lg:col-span-1 space-y-6">
             <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <ThemeCardContent 
-                  selectedTheme={watchedValues.theme || 'light'}
-                  onThemeSelect={handleThemeSelect}
-                />
+                {watchedValues.buttonStyle !== 'gradient' && (
+                  <ThemeCardContent 
+                    selectedTheme={watchedValues.theme || 'light'}
+                    onThemeSelect={handleThemeSelect}
+                  />
+                )}
                 <CustomStylesCard 
                   form={form} 
                 />
