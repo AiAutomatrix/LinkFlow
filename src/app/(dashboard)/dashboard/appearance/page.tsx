@@ -209,12 +209,13 @@ export default function AppearancePage() {
           render={({ field }) => (
             <FormItem>
               <Carousel
+                key={field.value}
                 opts={{
-                    align: "start",
-                    slidesToScroll: "auto",
-                    dragFree: true,
+                  align: "start",
+                  slidesToScroll: "auto",
+                  draggable: false,
                 }}
-                className="w-full max-w-full"
+                className="w-full"
               >
                 <CarouselContent className="-ml-1">
                     {themes.map((theme) => (
@@ -423,4 +424,4 @@ export default function AppearancePage() {
   );
 }
 
-  
+    
