@@ -305,15 +305,13 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
   
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-        // Optional: Add origin check for security
-        // if (event.origin !== 'https://your-app-domain.com') return;
         const { type, payload } = event.data;
 
         if (type === 'COPY_TO_CLIPBOARD') {
             navigator.clipboard.writeText(payload.text).then(() => {
                 toast({ title: "Copied to clipboard!" });
                 if (payload.linkId) {
-                    trackClick(payload.linkId, true);
+                    // Clicks for copy actions are tracked inside the iframe via postMessage
                 }
             }).catch(err => {
                 console.error("Failed to copy from parent: ", err);
@@ -325,24 +323,6 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, [toast]);
-
-
-  const trackClick = (linkId: string, isCopy: boolean = false) => {
-    const data = { userId: user.uid, linkId };
-     try {
-        if (!isCopy && navigator.sendBeacon) {
-            navigator.sendBeacon('/api/clicks', JSON.stringify(data));
-        } else {
-            fetch('/api/clicks', {
-                method: 'POST',
-                body: JSON.stringify(data),
-                keepalive: true,
-            });
-        }
-    } catch (e) {
-        console.error("Error tracking click: ", e);
-    }
-  }
 
 
   useEffect(() => {
@@ -373,18 +353,15 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     
     // This script will be embedded in the iframe to handle communication
     const iframeScript = `
-        function trackClick(linkId) {
+        function trackClick(linkId, isCopy = false) {
             const data = { userId: '${user.uid}', linkId };
             try {
-                if (navigator.sendBeacon) {
-                    navigator.sendBeacon('/api/clicks', JSON.stringify(data));
-                } else {
-                    fetch('/api/clicks', {
-                        method: 'POST',
-                        body: JSON.stringify(data),
-                        keepalive: true,
-                    });
-                }
+                // Use fetch for copy actions or if sendBeacon is not available
+                fetch('/api/clicks', {
+                    method: 'POST',
+                    body: JSON.stringify(data),
+                    keepalive: true,
+                });
             } catch (e) {
                 console.error("Error tracking click from iframe: ", e);
             }
@@ -394,7 +371,8 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
             window.parent.postMessage({
                 type: 'COPY_TO_CLIPBOARD',
                 payload: { text, linkId }
-            }, '*'); // Use a specific origin in production
+            }, '*');
+            trackClick(linkId, true); // Also track the click on copy
         }
     `;
 
@@ -404,7 +382,9 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     const supportLinks = activeLinks.filter(l => l.isSupport);
     const regularLinks = activeLinks.filter(l => !l.isSocial && !l.isSupport);
     
-    const pageContent = (
+    // Create static HTML for all the page content.
+    // NOTE: onClick handlers must be added as strings later.
+    const pageContent = ReactDOMServer.renderToStaticMarkup(
       <>
         <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
             {user.animatedBackground && <AnimatedBackground />}
@@ -417,31 +397,34 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
             <h1 className="text-2xl font-bold mt-3 text-foreground">{user.displayName}</h1>
             <p className="text-md text-muted-foreground">@{user.username}</p>
             <p className="mt-2 text-sm max-w-xs text-foreground/80">{user.bio}</p>
+            
             <div className="flex gap-4 justify-center mt-3 text-foreground/80">
-                {socialLinks.map(link => (
-                <a href={link.url} target="_blank" rel="noopener noreferrer" key={link.id} aria-label={`My ${link.title}`} className="hover:text-primary transition-colors" onClick={() => trackClick(link.id)}>
+              {socialLinks.map(link => (
+                <a href={link.url} target="_blank" rel="noopener noreferrer" key={link.id} data-link-id={link.id} aria-label={`My ${link.title}`} className="hover:text-primary transition-colors">
                   <SocialIcon platform={link.title} />
                 </a>
-                ))}
+              ))}
             </div>
+
             <div className="mt-6 space-y-3 w-full max-w-xs mx-auto">
-                {regularLinks.map((link) => (
+              {regularLinks.map((link) => (
                 <a
-                    key={link.id}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={cn(
+                  key={link.id}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-link-id={link.id}
+                  className={cn(
                     "block w-full text-center bg-secondary text-secondary-foreground font-semibold p-4 rounded-lg shadow-md transition-transform transform hover:scale-105 active:scale-[0.98] truncate",
                     "link-button"
-                    )}
-                    onClick={() => trackClick(link.id)}
+                  )}
                 >
-                    {link.title}
+                  {link.title}
                 </a>
-                ))}
+              ))}
             </div>
-            <SupportLinks links={supportLinks} onTrackClick={trackClick} onCopy={(text, id) => { /* This onCopy is now handled by the embedded script */ }} />
+            
+            <SupportLinks links={supportLinks} onTrackClick={() => {}} onCopy={() => {}} />
         </div>
         <footer className="w-full text-center py-4 shrink-0 text-foreground relative z-10">
             <Logo />
@@ -449,45 +432,31 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
       </>
     );
     
-    // We override the 'onCopy' for SupportLinks inside the iframe to use postMessage
-    const IframeSupportLinks = (props: any) => {
-        const newProps = { ...props, onCopy: (text: string, linkId: string) => { /* This will be handled by embedded JS */ } };
-        return <SupportLinks {...newProps} />
-    }
-    
-    // Replace the 'onCopy' and 'onClick' handlers in the static markup
-    // with calls to the iframe's embedded script functions.
-    let staticContent = ReactDOMServer.renderToStaticMarkup(pageContent);
-    
-    // Inject handleCopy calls for support links
-    const bmcLink = supportLinks.find(l => l.title === 'Buy Me A Coffee');
-    if (bmcLink) {
-        staticContent = staticContent.replace(`href="${bmcLink.url}"`, `href="${bmcLink.url}" onclick="trackClick('${bmcLink.id}')"`);
-    }
+    // Inject onclick handlers using string replacement
+    let staticContent = pageContent
+      .replace(/data-link-id="([^"]*)"/g, (match, linkId) => `${match} onclick="trackClick('${linkId}')"`)
+      .replace(/<button class="text-muted-foreground hover:text-foreground.*?<\/button>/g, (match) => {
+          const btcLink = supportLinks.find(l => l.title === 'BTC' && match.includes(l.url));
+          if(btcLink) return match.replace(/<button/, `<button onclick="handleCopy('${btcLink.url}', '${btcLink.id}')"`);
+
+          const ethLink = supportLinks.find(l => l.title === 'ETH' && match.includes(l.url));
+          if(ethLink) return match.replace(/<button/, `<button onclick="handleCopy('${ethLink.url}', '${ethLink.id}')"`);
+
+          const solLink = supportLinks.find(l => l.title === 'SOL' && match.includes(l.url));
+          if(solLink) return match.replace(/<button/, `<button onclick="handleCopy('${solLink.url}', '${solLink.id}')"`);
+
+          return match;
+      });
 
     const etLink = supportLinks.find(l => l.title === 'E-Transfer');
     if (etLink) {
         const email = etLink.url.replace('mailto:', '');
         staticContent = staticContent.replace(
-            /<button class="w-full text-center bg-secondary.*?E-Transfer<\/button>/,
+            /<button.*?E-Transfer<\/button>/,
             `<button class="w-full text-center bg-secondary text-secondary-foreground font-semibold p-3 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:scale-105 transition-transform" onclick="handleCopy('${email}', '${etLink.id}')">${ReactDOMServer.renderToStaticMarkup(<><Banknote className="h-5 w-5"/><span>E-Transfer</span></>)}</button>`
         );
     }
     
-    const btcLink = supportLinks.find(l => l.title === 'BTC');
-    if(btcLink) {
-       staticContent = staticContent.replace(`<button class="text-muted-foreground hover:text-foreground transition-colors shrink-0"><svg`, `<button class="text-muted-foreground hover:text-foreground transition-colors shrink-0" onclick="handleCopy('${btcLink.url}', '${btcLink.id}')"><svg`);
-    }
-    const ethLink = supportLinks.find(l => l.title === 'ETH');
-    if(ethLink) {
-         staticContent = staticContent.replace(`<p class="overflow-hidden truncate text-muted-foreground">${ethLink.url}</p><button class="text-muted-foreground`, `<p class="overflow-hidden truncate text-muted-foreground">${ethLink.url}</p><button onclick="handleCopy('${ethLink.url}', '${ethLink.id}')" class="text-muted-foreground`);
-    }
-    const solLink = supportLinks.find(l => l.title === 'SOL');
-     if(solLink) {
-         staticContent = staticContent.replace(`<p class="overflow-hidden truncate text-muted-foreground">${solLink.url}</p><button class="text-muted-foreground`, `<p class="overflow-hidden truncate text-muted-foreground">${solLink.url}</p><button onclick="handleCopy('${solLink.url}', '${solLink.id}')" class="text-muted-foreground`);
-    }
-
-
     const rawEmbedScript = user.bot?.embedScript || '';
     const embedScript = unescapeHtml(rawEmbedScript);
     
@@ -547,3 +516,4 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     </div>
   );
 }
+
