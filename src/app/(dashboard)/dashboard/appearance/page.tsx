@@ -113,7 +113,6 @@ export default function AppearancePage() {
   const [formLoading, setFormLoading] = useState(false);
   const [links, setLinks] = useState<Link[]>([]);
   const [customGradientsEnabled, setCustomGradientsEnabled] = useState(false);
-  const [_, forceUpdate] = useReducer((x) => x + 1, 0);
 
   const form = useForm<z.infer<typeof appearanceSchema>>({
     resolver: zodResolver(appearanceSchema),
@@ -212,7 +211,7 @@ export default function AppearancePage() {
                       slidesToScroll: "auto",
                       dragFree: true,
                   }}
-                  className="w-full"
+                  className="w-full max-w-full px-8 sm:px-12"
                 >
                   <CarouselContent className="-ml-1">
                       {themes.map((theme) => (
@@ -240,8 +239,8 @@ export default function AppearancePage() {
                       </CarouselItem>
                       ))}
                   </CarouselContent>
-                  <CarouselPrevious className="absolute -left-1 top-1/2 -translate-y-1/2 z-10" />
-                  <CarouselNext className="absolute -right-1 top-1/2 -translate-y-1/2 z-10" />
+                  <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2 z-10" />
+                  <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2 z-10" />
                 </Carousel>
                 <FormMessage />
             </FormItem>
@@ -381,10 +380,6 @@ export default function AppearancePage() {
                     />
                 </div>
             </div>
-                <Button type="button" variant="outline" onClick={() => forceUpdate()}>
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Refresh Preview
-            </Button>
         </CardContent>
     </Card>
   );
@@ -433,3 +428,5 @@ export default function AppearancePage() {
     </div>
   );
 }
+
+    
