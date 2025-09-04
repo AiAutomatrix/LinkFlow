@@ -116,7 +116,6 @@ export default function AppearancePage() {
   const [links, setLinks] = useState<Link[]>([]);
   const [customGradientsEnabled, setCustomGradientsEnabled] = useState(false);
   const [_, forceUpdate] = useReducer((x) => x + 1, 0);
-  const [carouselApi, setCarouselApi] = useState<CarouselApi>()
 
   const form = useForm<z.infer<typeof appearanceSchema>>({
     resolver: zodResolver(appearanceSchema),
@@ -411,18 +410,12 @@ export default function AppearancePage() {
         </div>
       </div>
       
-      <div className="space-y-6">
-        <div>
-            <h1 className="text-2xl font-bold">Appearance</h1>
-            <p className="text-muted-foreground">
-              Customize the look and feel of your public profile.
-            </p>
-        </div>
+      <div className="space-y-6 lg:mt-0 mt-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Mobile View: Carousel */}
             <div className="lg:hidden space-y-4">
-               <Carousel setApi={setCarouselApi} className="w-full">
+               <Carousel className="w-full">
                 <CarouselContent>
                     <CarouselItem>{ThemeCardContent()}</CarouselItem>
                     <CarouselItem>{ButtonCardContent()}</CarouselItem>
