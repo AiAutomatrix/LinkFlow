@@ -210,7 +210,7 @@ export default function AppearancePage() {
                   opts={{
                       align: "start",
                       slidesToScroll: "auto",
-                      watchDrag: false,
+                      dragFree: true,
                   }}
                   className="w-full"
                 >
@@ -240,8 +240,8 @@ export default function AppearancePage() {
                       </CarouselItem>
                       ))}
                   </CarouselContent>
-                  <CarouselPrevious className="absolute -left-1 top-1/2 -translate-y-1/2" />
-                  <CarouselNext className="absolute -right-1 top-1/2 -translate-y-1/2" />
+                  <CarouselPrevious className="absolute -left-1 top-1/2 -translate-y-1/2 z-10" />
+                  <CarouselNext className="absolute -right-1 top-1/2 -translate-y-1/2 z-10" />
                 </Carousel>
                 <FormMessage />
             </FormItem>
@@ -392,7 +392,7 @@ export default function AppearancePage() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         <div className="lg:sticky lg:top-6 w-full">
-            <div className="relative h-[500px] lg:h-[700px] w-full max-w-sm mx-auto">
+             <div className="w-full max-w-sm mx-auto">
                 <PublicProfilePreview 
                     profile={previewProfile} 
                     links={links} 

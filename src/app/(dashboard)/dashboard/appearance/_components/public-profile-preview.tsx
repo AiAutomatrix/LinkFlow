@@ -158,17 +158,17 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
     <>
       <Card className={cn(isPreview ? "border-none shadow-none" : "")}>
         <CardContent className={cn(isPreview ? "p-0" : "p-4")}>
-          <div className="relative h-[700px] w-full">
+          <div className="relative w-full">
             <div 
               data-theme={profile.theme || 'light'}
               data-style={profile.buttonStyle || 'solid'}
-              className="h-full w-full rounded-md border bg-background flex flex-col items-center relative overflow-hidden"
+              className="w-full rounded-md border bg-background flex flex-col items-center relative overflow-hidden"
               style={customStyles}
             >
               <div className="absolute inset-0 z-0">
                 {profile.animatedBackground && <AnimatedBackground />}
               </div>
-              <div className="relative z-10 flex-1 w-full flex flex-col items-center pt-12 text-center overflow-y-auto p-4 bg-transparent">
+              <div className="relative z-10 w-full flex flex-col items-center pt-12 text-center p-4 bg-transparent">
                 <Avatar className="h-24 w-24">
                   <AvatarImage src={profile.photoURL || undefined} />
                   <AvatarFallback>{getInitials(profile.displayName)}</AvatarFallback>
@@ -185,7 +185,7 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
 
                 <div className="mt-8 space-y-4 w-full max-w-xs mx-auto">
                   {regularLinks.length > 0 ? (
-                    regularLinks.slice(0, 2).map((link) => (
+                    regularLinks.map((link) => (
                       <LinkButton key={link.id}>{link.title}</LinkButton>
                     ))
                   ) : (
@@ -194,10 +194,10 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
                       <LinkButton>Example Link 2</LinkButton>
                     </>
                   )}
-                  {regularLinks.length > 2 && <p className="text-center text-sm text-muted-foreground">...</p>}
                 </div>
                 <SupportLinks links={supportLinks} />
               </div>
+              <div className="pb-4"></div>
             </div>
 
             <iframe
