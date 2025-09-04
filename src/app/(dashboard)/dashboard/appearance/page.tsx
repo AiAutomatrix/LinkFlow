@@ -6,6 +6,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,7 +20,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useEffect, useState, useReducer } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import PublicProfilePreview from "./_components/public-profile-preview";
 import type { Link, UserProfile } from "@/lib/types";
@@ -112,28 +113,17 @@ export default function AppearancePage() {
   const { user, loading: authLoading, setUser } = useAuth();
   const [formLoading, setFormLoading] = useState(false);
   const [links, setLinks] = useState<Link[]>([]);
-  const [customGradientsEnabled, setCustomGradientsEnabled] = useState(false);
-  const [isGradientStyle, setIsGradientStyle] = useState(false);
-
+  const [selectedTheme, setSelectedTheme] = useState(user?.theme || 'light');
+  
   const form = useForm<z.infer<typeof appearanceSchema>>({
     resolver: zodResolver(appearanceSchema),
-    defaultValues: {
-      theme: "light",
-      animatedBackground: false,
-      buttonStyle: 'solid',
-      customThemeGradient: { from: '#FFFFFF', to: '#AAAAAA' },
-      customButtonGradient: { from: '#AAAAAA', to: '#FFFFFF' },
-    },
   });
   
   const watchedValues = form.watch();
-
+  
   useEffect(() => {
     if (user) {
-        const isCustom = user.theme === 'custom';
-        const isGradient = user.buttonStyle === 'gradient';
-        setCustomGradientsEnabled(isCustom);
-        setIsGradientStyle(isGradient);
+        setSelectedTheme(user.theme || 'light');
         form.reset({
             theme: user.theme || 'light',
             animatedBackground: user.animatedBackground || false,
@@ -144,19 +134,6 @@ export default function AppearancePage() {
     }
   }, [user, form]);
   
-  useEffect(() => {
-    const currentTheme = form.getValues('theme');
-    if (customGradientsEnabled) {
-        if (currentTheme !== 'custom') {
-            form.setValue('theme', 'custom');
-        }
-    } else {
-        if (currentTheme === 'custom') {
-            form.setValue('theme', user?.theme !== 'custom' ? user?.theme || 'light' : 'light');
-        }
-    }
-  }, [customGradientsEnabled, form, user?.theme]);
-
   useEffect(() => {
     if (!user) return;
     const linksCollection = collection(db, `users/${user.uid}/links`);
@@ -170,12 +147,15 @@ export default function AppearancePage() {
   async function onSubmit(values: z.infer<typeof appearanceSchema>) {
     if (!user) return;
     setFormLoading(true);
+
+    // Use the component's selectedTheme state for submission
+    const dataToUpdate = {
+        ...values,
+        theme: selectedTheme,
+    };
+
     try {
         const userRef = doc(db, "users", user.uid);
-        const dataToUpdate = {
-          ...values,
-          theme: customGradientsEnabled ? 'custom' : values.theme,
-        };
         await updateDoc(userRef, dataToUpdate);
         setUser((prevUser) => prevUser ? { ...prevUser, ...dataToUpdate } : null);
         toast({ title: "Appearance updated successfully!" });
@@ -190,12 +170,22 @@ export default function AppearancePage() {
       return <Loading />;
   }
   
-  const previewProfile: Partial<UserProfile> = {
+  const isCustomActive = useMemo(() => {
+      return watchedValues.buttonStyle === 'gradient';
+  }, [watchedValues.buttonStyle]);
+  
+  useEffect(() => {
+      setSelectedTheme(isCustomActive ? 'custom' : (user?.theme !== 'custom' ? user?.theme || 'light' : 'light'));
+  }, [isCustomActive, user?.theme]);
+  
+
+  const previewProfile = useMemo(() => ({
     ...user,
     ...watchedValues,
-    theme: customGradientsEnabled ? 'custom' : watchedValues.theme,
+    theme: selectedTheme,
     bot: user?.bot,
-  };
+  }), [user, watchedValues, selectedTheme]);
+
 
   const ThemeCardContent = () => (
     <Card>
@@ -209,7 +199,6 @@ export default function AppearancePage() {
           render={({ field }) => (
             <FormItem>
               <Carousel
-                key={field.value}
                 opts={{
                   align: "start",
                   slidesToScroll: "auto",
@@ -218,30 +207,28 @@ export default function AppearancePage() {
                 className="w-full"
               >
                 <CarouselContent className="-ml-1">
-                    {themes.map((theme) => (
-                    <CarouselItem key={theme.id} className={cn("basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/4 xl:basis-1/5 pl-1", theme.id === 'custom' && !customGradientsEnabled ? 'hidden' : '')}>
-                        <div className="p-1">
-                            <button 
-                                type="button"
-                                disabled={theme.id === 'custom'}
-                                className={cn(
-                                    "w-full aspect-square rounded-lg flex items-center justify-center border-2 cursor-pointer transition-all",
-                                    field.value === theme.id ? 'border-primary ring-2 ring-primary/50' : 'border-transparent hover:border-primary/50',
-                                    theme.id === 'custom' && 'cursor-not-allowed opacity-50'
-                                )}
-                                onClick={() => {
-                                if (theme.id !== 'custom') {
-                                    setCustomGradientsEnabled(false);
-                                    field.onChange(theme.id)
-                                }
-                                }}
-                            >
-                                <div className="w-10 h-10 rounded-full flex overflow-hidden border" style={{ background: `linear-gradient(45deg, ${theme.colors[0]} 50%, ${theme.colors[1]} 50%)` }}></div>
-                            </button>
-                            <p className="text-xs text-center mt-1 text-muted-foreground truncate">{theme.name}</p>
-                        </div>
-                    </CarouselItem>
-                    ))}
+                    {themes.map((theme) => {
+                      if (theme.id === 'custom') return null;
+                      return (
+                        <CarouselItem key={theme.id} className="basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/4 xl:basis-1/5 pl-1">
+                            <div className="p-1">
+                                <button 
+                                    type="button"
+                                    disabled={isCustomActive}
+                                    className={cn(
+                                        "w-full aspect-square rounded-lg flex items-center justify-center border-2 cursor-pointer transition-all",
+                                        selectedTheme === theme.id ? 'border-primary ring-2 ring-primary/50' : 'border-transparent hover:border-primary/50',
+                                        isCustomActive && 'opacity-50 cursor-not-allowed'
+                                    )}
+                                    onClick={() => setSelectedTheme(theme.id)}
+                                >
+                                    <div className="w-10 h-10 rounded-full flex overflow-hidden border" style={{ background: `linear-gradient(45deg, ${theme.colors[0]} 50%, ${theme.colors[1]} 50%)` }}></div>
+                                </button>
+                                <p className="text-xs text-center mt-1 text-muted-foreground truncate">{theme.name}</p>
+                            </div>
+                        </CarouselItem>
+                      )
+                    })}
                 </CarouselContent>
                 <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background/50 backdrop-blur-sm" />
                 <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background/50 backdrop-blur-sm" />
@@ -273,125 +260,109 @@ export default function AppearancePage() {
     </Card>
   );
 
-  const ButtonCardContent = () => (
+  const CustomStylesCard = () => (
     <Card>
-        <CardHeader>
-            <CardTitle>Button Style</CardTitle>
-        </CardHeader>
-        <CardContent>
-            <FormField
-                control={form.control}
-                name="buttonStyle"
-                render={({ field }) => (
-                <FormItem className="space-y-3">
-                    <FormControl>
-                    <RadioGroup
-                        onValueChange={(value) => {
-                            field.onChange(value);
-                            setIsGradientStyle(value === 'gradient');
-                        }}
-                        defaultValue={field.value}
-                        className="grid grid-cols-2 gap-4"
-                    >
-                        <FormItem>
-                        <RadioGroupItem value="solid" id="solid" className="peer sr-only" />
-                        <Label htmlFor="solid" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
-                            <div className="h-6 w-full rounded-md bg-secondary mb-2"></div>
-                            Solid
-                        </Label>
-                        </FormItem>
-                        <FormItem>
-                        <RadioGroupItem value="gradient" id="gradient" className="peer sr-only" />
-                        <Label htmlFor="gradient" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
-                            <div className="h-6 w-full rounded-md bg-gradient-to-r from-secondary to-primary mb-2"></div>
-                            Gradient
-                        </Label>
-                        </FormItem>
-                    </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
+      <CardHeader>
+        <CardTitle>Custom Styles</CardTitle>
+        <CardDescription>Fine-tune your profile's look with custom button styles and colors.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <FormField
+          control={form.control}
+          name="buttonStyle"
+          render={({ field }) => (
+            <FormItem className="space-y-4">
+              <FormLabel>Button Style</FormLabel>
+              <RadioGroup
+                onValueChange={field.onChange}
+                value={field.value}
+                className="grid grid-cols-2 gap-4"
+              >
+                <FormItem>
+                  <RadioGroupItem value="solid" id="solid" className="peer sr-only" />
+                  <Label htmlFor="solid" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer">
+                    <div className="h-6 w-full max-w-[100px] rounded-md bg-secondary mb-2"></div>
+                    Solid
+                  </Label>
                 </FormItem>
-                )}
-            />
-        </CardContent>
+                <FormItem>
+                  <RadioGroupItem value="gradient" id="gradient" className="peer sr-only" />
+                  <Label htmlFor="gradient" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer">
+                    <div className="h-6 w-full max-w-[100px] rounded-md bg-gradient-to-r from-secondary to-primary mb-2"></div>
+                    Gradient
+                  </Label>
+                </FormItem>
+              </RadioGroup>
+            </FormItem>
+          )}
+        />
+        
+        {isCustomActive && (
+            <div className="space-y-6 pt-4 border-t">
+                <div>
+                    <Label className="font-medium text-base">Background Gradient</Label>
+                    <div className="grid grid-cols-2 gap-4 mt-2">
+                        <FormField
+                            control={form.control}
+                            name="customThemeGradient.from"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-xs text-muted-foreground">From</FormLabel>
+                                    <FormControl>
+                                    <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="customThemeGradient.to"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-xs text-muted-foreground">To</FormLabel>
+                                    <FormControl>
+                                    <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+                </div>
+                <div>
+                    <Label className="font-medium text-base">Button Gradient</Label>
+                    <div className="grid grid-cols-2 gap-4 mt-2">
+                        <FormField
+                            control={form.control}
+                            name="customButtonGradient.from"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-xs text-muted-foreground">From</FormLabel>
+                                    <FormControl>
+                                    <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="customButtonGradient.to"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-xs text-muted-foreground">To</FormLabel>
+                                    <FormControl>
+                                    <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+                </div>
+            </div>
+        )}
+      </CardContent>
     </Card>
   );
 
-  const CustomGradientCardContent = () => (
-    <Card>
-        <CardHeader className="flex-row items-center justify-between">
-            <div className="space-y-1">
-                <CardTitle>Custom Gradients</CardTitle>
-            </div>
-                <Switch
-                checked={customGradientsEnabled}
-                onCheckedChange={setCustomGradientsEnabled}
-                />
-        </CardHeader>
-        <CardContent className="space-y-6">
-            <div>
-                <Label className="font-medium">Theme Gradient</Label>
-                <div className="grid grid-cols-2 gap-4 mt-2">
-                <FormField
-                    control={form.control}
-                    name="customThemeGradient.from"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel className="text-xs text-muted-foreground">From</FormLabel>
-                            <FormControl>
-                            <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
-                            </FormControl>
-                        </FormItem>
-                    )}
-                    />
-                    <FormField
-                    control={form.control}
-                    name="customThemeGradient.to"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel className="text-xs text-muted-foreground">To</FormLabel>
-                            <FormControl>
-                            <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
-                            </FormControl>
-                        </FormItem>
-                    )}
-                    />
-                </div>
-            </div>
-            {isGradientStyle && (
-            <div>
-                <Label className="font-medium">Button Gradient</Label>
-                <div className="grid grid-cols-2 gap-4 mt-2">
-                <FormField
-                    control={form.control}
-                    name="customButtonGradient.from"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel className="text-xs text-muted-foreground">From</FormLabel>
-                            <FormControl>
-                            <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
-                            </FormControl>
-                        </FormItem>
-                    )}
-                    />
-                    <FormField
-                    control={form.control}
-                    name="customButtonGradient.to"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel className="text-xs text-muted-foreground">To</FormLabel>
-                            <FormControl>
-                            <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
-                            </FormControl>
-                        </FormItem>
-                    )}
-                    />
-                </div>
-            </div>
-            )}
-        </CardContent>
-    </Card>
-  );
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
@@ -410,8 +381,7 @@ export default function AppearancePage() {
             <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <ThemeCardContent />
-                <ButtonCardContent />
-                <CustomGradientCardContent />
+                <CustomStylesCard />
 
                 <Button type="submit" disabled={formLoading} className="w-full lg:w-auto">
                     {formLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
