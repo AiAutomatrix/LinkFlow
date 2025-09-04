@@ -21,13 +21,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useEffect, useState, useReducer } from "react";
+import { useEffect, useState, useReducer, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import PublicProfilePreview from "./_components/public-profile-preview";
 import type { Link, UserProfile } from "@/lib/types";
 import { Loader2, RefreshCw, Palette, Square, Pipette } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/auth-context";
 import { doc, updateDoc, collection, onSnapshot, query, orderBy } from "firebase/firestore";
@@ -36,7 +36,6 @@ import Loading from "@/app/loading";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { ColorPicker } from "@/components/ui/color-picker";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const hexColor = () => z.string().regex(/^#[0-9a-fA-F]{6}$/, "Must be a valid hex color");
 
@@ -118,6 +117,9 @@ export default function AppearancePage() {
   const [customGradientsEnabled, setCustomGradientsEnabled] = useState(false);
   const [_, forceUpdate] = useReducer((x) => x + 1, 0);
 
+  // State for the mobile settings carousel
+  const [mobileCarouselApi, setMobileCarouselApi] = useState<CarouselApi>();
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   const form = useForm<z.infer<typeof appearanceSchema>>({
     resolver: zodResolver(appearanceSchema),
@@ -169,6 +171,21 @@ export default function AppearancePage() {
     return () => unsubscribe();
   }, [user]);
 
+  // Mobile carousel effects
+  useEffect(() => {
+    if (!mobileCarouselApi) {
+      return;
+    }
+    setCurrentSlide(mobileCarouselApi.selectedScrollSnap());
+    mobileCarouselApi.on("select", () => {
+      setCurrentSlide(mobileCarouselApi.selectedScrollSnap());
+    });
+  }, [mobileCarouselApi]);
+
+  const handleTabClick = useCallback((index: number) => {
+    mobileCarouselApi?.scrollTo(index);
+  }, [mobileCarouselApi]);
+
   async function onSubmit(values: z.infer<typeof appearanceSchema>) {
     if (!user) return;
     setFormLoading(true);
@@ -199,26 +216,13 @@ export default function AppearancePage() {
     bot: user?.bot, // Ensure bot data is passed to the preview
   };
 
-  const SettingsContent = () => (
-     <div className="space-y-6 lg:hidden">
-        <Tabs defaultValue="theme" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="theme"><Palette className="h-5 w-5" /></TabsTrigger>
-                <TabsTrigger value="buttons"><Square className="h-5 w-5" /></TabsTrigger>
-                <TabsTrigger value="custom"><Pipette className="h-5 w-5" /></TabsTrigger>
-            </TabsList>
-            <TabsContent value="theme">
-                {ThemeCardContent()}
-            </TabsContent>
-            <TabsContent value="buttons">
-                {ButtonCardContent()}
-            </TabsContent>
-            <TabsContent value="custom">
-                {CustomGradientCardContent()}
-            </TabsContent>
-        </Tabs>
+  const MobileSettingsNav = () => (
+    <div className="p-1 grid grid-cols-3 gap-1 rounded-lg bg-muted">
+        <Button size="sm" variant={currentSlide === 0 ? "background" : "ghost"} onClick={() => handleTabClick(0)} className="h-8"><Palette className="h-5 w-5" /></Button>
+        <Button size="sm" variant={currentSlide === 1 ? "background" : "ghost"} onClick={() => handleTabClick(1)} className="h-8"><Square className="h-5 w-5" /></Button>
+        <Button size="sm" variant={currentSlide === 2 ? "background" : "ghost"} onClick={() => handleTabClick(2)} className="h-8"><Pipette className="h-5 w-5" /></Button>
     </div>
-  );
+  )
 
   const ThemeCardContent = () => (
     <Card>
@@ -237,11 +241,11 @@ export default function AppearancePage() {
                     align: "start",
                     slidesToScroll: "auto",
                 }}
-                className="w-full max-w-full"
+                className="w-full"
                 >
-                <CarouselContent>
+                <CarouselContent className="-ml-1">
                     {themes.map((theme) => (
-                    <CarouselItem key={theme.id} className={cn("basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/4 xl:basis-1/5", theme.id === 'custom' && !customGradientsEnabled ? 'hidden' : '')}>
+                    <CarouselItem key={theme.id} className={cn("basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/4 xl:basis-1/5 pl-1", theme.id === 'custom' && !customGradientsEnabled ? 'hidden' : '')}>
                         <div className="p-1">
                             <button 
                                 type="button"
@@ -265,8 +269,8 @@ export default function AppearancePage() {
                     </CarouselItem>
                     ))}
                 </CarouselContent>
-                <CarouselPrevious />
-                <CarouselNext />
+                <CarouselPrevious className="hidden sm:flex" />
+                <CarouselNext className="hidden sm:flex" />
                 </Carousel>
                 <FormMessage />
             </FormItem>
@@ -442,9 +446,16 @@ export default function AppearancePage() {
         </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Mobile View: Tabs */}
-            <div className="lg:hidden">
-              <SettingsContent />
+            {/* Mobile View: Carousel */}
+            <div className="lg:hidden space-y-4">
+               <MobileSettingsNav />
+               <Carousel setApi={setMobileCarouselApi} className="w-full">
+                <CarouselContent>
+                    <CarouselItem>{ThemeCardContent()}</CarouselItem>
+                    <CarouselItem>{ButtonCardContent()}</CarouselItem>
+                    <CarouselItem>{CustomGradientCardContent()}</CarouselItem>
+                </CarouselContent>
+               </Carousel>
             </div>
 
             {/* Desktop View: Stacked Cards */}
@@ -465,3 +476,5 @@ export default function AppearancePage() {
   );
 }
 
+
+    
