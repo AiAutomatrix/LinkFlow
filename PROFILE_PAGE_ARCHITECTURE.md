@@ -30,8 +30,6 @@ Instead of rendering JSX directly, the `ProfileClientPage` component dynamically
 2.  **Inject Assets**: This HTML string is embedded into a full `<html>` document structure. Crucially, all necessary CSS and JavaScript are injected directly into this document.
 3.  **Set `srcDoc`**: The final, self-contained HTML document is passed to the `srcDoc` attribute of the `iframe` element, which then renders it.
 
-This technique treats the profile page as a self-contained "microsite" within the main page, effectively solving all layout and `z-index` problems related to the chatbot.
-
 ```jsx
 // Simplified example from profile-client-page.tsx
 
