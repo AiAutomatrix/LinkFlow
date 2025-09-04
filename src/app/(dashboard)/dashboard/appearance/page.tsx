@@ -21,7 +21,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useEffect, useState, useMemo, memo } from "react";
+import { useEffect, useState, useMemo, memo, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import PublicProfilePreview from "./_components/public-profile-preview";
 import type { Link, UserProfile } from "@/lib/types";
@@ -109,192 +109,204 @@ export const themes = [
     { id: 'custom', name: 'Custom', colors: ['#DDDDDD', '#888888'] },
 ];
 
-// Memoize the ThemeCardContent to prevent re-renders that reset the carousel state
-const ThemeCardContent = memo(function ThemeCardContent({ selectedTheme, setSelectedTheme, isCustomActive, form }: {
+const ThemeCardContent = memo(function ThemeCardContent({ selectedTheme, onThemeSelect }: {
   selectedTheme: string;
-  setSelectedTheme: (theme: string) => void;
-  isCustomActive: boolean;
-  form: any;
+  onThemeSelect: (themeId: string) => void;
 }) {
+  const isCustom = selectedTheme === 'custom';
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Theme</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <FormField
-          control={form.control}
-          name="theme"
-          render={({ field }) => (
-            <FormItem>
-              <Carousel
-                opts={{
-                  align: "start",
-                  slidesToScroll: "auto",
-                  draggable: false, // Explicitly disable dragging
-                }}
-                className="w-full"
-              >
-                <CarouselContent className="-ml-1">
-                    {themes.map((theme) => {
-                      if (theme.id === 'custom') return null;
-                      return (
-                        <CarouselItem key={theme.id} className="basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/4 xl:basis-1/5 pl-1">
-                            <div className="p-1">
-                                <button 
-                                    type="button"
-                                    disabled={isCustomActive}
-                                    className={cn(
-                                        "w-full aspect-square rounded-lg flex items-center justify-center border-2 cursor-pointer transition-all",
-                                        selectedTheme === theme.id ? 'border-primary ring-2 ring-primary/50' : 'border-transparent hover:border-primary/50',
-                                        isCustomActive && 'opacity-50 cursor-not-allowed'
-                                    )}
-                                    onClick={() => setSelectedTheme(theme.id)}
-                                >
-                                    <div className="w-10 h-10 rounded-full flex overflow-hidden border" style={{ background: `linear-gradient(45deg, ${theme.colors[0]} 50%, ${theme.colors[1]} 50%)` }}></div>
-                                </button>
-                                <p className="text-xs text-center mt-1 text-muted-foreground truncate">{theme.name}</p>
-                            </div>
-                        </CarouselItem>
-                      )
-                    })}
-                </CarouselContent>
-                <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background/50 backdrop-blur-sm" />
-                <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background/50 backdrop-blur-sm" />
-              </Carousel>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="animatedBackground"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-            <div className="space-y-0.5">
-                <FormLabel className="text-base">
-                Animated Background
-                </FormLabel>
-            </div>
-            <FormControl>
-                <Switch
-                checked={field.value}
-                onCheckedChange={field.onChange}
-                />
-            </FormControl>
-            </FormItem>
-          )}
-        />
+        <Carousel
+          opts={{
+            align: "start",
+            slidesToScroll: "auto",
+            draggable: false,
+          }}
+          className="w-full"
+        >
+          <CarouselContent className="-ml-1">
+              {themes.map((theme) => {
+                if (theme.id === 'custom') return null;
+                return (
+                  <CarouselItem key={theme.id} className="basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/4 xl:basis-1/5 pl-1">
+                      <div className="p-1">
+                          <button 
+                              type="button"
+                              disabled={isCustom}
+                              className={cn(
+                                  "w-full aspect-square rounded-lg flex items-center justify-center border-2 cursor-pointer transition-all",
+                                  selectedTheme === theme.id ? 'border-primary ring-2 ring-primary/50' : 'border-transparent hover:border-primary/50',
+                                  isCustom && 'opacity-50 cursor-not-allowed'
+                              )}
+                              onClick={() => onThemeSelect(theme.id)}
+                          >
+                              <div className="w-10 h-10 rounded-full flex overflow-hidden border" style={{ background: `linear-gradient(45deg, ${theme.colors[0]} 50%, ${theme.colors[1]} 50%)` }}></div>
+                          </button>
+                          <p className="text-xs text-center mt-1 text-muted-foreground truncate">{theme.name}</p>
+                      </div>
+                  </CarouselItem>
+                )
+              })}
+          </CarouselContent>
+          <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background/50 backdrop-blur-sm" />
+          <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background/50 backdrop-blur-sm" />
+        </Carousel>
       </CardContent>
     </Card>
   );
 });
-
 ThemeCardContent.displayName = 'ThemeCardContent';
 
-const CustomStylesCard = memo(function CustomStylesCard({ form, isCustomActive }: { form: any, isCustomActive: boolean }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Custom Styles</CardTitle>
-        <CardDescription>Fine-tune your profile's look with custom button styles and colors.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <FormField
-          control={form.control}
-          name="buttonStyle"
-          render={({ field }) => (
-            <FormItem className="space-y-4">
-              <FormLabel>Button Style</FormLabel>
-              <RadioGroup
-                onValueChange={field.onChange}
-                value={field.value}
-                className="grid grid-cols-2 gap-4"
-              >
-                <FormItem>
-                  <RadioGroupItem value="solid" id="solid" className="peer sr-only" />
-                  <Label htmlFor="solid" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer">
-                    <div className="h-6 w-full max-w-[100px] rounded-md bg-secondary mb-2"></div>
-                    Solid
-                  </Label>
-                </FormItem>
-                <FormItem>
-                  <RadioGroupItem value="gradient" id="gradient" className="peer sr-only" />
-                  <Label htmlFor="gradient" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer">
-                    <div className="h-6 w-full max-w-[100px] rounded-md bg-gradient-to-r from-secondary to-primary mb-2"></div>
-                    Gradient
-                  </Label>
-                </FormItem>
-              </RadioGroup>
-            </FormItem>
-          )}
-        />
-        
-        {isCustomActive && (
-            <div className="space-y-6 pt-4 border-t">
-                <div>
-                    <Label className="font-medium text-base">Background Gradient</Label>
-                    <div className="grid grid-cols-2 gap-4 mt-2">
-                        <FormField
-                            control={form.control}
-                            name="customThemeGradient.from"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel className="text-xs text-muted-foreground">From</FormLabel>
-                                    <FormControl>
-                                    <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="customThemeGradient.to"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel className="text-xs text-muted-foreground">To</FormLabel>
-                                    <FormControl>
-                                    <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
-                    </div>
+
+const CustomStylesCard = memo(function CustomStylesCard({ form }: { form: any }) {
+    const isCustomActive = form.watch('theme') === 'custom';
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Button & Background Styles</CardTitle>
+                <CardDescription>Customize your profile's look with custom buttons and backgrounds.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <FormField
+                    control={form.control}
+                    name="buttonStyle"
+                    render={({ field }) => (
+                        <FormItem className="space-y-4">
+                        <FormLabel>Button Style</FormLabel>
+                        <RadioGroup
+                            onValueChange={field.onChange}
+                            value={field.value}
+                            className="grid grid-cols-2 gap-4"
+                        >
+                            <FormItem>
+                            <RadioGroupItem value="solid" id="solid" className="peer sr-only" />
+                            <Label htmlFor="solid" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer">
+                                <div className="h-6 w-full max-w-[100px] rounded-md bg-secondary mb-2"></div>
+                                Solid
+                            </Label>
+                            </FormItem>
+                            <FormItem>
+                            <RadioGroupItem value="gradient" id="gradient" className="peer sr-only" />
+                            <Label htmlFor="gradient" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer">
+                                <div className="h-6 w-full max-w-[100px] rounded-md bg-gradient-to-r from-secondary to-primary mb-2"></div>
+                                Gradient
+                            </Label>
+                            </FormItem>
+                        </RadioGroup>
+                        </FormItem>
+                    )}
+                />
+                
+                <div className="space-y-4 pt-4 border-t">
+                    <FormField
+                        control={form.control}
+                        name="theme"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                <div className="space-y-0.5">
+                                    <FormLabel className="text-base">Enable Custom Theme</FormLabel>
+                                    <FormDescription>Use custom gradients for background and buttons.</FormDescription>
+                                </div>
+                                <FormControl>
+                                    <Switch
+                                        checked={field.value === 'custom'}
+                                        onCheckedChange={(checked) => field.onChange(checked ? 'custom' : 'light')}
+                                    />
+                                </FormControl>
+                            </FormItem>
+                        )}
+                    />
+                    {isCustomActive && (
+                        <div className="space-y-6">
+                            <div>
+                                <Label className="font-medium text-base">Background Gradient</Label>
+                                <div className="grid grid-cols-2 gap-4 mt-2">
+                                    <FormField
+                                        control={form.control}
+                                        name="customThemeGradient.from"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-xs text-muted-foreground">From</FormLabel>
+                                                <FormControl>
+                                                <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
+                                                </FormControl>
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="customThemeGradient.to"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-xs text-muted-foreground">To</FormLabel>
+                                                <FormControl>
+                                                <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
+                                                </FormControl>
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <Label className="font-medium text-base">Button Gradient</Label>
+                                <div className="grid grid-cols-2 gap-4 mt-2">
+                                    <FormField
+                                        control={form.control}
+                                        name="customButtonGradient.from"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-xs text-muted-foreground">From</FormLabel>
+                                                <FormControl>
+                                                <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
+                                                </FormControl>
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="customButtonGradient.to"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-xs text-muted-foreground">To</FormLabel>
+                                                <FormControl>
+                                                <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
+                                                </FormControl>
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
-                <div>
-                    <Label className="font-medium text-base">Button Gradient</Label>
-                    <div className="grid grid-cols-2 gap-4 mt-2">
-                        <FormField
-                            control={form.control}
-                            name="customButtonGradient.from"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel className="text-xs text-muted-foreground">From</FormLabel>
-                                    <FormControl>
-                                    <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="customButtonGradient.to"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel className="text-xs text-muted-foreground">To</FormLabel>
-                                    <FormControl>
-                                    <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
-                    </div>
-                </div>
-            </div>
-        )}
-      </CardContent>
-    </Card>
-  );
+                 <FormField
+                    control={form.control}
+                    name="animatedBackground"
+                    render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                            <FormLabel className="text-base">
+                            Animated Background
+                            </FormLabel>
+                        </div>
+                        <FormControl>
+                            <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            />
+                        </FormControl>
+                        </FormItem>
+                    )}
+                />
+            </CardContent>
+        </Card>
+    );
 });
 
 CustomStylesCard.displayName = 'CustomStylesCard';
@@ -305,18 +317,17 @@ export default function AppearancePage() {
   const [formLoading, setFormLoading] = useState(false);
   const [links, setLinks] = useState<Link[]>([]);
   
-  // This state is now managed separately to prevent carousel re-renders
-  const [selectedTheme, setSelectedTheme] = useState(user?.theme || 'light');
-  
   const form = useForm<z.infer<typeof appearanceSchema>>({
     resolver: zodResolver(appearanceSchema),
   });
+
+  // State to hold the last *non-custom* theme
+  const [lastStandardTheme, setLastStandardTheme] = useState('light');
   
   const watchedValues = form.watch();
   
   useEffect(() => {
     if (user) {
-        setSelectedTheme(user.theme !== 'custom' ? user.theme || 'light' : 'light');
         form.reset({
             theme: user.theme || 'light',
             animatedBackground: user.animatedBackground || false,
@@ -324,6 +335,9 @@ export default function AppearancePage() {
             customThemeGradient: user.customThemeGradient || { from: '#FFFFFF', to: '#AAAAAA' },
             customButtonGradient: user.customButtonGradient || { from: '#AAAAAA', to: '#FFFFFF' },
         });
+        if (user.theme !== 'custom') {
+            setLastStandardTheme(user.theme || 'light');
+        }
     }
   }, [user, form]);
   
@@ -337,17 +351,41 @@ export default function AppearancePage() {
     return () => unsubscribe();
   }, [user]);
 
+  const handleThemeSelect = useCallback((themeId: string) => {
+    form.setValue('theme', themeId);
+    if (themeId !== 'custom') {
+      setLastStandardTheme(themeId);
+    }
+  }, [form]);
+
+  // Watch for changes on the 'theme' field specifically
+  const watchedTheme = form.watch('theme');
+  useEffect(() => {
+    if (watchedTheme !== 'custom' && watchedTheme) {
+        setLastStandardTheme(watchedTheme);
+    }
+  }, [watchedTheme]);
+
+  // Effect to handle switching between custom and standard themes
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+        if (name === 'theme') {
+            if (value.theme === 'custom') {
+                // When switching to custom, we do nothing to the lastStandardTheme
+            } else {
+                // When switching away from custom, update the theme value
+                form.setValue('theme', value.theme || lastStandardTheme);
+            }
+        }
+    });
+    return () => subscription.unsubscribe();
+  }, [form, lastStandardTheme]);
+
   async function onSubmit(values: z.infer<typeof appearanceSchema>) {
     if (!user) return;
     setFormLoading(true);
     
-    // The theme passed to the DB should be 'custom' if gradient buttons are active, otherwise the selected standard theme
-    const finalTheme = values.buttonStyle === 'gradient' ? 'custom' : selectedTheme;
-
-    const dataToUpdate = {
-        ...values,
-        theme: finalTheme,
-    };
+    const dataToUpdate = { ...values };
 
     try {
         const userRef = doc(db, "users", user.uid);
@@ -365,17 +403,11 @@ export default function AppearancePage() {
       return <Loading />;
   }
   
-  const isCustomActive = useMemo(() => {
-      return watchedValues.buttonStyle === 'gradient';
-  }, [watchedValues.buttonStyle]);
-  
   const previewProfile = useMemo(() => ({
     ...user,
     ...watchedValues,
-    // Preview uses 'custom' if gradient is active, otherwise the selected standard theme
-    theme: isCustomActive ? 'custom' : selectedTheme, 
     bot: user?.bot,
-  }), [user, watchedValues, isCustomActive, selectedTheme]);
+  }), [user, watchedValues]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
@@ -394,16 +426,12 @@ export default function AppearancePage() {
             <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <ThemeCardContent 
-                  selectedTheme={selectedTheme} 
-                  setSelectedTheme={setSelectedTheme} 
-                  isCustomActive={isCustomActive}
-                  form={form}
+                  selectedTheme={watchedValues.theme || 'light'}
+                  onThemeSelect={handleThemeSelect}
                 />
                 <CustomStylesCard 
                   form={form} 
-                  isCustomActive={isCustomActive}
                 />
-
                 <Button type="submit" disabled={formLoading} className="w-full lg:w-auto">
                     {formLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Update Appearance
@@ -415,4 +443,4 @@ export default function AppearancePage() {
   );
 }
 
-    
+  
