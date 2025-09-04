@@ -113,6 +113,7 @@ export default function AppearancePage() {
   const [formLoading, setFormLoading] = useState(false);
   const [links, setLinks] = useState<Link[]>([]);
   const [customGradientsEnabled, setCustomGradientsEnabled] = useState(false);
+  const [isGradientStyle, setIsGradientStyle] = useState(false);
 
   const form = useForm<z.infer<typeof appearanceSchema>>({
     resolver: zodResolver(appearanceSchema),
@@ -130,7 +131,9 @@ export default function AppearancePage() {
   useEffect(() => {
     if (user) {
         const isCustom = user.theme === 'custom';
+        const isGradient = user.buttonStyle === 'gradient';
         setCustomGradientsEnabled(isCustom);
+        setIsGradientStyle(isGradient);
         form.reset({
             theme: user.theme || 'light',
             animatedBackground: user.animatedBackground || false,
@@ -205,13 +208,13 @@ export default function AppearancePage() {
           name="theme"
           render={({ field }) => (
             <FormItem>
-                <div onTouchMove={(e) => e.stopPropagation()} onWheel={(e) => e.stopPropagation()}>
+                <div onTouchStart={(e) => e.stopPropagation()} onTouchMove={(e) => e.stopPropagation()} onWheel={(e) => e.stopPropagation()}>
                     <Carousel
-                      key={field.value}
+                      key={field.value} // Add key to force re-render on change but preserve state
                       opts={{
                           align: "start",
                           slidesToScroll: "auto",
-                          dragFree: true,
+                          dragFree: false, // Disable drag-to-scroll
                       }}
                       className="w-full max-w-full"
                     >
@@ -289,7 +292,10 @@ export default function AppearancePage() {
                 <FormItem className="space-y-3">
                     <FormControl>
                     <RadioGroup
-                        onValueChange={field.onChange}
+                        onValueChange={(value) => {
+                            field.onChange(value);
+                            setIsGradientStyle(value === 'gradient');
+                        }}
                         defaultValue={field.value}
                         className="grid grid-cols-2 gap-4"
                     >
@@ -358,6 +364,7 @@ export default function AppearancePage() {
                     />
                 </div>
             </div>
+            {isGradientStyle && (
             <div>
                 <Label className="font-medium">Button Gradient</Label>
                 <div className="grid grid-cols-2 gap-4 mt-2">
@@ -387,6 +394,7 @@ export default function AppearancePage() {
                     />
                 </div>
             </div>
+            )}
         </CardContent>
     </Card>
   );
