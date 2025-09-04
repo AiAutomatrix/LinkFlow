@@ -4,7 +4,7 @@ import AnimatedBackground from "@/components/animated-background";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import type { UserProfile, Link as LinkType } from "@/lib/types";
-import { Mail, Instagram, Facebook, Github, Coffee, Banknote, Bitcoin, ClipboardCopy, ClipboardCheck } from 'lucide-react';
+import { Mail, Instagram, Facebook, Github, Linkedin, Coffee, Banknote, Bitcoin, ClipboardCopy, ClipboardCheck } from 'lucide-react';
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -131,6 +131,7 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
       case 'instagram': return <Instagram className="h-6 w-6" />;
       case 'facebook': return <Facebook className="h-6 w-6" />;
       case 'github': return <Github className="h-6 w-6" />;
+      case 'linkedin': return <Linkedin className="h-6 w-6" />;
       default: return null;
     }
   };

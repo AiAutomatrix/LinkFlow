@@ -4,7 +4,7 @@ import type { Link as LinkType, UserProfile } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Logo from '@/components/logo';
 import AnimatedBackground from '@/components/animated-background';
-import { Mail, Instagram, Facebook, Github, Coffee, Banknote, Bitcoin, ClipboardCopy, ClipboardCheck } from 'lucide-react';
+import { Mail, Instagram, Facebook, Github, Linkedin, Coffee, Banknote, Bitcoin, ClipboardCopy, ClipboardCheck } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -200,6 +200,7 @@ const SocialIcon = ({ platform }: { platform: string }) => {
     case 'instagram': return <Instagram className="h-6 w-6" />;
     case 'facebook': return <Facebook className="h-6 w-6" />;
     case 'github': return <Github className="h-6 w-6" />;
+    case 'linkedin': return <Linkedin className="h-6 w-6" />;
     default: return null;
   }
 };
@@ -545,4 +546,3 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     </div>
   );
 }
-
