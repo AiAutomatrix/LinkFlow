@@ -444,16 +444,18 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     const embedScript = unescapeHtml(rawEmbedScript);
     
     const autoOpenScript = user.bot?.autoOpen ? `
-        const initBotpress = () => {
-            if (window.botpress) {
-              window.botpress.on("webchat:ready", () => {
-                  window.botpress.open();
-              });
-            } else {
-              setTimeout(initBotpress, 200);
-            }
-        };
-        initBotpress();
+        <script>
+            const initBotpress = () => {
+                if (window.botpress) {
+                  window.botpress.on("webchat:ready", () => {
+                      window.botpress.open();
+                  });
+                } else {
+                  setTimeout(initBotpress, 200);
+                }
+            };
+            window.addEventListener('load', initBotpress);
+        </script>
     ` : '';
     
     const finalHtml = `
@@ -478,8 +480,8 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
           </div>
           <script>
             ${iframeScript}
-            ${autoOpenScript}
           </script>
+          ${autoOpenScript}
         </body>
       </html>
     `;

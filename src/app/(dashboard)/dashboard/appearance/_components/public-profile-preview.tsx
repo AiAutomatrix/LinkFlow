@@ -91,7 +91,7 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
     if (!showBot) {
       setSrcDoc('');
       return;
-    };
+    }
 
     const rawEmbedScript = profile.bot?.embedScript || '';
 
@@ -104,10 +104,26 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
 
     const embedScript = unescapeHtml(rawEmbedScript);
 
+    const autoOpenScript = profile.bot?.autoOpen ? `
+        <script>
+            const initBotpress = () => {
+                if (window.botpress) {
+                    window.botpress.on("webchat:ready", () => {
+                        window.botpress.open();
+                    });
+                } else {
+                    setTimeout(initBotpress, 200);
+                }
+            };
+            window.addEventListener('load', initBotpress);
+        </script>
+    ` : '';
+
     const newSrcDoc = embedScript ? `
       <html>
       <head>
         ${embedScript}
+        ${autoOpenScript}
       </head>
       <body>
       </body>
@@ -115,7 +131,7 @@ export default function PublicProfilePreview({ profile, links = [], isPreview = 
     ` : '';
 
     setSrcDoc(newSrcDoc);
-  }, [profile.bot?.embedScript, showBot]);
+  }, [profile.bot?.embedScript, profile.bot?.autoOpen, showBot]);
 
   const getInitials = (name: string = "") => {
     return name.split(" ").map((n) => n[0]).join("");
