@@ -23,7 +23,7 @@ import { useEffect, useState, useReducer } from "react";
 import { useToast } from "@/hooks/use-toast";
 import PublicProfilePreview from "./_components/public-profile-preview";
 import type { Link, UserProfile } from "@/lib/types";
-import { Loader2, RefreshCw, Palette, Square, Pipette } from "lucide-react";
+import { Loader2, RefreshCw, Palette, Square, Pipette, MoveRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Switch } from "@/components/ui/switch";
@@ -205,47 +205,54 @@ export default function AppearancePage() {
           name="theme"
           render={({ field }) => (
             <FormItem>
-                <Carousel
-                  opts={{
-                      align: "start",
-                      slidesToScroll: "auto",
-                      dragFree: true,
-                  }}
-                  className="w-full max-w-full px-8 sm:px-12"
-                >
-                  <CarouselContent className="-ml-1">
-                      {themes.map((theme) => (
-                      <CarouselItem key={theme.id} className={cn("basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/4 xl:basis-1/5 pl-1", theme.id === 'custom' && !customGradientsEnabled ? 'hidden' : '')}>
-                          <div className="p-1">
-                              <button 
-                                  type="button"
-                                  disabled={theme.id === 'custom'}
-                                  className={cn(
-                                      "w-full aspect-square rounded-lg flex items-center justify-center border-2 cursor-pointer transition-all",
-                                      field.value === theme.id ? 'border-primary ring-2 ring-primary/50' : 'border-transparent hover:border-primary/50',
-                                      theme.id === 'custom' && 'cursor-not-allowed opacity-50'
-                                  )}
-                                  onClick={() => {
-                                  if (theme.id !== 'custom') {
-                                      setCustomGradientsEnabled(false);
-                                      field.onChange(theme.id)
-                                  }
-                                  }}
-                              >
-                                  <div className="w-10 h-10 rounded-full flex overflow-hidden border" style={{ background: `linear-gradient(45deg, ${theme.colors[0]} 50%, ${theme.colors[1]} 50%)` }}></div>
-                              </button>
-                              <p className="text-xs text-center mt-1 text-muted-foreground truncate">{theme.name}</p>
-                          </div>
-                      </CarouselItem>
-                      ))}
-                  </CarouselContent>
-                  <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2 z-10" />
-                  <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2 z-10" />
-                </Carousel>
+                <div onTouchMove={(e) => e.stopPropagation()} onWheel={(e) => e.stopPropagation()}>
+                    <Carousel
+                      key={field.value}
+                      opts={{
+                          align: "start",
+                          slidesToScroll: "auto",
+                          dragFree: true,
+                      }}
+                      className="w-full max-w-full"
+                    >
+                      <CarouselContent className="-ml-1">
+                          {themes.map((theme) => (
+                          <CarouselItem key={theme.id} className={cn("basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/4 xl:basis-1/5 pl-1", theme.id === 'custom' && !customGradientsEnabled ? 'hidden' : '')}>
+                              <div className="p-1">
+                                  <button 
+                                      type="button"
+                                      disabled={theme.id === 'custom'}
+                                      className={cn(
+                                          "w-full aspect-square rounded-lg flex items-center justify-center border-2 cursor-pointer transition-all",
+                                          field.value === theme.id ? 'border-primary ring-2 ring-primary/50' : 'border-transparent hover:border-primary/50',
+                                          theme.id === 'custom' && 'cursor-not-allowed opacity-50'
+                                      )}
+                                      onClick={() => {
+                                      if (theme.id !== 'custom') {
+                                          setCustomGradientsEnabled(false);
+                                          field.onChange(theme.id)
+                                      }
+                                      }}
+                                  >
+                                      <div className="w-10 h-10 rounded-full flex overflow-hidden border" style={{ background: `linear-gradient(45deg, ${theme.colors[0]} 50%, ${theme.colors[1]} 50%)` }}></div>
+                                  </button>
+                                  <p className="text-xs text-center mt-1 text-muted-foreground truncate">{theme.name}</p>
+                              </div>
+                          </CarouselItem>
+                          ))}
+                      </CarouselContent>
+                      <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background/50 backdrop-blur-sm" />
+                      <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background/50 backdrop-blur-sm" />
+                    </Carousel>
+                </div>
                 <FormMessage />
             </FormItem>
           )}
         />
+            <div className="text-center text-xs text-muted-foreground flex items-center justify-center gap-2 lg:hidden">
+                <MoveRight className="w-4 h-4" />
+                <span>Swipe for more tools</span>
+            </div>
             <FormField
             control={form.control}
             name="animatedBackground"
@@ -386,7 +393,7 @@ export default function AppearancePage() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-        <div className="lg:sticky lg:top-6 w-full">
+        <div className="lg:sticky lg:top-6 w-full h-[500px] lg:h-auto">
              <div className="w-full max-w-sm mx-auto">
                 <PublicProfilePreview 
                     profile={previewProfile} 
@@ -397,7 +404,7 @@ export default function AppearancePage() {
             </div>
         </div>
         
-        <div className="w-full lg:col-span-1 space-y-6">
+        <div className="w-full lg:col-span-1 space-y-6 mt-6 lg:mt-0">
             <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 {/* Mobile View: Carousel */}
