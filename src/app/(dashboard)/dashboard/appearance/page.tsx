@@ -212,7 +212,7 @@ export default function AppearancePage() {
                   opts={{
                       align: "start",
                       slidesToScroll: "auto",
-                      draggable: false, // Disable swipe on inner carousel
+                      draggable: false, // This disables swiping on the inner carousel
                   }}
                   className="w-full"
                 >
