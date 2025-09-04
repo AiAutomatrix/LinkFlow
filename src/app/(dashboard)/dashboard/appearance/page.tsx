@@ -15,16 +15,17 @@ import * as z from "zod";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, memo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import PublicProfilePreview from "./_components/public-profile-preview";
 import type { Link, UserProfile } from "@/lib/types";
-import { Loader2, Palette, Square, Pipette } from "lucide-react";
+import { Loader2, Palette, Square, Pipette, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Switch } from "@/components/ui/switch";
@@ -108,86 +109,14 @@ export const themes = [
     { id: 'custom', name: 'Custom', colors: ['#DDDDDD', '#888888'] },
 ];
 
-export default function AppearancePage() {
-  const { toast } = useToast();
-  const { user, loading: authLoading, setUser } = useAuth();
-  const [formLoading, setFormLoading] = useState(false);
-  const [links, setLinks] = useState<Link[]>([]);
-  const [selectedTheme, setSelectedTheme] = useState(user?.theme || 'light');
-  
-  const form = useForm<z.infer<typeof appearanceSchema>>({
-    resolver: zodResolver(appearanceSchema),
-  });
-  
-  const watchedValues = form.watch();
-  
-  useEffect(() => {
-    if (user) {
-        setSelectedTheme(user.theme || 'light');
-        form.reset({
-            theme: user.theme || 'light',
-            animatedBackground: user.animatedBackground || false,
-            buttonStyle: user.buttonStyle || 'solid',
-            customThemeGradient: user.customThemeGradient || { from: '#FFFFFF', to: '#AAAAAA' },
-            customButtonGradient: user.customButtonGradient || { from: '#AAAAAA', to: '#FFFFFF' },
-        });
-    }
-  }, [user, form]);
-  
-  useEffect(() => {
-    if (!user) return;
-    const linksCollection = collection(db, `users/${user.uid}/links`);
-    const q = query(linksCollection, orderBy("order"));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-        setLinks(snapshot.docs.map(doc => ({id: doc.id, ...doc.data()} as Link)))
-    });
-    return () => unsubscribe();
-  }, [user]);
-
-  async function onSubmit(values: z.infer<typeof appearanceSchema>) {
-    if (!user) return;
-    setFormLoading(true);
-
-    // Use the component's selectedTheme state for submission
-    const dataToUpdate = {
-        ...values,
-        theme: selectedTheme,
-    };
-
-    try {
-        const userRef = doc(db, "users", user.uid);
-        await updateDoc(userRef, dataToUpdate);
-        setUser((prevUser) => prevUser ? { ...prevUser, ...dataToUpdate } : null);
-        toast({ title: "Appearance updated successfully!" });
-    } catch (error: any) {
-        toast({ variant: 'destructive', title: "Error", description: error.message });
-    } finally {
-        setFormLoading(false);
-    }
-  }
-
-  if (authLoading) {
-      return <Loading />;
-  }
-  
-  const isCustomActive = useMemo(() => {
-      return watchedValues.buttonStyle === 'gradient';
-  }, [watchedValues.buttonStyle]);
-  
-  useEffect(() => {
-      setSelectedTheme(isCustomActive ? 'custom' : (user?.theme !== 'custom' ? user?.theme || 'light' : 'light'));
-  }, [isCustomActive, user?.theme]);
-  
-
-  const previewProfile = useMemo(() => ({
-    ...user,
-    ...watchedValues,
-    theme: selectedTheme,
-    bot: user?.bot,
-  }), [user, watchedValues, selectedTheme]);
-
-
-  const ThemeCardContent = () => (
+// Memoize the ThemeCardContent to prevent re-renders that reset the carousel state
+const ThemeCardContent = memo(function ThemeCardContent({ selectedTheme, setSelectedTheme, isCustomActive, form }: {
+  selectedTheme: string;
+  setSelectedTheme: (theme: string) => void;
+  isCustomActive: boolean;
+  form: any;
+}) {
+  return (
     <Card>
       <CardHeader>
         <CardTitle>Theme</CardTitle>
@@ -202,7 +131,7 @@ export default function AppearancePage() {
                 opts={{
                   align: "start",
                   slidesToScroll: "auto",
-                  draggable: false,
+                  draggable: false, // Explicitly disable dragging
                 }}
                 className="w-full"
               >
@@ -259,8 +188,12 @@ export default function AppearancePage() {
       </CardContent>
     </Card>
   );
+});
 
-  const CustomStylesCard = () => (
+ThemeCardContent.displayName = 'ThemeCardContent';
+
+const CustomStylesCard = memo(function CustomStylesCard({ form, isCustomActive }: { form: any, isCustomActive: boolean }) {
+  return (
     <Card>
       <CardHeader>
         <CardTitle>Custom Styles</CardTitle>
@@ -362,7 +295,87 @@ export default function AppearancePage() {
       </CardContent>
     </Card>
   );
+});
 
+CustomStylesCard.displayName = 'CustomStylesCard';
+
+export default function AppearancePage() {
+  const { toast } = useToast();
+  const { user, loading: authLoading, setUser } = useAuth();
+  const [formLoading, setFormLoading] = useState(false);
+  const [links, setLinks] = useState<Link[]>([]);
+  
+  // This state is now managed separately to prevent carousel re-renders
+  const [selectedTheme, setSelectedTheme] = useState(user?.theme || 'light');
+  
+  const form = useForm<z.infer<typeof appearanceSchema>>({
+    resolver: zodResolver(appearanceSchema),
+  });
+  
+  const watchedValues = form.watch();
+  
+  useEffect(() => {
+    if (user) {
+        setSelectedTheme(user.theme !== 'custom' ? user.theme || 'light' : 'light');
+        form.reset({
+            theme: user.theme || 'light',
+            animatedBackground: user.animatedBackground || false,
+            buttonStyle: user.buttonStyle || 'solid',
+            customThemeGradient: user.customThemeGradient || { from: '#FFFFFF', to: '#AAAAAA' },
+            customButtonGradient: user.customButtonGradient || { from: '#AAAAAA', to: '#FFFFFF' },
+        });
+    }
+  }, [user, form]);
+  
+  useEffect(() => {
+    if (!user) return;
+    const linksCollection = collection(db, `users/${user.uid}/links`);
+    const q = query(linksCollection, orderBy("order"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        setLinks(snapshot.docs.map(doc => ({id: doc.id, ...doc.data()} as Link)))
+    });
+    return () => unsubscribe();
+  }, [user]);
+
+  async function onSubmit(values: z.infer<typeof appearanceSchema>) {
+    if (!user) return;
+    setFormLoading(true);
+    
+    // The theme passed to the DB should be 'custom' if gradient buttons are active, otherwise the selected standard theme
+    const finalTheme = values.buttonStyle === 'gradient' ? 'custom' : selectedTheme;
+
+    const dataToUpdate = {
+        ...values,
+        theme: finalTheme,
+    };
+
+    try {
+        const userRef = doc(db, "users", user.uid);
+        await updateDoc(userRef, dataToUpdate);
+        setUser((prevUser) => prevUser ? { ...prevUser, ...dataToUpdate } : null);
+        toast({ title: "Appearance updated successfully!" });
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: "Error", description: error.message });
+    } finally {
+        setFormLoading(false);
+    }
+  }
+
+  if (authLoading) {
+      return <Loading />;
+  }
+  
+  const isCustomActive = useMemo(() => {
+      return watchedValues.buttonStyle === 'gradient';
+  }, [watchedValues.buttonStyle]);
+  
+  const previewProfile = useMemo(() => ({
+    ...user,
+    ...watchedValues,
+    // Preview uses 'custom' if gradient is active, otherwise the selected standard theme
+    theme: isCustomActive ? 'custom' : selectedTheme, 
+    bot: user?.bot,
+  }), [user, watchedValues, isCustomActive, selectedTheme]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
@@ -380,8 +393,16 @@ export default function AppearancePage() {
         <div className="w-full lg:col-span-1 space-y-6">
             <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <ThemeCardContent />
-                <CustomStylesCard />
+                <ThemeCardContent 
+                  selectedTheme={selectedTheme} 
+                  setSelectedTheme={setSelectedTheme} 
+                  isCustomActive={isCustomActive}
+                  form={form}
+                />
+                <CustomStylesCard 
+                  form={form} 
+                  isCustomActive={isCustomActive}
+                />
 
                 <Button type="submit" disabled={formLoading} className="w-full lg:w-auto">
                     {formLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
