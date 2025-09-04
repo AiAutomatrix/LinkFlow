@@ -138,11 +138,9 @@ const ThemeCardContent = memo(function ThemeCardContent({ selectedTheme, onTheme
                               type="button"
                               className={cn(
                                   "w-full aspect-square rounded-lg flex items-center justify-center border-2 cursor-pointer transition-all",
-                                  selectedTheme === theme.id ? 'border-primary ring-2 ring-primary/50' : 'border-transparent hover:border-primary/50',
-                                  selectedTheme === 'custom' && 'opacity-50 cursor-not-allowed'
+                                  selectedTheme === theme.id ? 'border-primary ring-2 ring-primary/50' : 'border-transparent hover:border-primary/50'
                               )}
                               onClick={() => onThemeSelect(theme.id)}
-                              disabled={selectedTheme === 'custom'}
                           >
                               <div className="w-10 h-10 rounded-full flex overflow-hidden border" style={{ background: `linear-gradient(45deg, ${theme.colors[0]} 50%, ${theme.colors[1]} 50%)` }}></div>
                           </button>
@@ -233,32 +231,30 @@ const CustomGradientCard = memo(function CustomGradientCard({ form }: { form: an
 
 
 const CustomStylesCard = memo(function CustomStylesCard({ form }: { form: any }) {
-  const [lastSelectedTheme, setLastSelectedTheme] = useState('light');
 
-  const setButtonStyle = (style: 'solid' | 'gradient') => {
+  const setColorStyle = (style: 'solid' | 'gradient') => {
       form.setValue('buttonStyle', style, { shouldDirty: true });
       if (style === 'gradient') {
-          const currentTheme = form.getValues('theme');
-          if (currentTheme !== 'custom') {
-            setLastSelectedTheme(currentTheme);
-          }
           form.setValue('theme', 'custom', { shouldDirty: true });
       } else {
-          form.setValue('theme', lastSelectedTheme, { shouldDirty: true });
+          // If switching back from custom, reset to a default theme
+          if (form.getValues('theme') === 'custom') {
+            form.setValue('theme', 'light', { shouldDirty: true });
+          }
       }
   };
 
   return (
       <Card>
           <CardHeader>
-              <CardTitle>Button & Background Styles</CardTitle>
-              <CardDescription>Select a button style and toggle the animated background.</CardDescription>
+              <CardTitle>Color & Background Styles</CardTitle>
+              <CardDescription>Select a color style and toggle the animated background.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
               <div className="space-y-2">
-                  <Label>Button Style</Label>
+                  <Label>Color Style</Label>
                   <RadioGroup
-                      onValueChange={(value) => setButtonStyle(value as 'solid' | 'gradient')}
+                      onValueChange={(value) => setColorStyle(value as 'solid' | 'gradient')}
                       value={form.watch('buttonStyle')}
                       className="grid grid-cols-2 gap-4"
                   >
@@ -354,7 +350,7 @@ export default function AppearancePage() {
     setFormLoading(true);
     
     if (values.buttonStyle === 'solid' && values.theme === 'custom') {
-        values.theme = 'light'; // Default back to light if they somehow save with solid+custom
+        values.theme = 'light';
     }
     
     const dataToUpdate = { ...values };
