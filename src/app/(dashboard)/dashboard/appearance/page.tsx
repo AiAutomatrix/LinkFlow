@@ -4,7 +4,6 @@
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -15,19 +14,18 @@ import * as z from "zod";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useEffect, useState, useReducer, useCallback } from "react";
+import { useEffect, useState, useReducer } from "react";
 import { useToast } from "@/hooks/use-toast";
 import PublicProfilePreview from "./_components/public-profile-preview";
 import type { Link, UserProfile } from "@/lib/types";
 import { Loader2, RefreshCw, Palette, Square, Pipette } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/auth-context";
 import { doc, updateDoc, collection, onSnapshot, query, orderBy } from "firebase/firestore";
@@ -212,7 +210,7 @@ export default function AppearancePage() {
                   opts={{
                       align: "start",
                       slidesToScroll: "auto",
-                      draggable: false, // This disables swiping on the inner carousel
+                      draggable: false, 
                   }}
                   className="w-full"
                 >
@@ -395,7 +393,7 @@ export default function AppearancePage() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
       <div className="lg:sticky lg:top-6 space-y-6">
-        <div className="relative h-[500px] lg:h-[700px] w-full max-w-sm mx-auto">
+        <div className="relative h-[350px] lg:h-[700px] w-full max-w-sm mx-auto">
             <PublicProfilePreview 
                 profile={previewProfile} 
                 links={links} 
@@ -436,5 +434,3 @@ export default function AppearancePage() {
     </div>
   );
 }
-
-    
