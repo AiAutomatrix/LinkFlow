@@ -209,41 +209,41 @@ export default function AppearancePage() {
           render={({ field }) => (
             <FormItem>
                 <Carousel
-                opts={{
-                    align: "start",
-                    slidesToScroll: "auto",
-                    draggable: false, // Disable swipe on inner carousel
-                }}
-                className="w-full"
+                  opts={{
+                      align: "start",
+                      slidesToScroll: "auto",
+                      draggable: false, // Disable swipe on inner carousel
+                  }}
+                  className="w-full"
                 >
-                <CarouselContent className="-ml-1">
-                    {themes.map((theme) => (
-                    <CarouselItem key={theme.id} className={cn("basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/4 xl:basis-1/5 pl-1", theme.id === 'custom' && !customGradientsEnabled ? 'hidden' : '')}>
-                        <div className="p-1">
-                            <button 
-                                type="button"
-                                disabled={theme.id === 'custom'}
-                                className={cn(
-                                    "w-full aspect-square rounded-lg flex items-center justify-center border-2 cursor-pointer transition-all",
-                                    field.value === theme.id ? 'border-primary ring-2 ring-primary/50' : 'border-transparent hover:border-primary/50',
-                                    theme.id === 'custom' && 'cursor-not-allowed opacity-50'
-                                )}
-                                onClick={() => {
-                                if (theme.id !== 'custom') {
-                                    setCustomGradientsEnabled(false);
-                                    field.onChange(theme.id)
-                                }
-                                }}
-                            >
-                                <div className="w-10 h-10 rounded-full flex overflow-hidden border" style={{ background: `linear-gradient(45deg, ${theme.colors[0]} 50%, ${theme.colors[1]} 50%)` }}></div>
-                            </button>
-                            <p className="text-xs text-center mt-1 text-muted-foreground truncate">{theme.name}</p>
-                        </div>
-                    </CarouselItem>
-                    ))}
-                </CarouselContent>
-                <CarouselPrevious />
-                <CarouselNext />
+                  <CarouselContent className="-ml-1">
+                      {themes.map((theme) => (
+                      <CarouselItem key={theme.id} className={cn("basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/4 xl:basis-1/5 pl-1", theme.id === 'custom' && !customGradientsEnabled ? 'hidden' : '')}>
+                          <div className="p-1">
+                              <button 
+                                  type="button"
+                                  disabled={theme.id === 'custom'}
+                                  className={cn(
+                                      "w-full aspect-square rounded-lg flex items-center justify-center border-2 cursor-pointer transition-all",
+                                      field.value === theme.id ? 'border-primary ring-2 ring-primary/50' : 'border-transparent hover:border-primary/50',
+                                      theme.id === 'custom' && 'cursor-not-allowed opacity-50'
+                                  )}
+                                  onClick={() => {
+                                  if (theme.id !== 'custom') {
+                                      setCustomGradientsEnabled(false);
+                                      field.onChange(theme.id)
+                                  }
+                                  }}
+                              >
+                                  <div className="w-10 h-10 rounded-full flex overflow-hidden border" style={{ background: `linear-gradient(45deg, ${theme.colors[0]} 50%, ${theme.colors[1]} 50%)` }}></div>
+                              </button>
+                              <p className="text-xs text-center mt-1 text-muted-foreground truncate">{theme.name}</p>
+                          </div>
+                      </CarouselItem>
+                      ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="absolute -left-1 top-1/2 -translate-y-1/2" />
+                  <CarouselNext className="absolute -right-1 top-1/2 -translate-y-1/2" />
                 </Carousel>
                 <FormMessage />
             </FormItem>
@@ -405,7 +405,7 @@ export default function AppearancePage() {
         </div>
       </div>
       
-      <div className="space-y-6 lg:mt-0 mt-6">
+      <div className="space-y-6 lg:mt-0 mt-8">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Mobile View: Carousel */}
