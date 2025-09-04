@@ -116,10 +116,7 @@ export default function AppearancePage() {
   const [links, setLinks] = useState<Link[]>([]);
   const [customGradientsEnabled, setCustomGradientsEnabled] = useState(false);
   const [_, forceUpdate] = useReducer((x) => x + 1, 0);
-
-  // State for the mobile settings carousel
-  const [mobileCarouselApi, setMobileCarouselApi] = useState<CarouselApi>();
-  const [currentSlide, setCurrentSlide] = useState(0);
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>()
 
   const form = useForm<z.infer<typeof appearanceSchema>>({
     resolver: zodResolver(appearanceSchema),
@@ -171,21 +168,6 @@ export default function AppearancePage() {
     return () => unsubscribe();
   }, [user]);
 
-  // Mobile carousel effects
-  useEffect(() => {
-    if (!mobileCarouselApi) {
-      return;
-    }
-    setCurrentSlide(mobileCarouselApi.selectedScrollSnap());
-    mobileCarouselApi.on("select", () => {
-      setCurrentSlide(mobileCarouselApi.selectedScrollSnap());
-    });
-  }, [mobileCarouselApi]);
-
-  const handleTabClick = useCallback((index: number) => {
-    mobileCarouselApi?.scrollTo(index);
-  }, [mobileCarouselApi]);
-
   async function onSubmit(values: z.infer<typeof appearanceSchema>) {
     if (!user) return;
     setFormLoading(true);
@@ -215,14 +197,6 @@ export default function AppearancePage() {
     theme: customGradientsEnabled ? 'custom' : watchedValues.theme,
     bot: user?.bot, // Ensure bot data is passed to the preview
   };
-
-  const MobileSettingsNav = () => (
-    <div className="p-1 grid grid-cols-3 gap-1 rounded-lg bg-muted">
-        <Button size="sm" variant={currentSlide === 0 ? "background" : "ghost"} onClick={() => handleTabClick(0)} className="h-8"><Palette className="h-5 w-5" /></Button>
-        <Button size="sm" variant={currentSlide === 1 ? "background" : "ghost"} onClick={() => handleTabClick(1)} className="h-8"><Square className="h-5 w-5" /></Button>
-        <Button size="sm" variant={currentSlide === 2 ? "background" : "ghost"} onClick={() => handleTabClick(2)} className="h-8"><Pipette className="h-5 w-5" /></Button>
-    </div>
-  )
 
   const ThemeCardContent = () => (
     <Card>
@@ -448,8 +422,7 @@ export default function AppearancePage() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Mobile View: Carousel */}
             <div className="lg:hidden space-y-4">
-               <MobileSettingsNav />
-               <Carousel setApi={setMobileCarouselApi} className="w-full">
+               <Carousel setApi={setCarouselApi} className="w-full">
                 <CarouselContent>
                     <CarouselItem>{ThemeCardContent()}</CarouselItem>
                     <CarouselItem>{ButtonCardContent()}</CarouselItem>
@@ -475,6 +448,3 @@ export default function AppearancePage() {
     </div>
   );
 }
-
-
-    
