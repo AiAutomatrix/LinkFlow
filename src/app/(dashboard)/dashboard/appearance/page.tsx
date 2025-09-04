@@ -160,8 +160,79 @@ const ThemeCardContent = memo(function ThemeCardContent({ selectedTheme, onTheme
   );
 });
 
+const CustomGradientCard = memo(function CustomGradientCard({ form }: { form: any }) {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Custom Gradient</CardTitle>
+                <CardDescription>Design your own unique background and button gradients.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <div>
+                    <Label className="font-medium text-base">Background Gradient</Label>
+                    <div className="grid grid-cols-2 gap-4 mt-2">
+                        <FormField
+                            control={form.control}
+                            name="customThemeGradient.from"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-xs text-muted-foreground">From</FormLabel>
+                                    <FormControl>
+                                    <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="customThemeGradient.to"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-xs text-muted-foreground">To</FormLabel>
+                                    <FormControl>
+                                    <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+                </div>
+                <div>
+                    <Label className="font-medium text-base">Button Gradient</Label>
+                    <div className="grid grid-cols-2 gap-4 mt-2">
+                        <FormField
+                            control={form.control}
+                            name="customButtonGradient.from"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-xs text-muted-foreground">From</FormLabel>
+                                    <FormControl>
+                                    <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="customButtonGradient.to"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-xs text-muted-foreground">To</FormLabel>
+                                    <FormControl>
+                                    <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    )
+});
+
+
 const CustomStylesCard = memo(function CustomStylesCard({ form }: { form: any }) {
-  const isCustomActive = form.watch('theme') === 'custom';
   const [lastSelectedTheme, setLastSelectedTheme] = useState('light');
 
   const setButtonStyle = (style: 'solid' | 'gradient') => {
@@ -181,7 +252,7 @@ const CustomStylesCard = memo(function CustomStylesCard({ form }: { form: any })
       <Card>
           <CardHeader>
               <CardTitle>Button & Background Styles</CardTitle>
-              <CardDescription>Customize your profile's look with custom buttons and backgrounds.</CardDescription>
+              <CardDescription>Select a button style and toggle the animated background.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
               <div className="space-y-2">
@@ -216,68 +287,6 @@ const CustomStylesCard = memo(function CustomStylesCard({ form }: { form: any })
                   </RadioGroup>
               </div>
               
-              {isCustomActive && (
-                  <div className="space-y-6 pt-4 border-t">
-                      <div>
-                          <Label className="font-medium text-base">Background Gradient</Label>
-                          <div className="grid grid-cols-2 gap-4 mt-2">
-                              <FormField
-                                  control={form.control}
-                                  name="customThemeGradient.from"
-                                  render={({ field }) => (
-                                      <FormItem>
-                                          <FormLabel className="text-xs text-muted-foreground">From</FormLabel>
-                                          <FormControl>
-                                          <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
-                                          </FormControl>
-                                      </FormItem>
-                                  )}
-                              />
-                              <FormField
-                                  control={form.control}
-                                  name="customThemeGradient.to"
-                                  render={({ field }) => (
-                                      <FormItem>
-                                          <FormLabel className="text-xs text-muted-foreground">To</FormLabel>
-                                          <FormControl>
-                                          <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
-                                          </FormControl>
-                                      </FormItem>
-                                  )}
-                              />
-                          </div>
-                      </div>
-                      <div>
-                          <Label className="font-medium text-base">Button Gradient</Label>
-                          <div className="grid grid-cols-2 gap-4 mt-2">
-                              <FormField
-                                  control={form.control}
-                                  name="customButtonGradient.from"
-                                  render={({ field }) => (
-                                      <FormItem>
-                                          <FormLabel className="text-xs text-muted-foreground">From</FormLabel>
-                                          <FormControl>
-                                          <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
-                                          </FormControl>
-                                      </FormItem>
-                                  )}
-                              />
-                              <FormField
-                                  control={form.control}
-                                  name="customButtonGradient.to"
-                                  render={({ field }) => (
-                                      <FormItem>
-                                          <FormLabel className="text-xs text-muted-foreground">To</FormLabel>
-                                          <FormControl>
-                                          <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
-                                          </FormControl>
-                                      </FormItem>
-                                  )}
-                              />
-                          </div>
-                      </div>
-                  </div>
-              )}
                <FormField
                   control={form.control}
                   name="animatedBackground"
@@ -388,15 +397,19 @@ export default function AppearancePage() {
         <div className="w-full lg:col-span-1 space-y-6">
             <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                {watchedValues.buttonStyle !== 'gradient' && (
+                {watchedValues.buttonStyle === 'solid' ? (
                   <ThemeCardContent 
                     selectedTheme={watchedValues.theme || 'light'}
                     onThemeSelect={handleThemeSelect}
                   />
+                ) : (
+                  <CustomGradientCard form={form} />
                 )}
+                
                 <CustomStylesCard 
                   form={form} 
                 />
+                
                 <Button type="submit" disabled={formLoading} className="w-full lg:w-auto">
                     {formLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Update Appearance
@@ -407,3 +420,5 @@ export default function AppearancePage() {
     </div>
   );
 }
+
+    
