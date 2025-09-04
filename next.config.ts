@@ -27,6 +27,14 @@ const nextConfig: NextConfig = {
   experimental: {
     ppr: false,
   },
+  async rewrites() {
+    return [
+      {
+        source: '/:username((?!api|dashboard|login|signup|_next|u|favicon.ico|sw.js).*)',
+        destination: '/u/:username',
+      },
+    ]
+  }
 };
 
 export default nextConfig;

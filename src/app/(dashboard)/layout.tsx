@@ -63,7 +63,7 @@ function DashboardMobileLayout({
           <div className="flex items-center justify-between border-t border-sidebar-border pt-2 mt-1">
             <UserNav />
             <Button variant="outline" size="sm" asChild>
-              <Link href={`/u/${user.username}`} target="_blank">
+              <Link href={`/${user.username}`} target="_blank">
                   <ExternalLink className="mr-2 h-4 w-4" />
                   Public Page
               </Link>

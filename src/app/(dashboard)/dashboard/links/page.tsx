@@ -159,7 +159,7 @@ export default function LinksPage() {
 
   const handleShare = () => {
     if (!user) return;
-    const publicUrl = `${window.location.origin}/u/${user.username}`;
+    const publicUrl = `${window.location.origin}/${user.username}`;
     navigator.clipboard.writeText(publicUrl);
     toast({
         title: "Link Copied!",

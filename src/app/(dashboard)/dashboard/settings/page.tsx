@@ -94,7 +94,7 @@ export default function SettingsPage() {
         <CardContent>
             <div className="flex items-center space-x-2">
               <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold">
-                {`.../u/${username}`}
+                {`.../${username}`}
               </code>
             </div>
         </CardContent>
