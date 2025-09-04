@@ -192,7 +192,7 @@ export default function AppearancePage() {
     ...user,
     ...watchedValues,
     theme: customGradientsEnabled ? 'custom' : watchedValues.theme,
-    bot: user?.bot, // Ensure bot data is passed to the preview
+    bot: user?.bot,
   };
 
   const ThemeCardContent = () => (
@@ -210,8 +210,6 @@ export default function AppearancePage() {
                   opts={{
                       align: "start",
                       slidesToScroll: "auto",
-                      // This is the key fix: it disables swiping on the inner theme carousel
-                      // so it doesn't conflict with the outer tool carousel on mobile.
                       watchDrag: false,
                   }}
                   className="w-full"
@@ -392,48 +390,46 @@ export default function AppearancePage() {
   );
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 items-start">
-      <div className="w-full lg:w-1/2 lg:sticky lg:top-6">
-        <div className="relative h-[500px] lg:h-[700px] w-full max-w-sm mx-auto">
-            <PublicProfilePreview 
-                profile={previewProfile} 
-                links={links} 
-                isPreview 
-                showBot={true}
-            />
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <div className="lg:sticky lg:top-6 w-full">
+            <div className="relative h-[500px] lg:h-[700px] w-full max-w-sm mx-auto">
+                <PublicProfilePreview 
+                    profile={previewProfile} 
+                    links={links} 
+                    isPreview 
+                    showBot={true}
+                />
+            </div>
         </div>
-      </div>
-      
-      <div className="w-full lg:w-1/2 space-y-6">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Mobile View: Carousel */}
-            <div className="lg:hidden mt-4 space-y-4">
-               <Carousel className="w-full">
-                <CarouselContent>
-                    <CarouselItem>{ThemeCardContent()}</CarouselItem>
-                    <CarouselItem>{ButtonCardContent()}</CarouselItem>
-                    <CarouselItem>{CustomGradientCardContent()}</CarouselItem>
-                </CarouselContent>
-               </Carousel>
-            </div>
+        
+        <div className="w-full lg:col-span-1 space-y-6">
+            <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                {/* Mobile View: Carousel */}
+                <div className="lg:hidden mt-4 space-y-4">
+                    <Carousel className="w-full">
+                        <CarouselContent>
+                            <CarouselItem>{ThemeCardContent()}</CarouselItem>
+                            <CarouselItem>{ButtonCardContent()}</CarouselItem>
+                            <CarouselItem>{CustomGradientCardContent()}</CarouselItem>
+                        </CarouselContent>
+                    </Carousel>
+                </div>
 
-            {/* Desktop View: Stacked Cards */}
-            <div className="hidden lg:block space-y-6">
-              <ThemeCardContent />
-              <ButtonCardContent />
-              <CustomGradientCardContent />
-            </div>
+                {/* Desktop View: Stacked Cards */}
+                <div className="hidden lg:block space-y-6">
+                    <ThemeCardContent />
+                    <ButtonCardContent />
+                    <CustomGradientCardContent />
+                </div>
 
-            <Button type="submit" disabled={formLoading} className="w-full lg:w-auto">
-                {formLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Update Appearance
-            </Button>
-          </form>
-        </Form>
-      </div>
+                <Button type="submit" disabled={formLoading} className="w-full lg:w-auto">
+                    {formLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Update Appearance
+                </Button>
+            </form>
+            </Form>
+        </div>
     </div>
   );
 }
-
-    
