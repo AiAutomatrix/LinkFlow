@@ -201,7 +201,6 @@ export default function AppearancePage() {
     <Card>
       <CardHeader>
         <CardTitle>Theme</CardTitle>
-        <CardDescription>Select a color scheme for your profile.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <FormField
@@ -213,6 +212,7 @@ export default function AppearancePage() {
                 opts={{
                     align: "start",
                     slidesToScroll: "auto",
+                    draggable: false, // Disable swipe on inner carousel
                 }}
                 className="w-full"
                 >
@@ -242,8 +242,8 @@ export default function AppearancePage() {
                     </CarouselItem>
                     ))}
                 </CarouselContent>
-                <CarouselPrevious className="hidden sm:flex" />
-                <CarouselNext className="hidden sm:flex" />
+                <CarouselPrevious />
+                <CarouselNext />
                 </Carousel>
                 <FormMessage />
             </FormItem>
@@ -258,9 +258,6 @@ export default function AppearancePage() {
                     <FormLabel className="text-base">
                     Animated Background
                     </FormLabel>
-                    <FormDescription>
-                    Enable a subtle, animated background on your public profile.
-                    </FormDescription>
                 </div>
                 <FormControl>
                     <Switch
@@ -279,7 +276,6 @@ export default function AppearancePage() {
     <Card>
         <CardHeader>
             <CardTitle>Button Style</CardTitle>
-            <CardDescription>Choose the appearance of your profile links.</CardDescription>
         </CardHeader>
         <CardContent>
             <FormField
@@ -322,7 +318,6 @@ export default function AppearancePage() {
         <CardHeader className="flex-row items-center justify-between">
             <div className="space-y-1">
                 <CardTitle>Custom Gradients</CardTitle>
-                <CardDescription>Create your own unique gradients. This enables the 'Custom' theme.</CardDescription>
             </div>
                 <Switch
                 checked={customGradientsEnabled}
@@ -414,7 +409,7 @@ export default function AppearancePage() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Mobile View: Carousel */}
-            <div className="lg:hidden space-y-4">
+            <div className="lg:hidden mt-4 space-y-4">
                <Carousel className="w-full">
                 <CarouselContent>
                     <CarouselItem>{ThemeCardContent()}</CarouselItem>
@@ -441,3 +436,5 @@ export default function AppearancePage() {
     </div>
   );
 }
+
+    
