@@ -23,7 +23,7 @@ import { useEffect, useState, useReducer } from "react";
 import { useToast } from "@/hooks/use-toast";
 import PublicProfilePreview from "./_components/public-profile-preview";
 import type { Link, UserProfile } from "@/lib/types";
-import { Loader2, RefreshCw, Palette, Square, Pipette, MoveRight } from "lucide-react";
+import { Loader2, Palette, Square, Pipette, MoveRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Switch } from "@/components/ui/switch";
@@ -393,7 +393,7 @@ export default function AppearancePage() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-        <div className="lg:sticky lg:top-6 w-full h-[500px] lg:h-auto">
+        <div className="lg:sticky lg:top-6 w-full">
              <div className="w-full max-w-sm mx-auto">
                 <PublicProfilePreview 
                     profile={previewProfile} 
@@ -404,7 +404,7 @@ export default function AppearancePage() {
             </div>
         </div>
         
-        <div className="w-full lg:col-span-1 space-y-6 mt-6 lg:mt-0">
+        <div className="w-full lg:col-span-1 space-y-6">
             <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 {/* Mobile View: Carousel */}
@@ -435,5 +435,3 @@ export default function AppearancePage() {
     </div>
   );
 }
-
-    
