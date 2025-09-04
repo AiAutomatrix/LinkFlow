@@ -103,7 +103,10 @@ export default function LinksPage() {
                 const platform = link.title.toLowerCase() as keyof z.infer<typeof socialLinksSchema>;
                  if (platform === 'email') {
                     socialLinksValues[platform] = link.url.replace('mailto:', '');
-                } else {
+                } else if (platform === 'linkedin') { // Handle linkedIn case difference
+                    socialLinksValues['linkedin'] = link.url;
+                }
+                 else {
                     socialLinksValues[platform] = link.url;
                 }
             }
@@ -657,5 +660,3 @@ export default function LinksPage() {
     </>
   );
 }
-
-    
