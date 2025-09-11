@@ -22,15 +22,6 @@ const agents = [
     templateUrl: "/flowbot.bpz",
     configureUrl: "/dashboard/bot"
   },
-  {
-    name: "Lead Generation Agent",
-    description: "Proactively engages visitors to capture leads, book meetings, or direct them to specific funnels. (Coming soon)",
-    icon: BrainCircuit,
-    tags: ["Pro", "Sales"],
-    templateUrl: "#",
-    configureUrl: "#",
-    disabled: true,
-  },
 ];
 
 export default function AgentHubPage() {
@@ -40,12 +31,9 @@ export default function AgentHubPage() {
         <div>
           <h1 className="text-2xl font-bold">Agent Hub</h1>
           <p className="text-muted-foreground">
-            Manage your AI agents or download pre-built templates.
+            Download pre-built agent templates for your profile.
           </p>
         </div>
-        <Button disabled>
-          <Plus className="mr-2 h-4 w-4" /> Create New Agent (Coming Soon)
-        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -83,13 +71,6 @@ export default function AgentHubPage() {
             </CardFooter>
           </Card>
         ))}
-         <Card className="flex flex-col items-center justify-center border-dashed bg-muted/20">
-            <div className="text-center p-6">
-                <Plus className="h-8 w-8 text-muted-foreground mb-2 mx-auto"/>
-                <h3 className="font-semibold">Custom Agent</h3>
-                <p className="text-sm text-muted-foreground">The ability to create your own agents from scratch is coming soon.</p>
-            </div>
-        </Card>
       </div>
     </div>
   );
