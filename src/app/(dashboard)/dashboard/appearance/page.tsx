@@ -33,7 +33,6 @@ import { useAuth } from "@/contexts/auth-context";
 import { doc, updateDoc, collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Loading from "@/app/loading";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { ColorPicker } from "@/components/ui/color-picker";
 
@@ -210,42 +209,44 @@ const CustomGradientSelection = memo(function CustomGradientSelection({ form }: 
 });
 
 const ButtonStyleSelection = memo(function ButtonStyleSelection({ form }: { form: any }) {
+  const currentStyle = form.watch('buttonStyle');
+
   return (
     <>
-        <CardHeader>
-            <CardTitle>Button Style</CardTitle>
-            <CardDescription>Select a solid color or gradient style for your link buttons.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-            <RadioGroup
-                onValueChange={(value) => form.setValue('buttonStyle', value, { shouldDirty: true })}
-                value={form.watch('buttonStyle')}
-                className="grid grid-cols-2 gap-4"
-            >
-                <Label
-                    htmlFor="solid"
-                    className={cn(
-                        "flex flex-col items-center justify-between rounded-md border-2 p-4 cursor-pointer transition-colors",
-                        form.watch('buttonStyle') === 'solid' ? "border-primary bg-accent" : "border-muted bg-popover hover:bg-accent"
-                    )}
-                >
-                    <RadioGroupItem value="solid" id="solid" className="peer sr-only" />
-                    <div className="h-6 w-full max-w-[100px] rounded-md bg-secondary mb-2 border"></div>
-                    Solid
-                </Label>
-                <Label
-                    htmlFor="gradient"
-                    className={cn(
-                        "flex flex-col items-center justify-between rounded-md border-2 p-4 cursor-pointer transition-colors",
-                        form.watch('buttonStyle') === 'gradient' ? "border-primary bg-accent" : "border-muted bg-popover hover:bg-accent"
-                    )}
-                >
-                    <RadioGroupItem value="gradient" id="gradient" className="peer sr-only" />
-                    <div className="h-6 w-full max-w-[100px] rounded-md bg-gradient-to-r from-secondary to-primary mb-2 border"></div>
-                    Gradient
-                </Label>
-            </RadioGroup>
-        </CardContent>
+      <CardHeader>
+        <CardTitle>Button Style</CardTitle>
+        <CardDescription>Select a solid color or gradient style for your link buttons.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="grid grid-cols-2 gap-4">
+          <button
+            type="button"
+            data-active={currentStyle === 'solid'}
+            onClick={() => form.setValue('buttonStyle', 'solid', { shouldDirty: true })}
+            className={cn(
+              "flex flex-col items-center justify-between rounded-md border-2 p-4 cursor-pointer transition-all transform active:scale-95",
+              "data-[active=true]:border-primary data-[active=true]:bg-accent data-[active=true]:ring-2 data-[active=true]:ring-primary/50",
+              "data-[active=false]:border-muted data-[active=false]:bg-popover data-[active=false]:hover:bg-accent"
+            )}
+          >
+            <div className="h-6 w-full max-w-[100px] rounded-md bg-secondary mb-2 border"></div>
+            Solid
+          </button>
+          <button
+            type="button"
+            data-active={currentStyle === 'gradient'}
+            onClick={() => form.setValue('buttonStyle', 'gradient', { shouldDirty: true })}
+            className={cn(
+              "flex flex-col items-center justify-between rounded-md border-2 p-4 cursor-pointer transition-all transform active:scale-95",
+              "data-[active=true]:border-primary data-[active=true]:bg-accent data-[active=true]:ring-2 data-[active=true]:ring-primary/50",
+              "data-[active=false]:border-muted data-[active=false]:bg-popover data-[active=false]:hover:bg-accent"
+            )}
+          >
+            <div className="h-6 w-full max-w-[100px] rounded-md bg-gradient-to-r from-secondary to-primary mb-2 border"></div>
+            Gradient
+          </button>
+        </div>
+      </CardContent>
     </>
   )
 });
@@ -405,7 +406,5 @@ export default function AppearancePage() {
     </div>
   );
 }
-
-    
 
     
