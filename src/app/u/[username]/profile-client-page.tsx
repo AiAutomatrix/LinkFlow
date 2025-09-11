@@ -458,6 +458,10 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         </script>
     ` : '';
     
+    const customStyleString = user.theme === 'custom' 
+      ? `--background-gradient-from: ${user.customThemeGradient?.from}; --background-gradient-to: ${user.customThemeGradient?.to}; --btn-gradient-from: ${user.customButtonGradient?.from}; --btn-gradient-to: ${user.customButtonGradient?.to};`
+      : '';
+
     const finalHtml = `
       <html style="height: 100vh; overflow: hidden;">
         <head>
@@ -474,7 +478,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
             data-theme="${user.theme || 'light'}"
             data-style="${user.buttonStyle || 'solid'}"
             class="relative flex flex-col bg-background"
-            style="min-height: 100vh; ${user.theme === 'custom' ? `--background-gradient-from: ${user.customThemeGradient?.from}; --background-gradient-to: ${user.customThemeGradient?.to}; --btn-gradient-from: ${user.customButtonGradient?.from}; --btn-gradient-to: ${user.customButtonGradient?.to};` : ''}"
+            style="min-height: 100vh; ${customStyleString}"
           >
             ${pageContent}
           </div>
