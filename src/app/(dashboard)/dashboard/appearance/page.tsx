@@ -208,7 +208,7 @@ const CustomGradientSelection = memo(function CustomGradientSelection({ form }: 
     )
 });
 
-const ButtonStyleSelection = memo(function ButtonStyleSelection({ form }: { form: any }) {
+function ButtonStyleSelection({ form }: { form: any }) {
   const currentStyle = form.watch('buttonStyle');
 
   return (
@@ -249,7 +249,7 @@ const ButtonStyleSelection = memo(function ButtonStyleSelection({ form }: { form
       </CardContent>
     </>
   )
-});
+}
 
 
 export default function AppearancePage() {
