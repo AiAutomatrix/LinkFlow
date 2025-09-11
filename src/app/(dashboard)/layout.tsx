@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { SidebarProvider, Sidebar, SidebarTrigger, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset, useSidebar } from "@/components/ui/sidebar";
 import Logo from "@/components/logo";
 import { UserNav } from "@/components/user-nav";
-import { User, Palette, Link as LinkIcon, BarChart3, Settings, ExternalLink, Bot } from "lucide-react";
+import { User, Palette, Link as LinkIcon, BarChart3, Settings, ExternalLink, Bot, MessageCircleQuestion, GraduationCap } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Loading from "@/app/loading";
@@ -21,11 +21,12 @@ function DashboardMobileLayout({
   const { setOpenMobile } = useSidebar();
 
   const menuItems = [
-    { href: "/dashboard/profile", label: "Profile", icon: User },
     { href: "/dashboard/links", label: "Links", icon: LinkIcon },
     { href: "/dashboard/appearance", label: "Appearance", icon: Palette },
     { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
     { href: "/dashboard/bot", label: "Bot", icon: Bot },
+    { href: "/dashboard/agent-hub", label: "Agent Hub", icon: MessageCircleQuestion },
+    { href: "/dashboard/instructions", label: "Instructions", icon: GraduationCap },
   ];
   
   if (!user) return null;
@@ -51,6 +52,14 @@ function DashboardMobileLayout({
         </SidebarContent>
         <SidebarFooter className="flex-col !gap-1">
            <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={pathname.startsWith("/dashboard/profile")} onClick={() => setOpenMobile(false)}>
+                      <Link href="/dashboard/profile">
+                          <User />
+                          <span>Profile</span>
+                      </Link>
+                  </SidebarMenuButton>
+              </SidebarMenuItem>
                <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={pathname.startsWith("/dashboard/settings")} onClick={() => setOpenMobile(false)}>
                       <Link href="/dashboard/settings">
