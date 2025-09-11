@@ -117,6 +117,7 @@ const ThemeCardContent = memo(function ThemeCardContent({ selectedTheme, onTheme
     <Card>
       <CardHeader>
         <CardTitle>Theme</CardTitle>
+        <CardDescription>Select a pre-designed theme for your profile background and buttons.</CardDescription>
       </CardHeader>
       <CardContent>
         <Carousel
@@ -232,15 +233,10 @@ const CustomGradientCard = memo(function CustomGradientCard({ form }: { form: an
 
 const CustomStylesCard = memo(function CustomStylesCard({ form }: { form: any }) {
 
-  const setColorStyle = (style: 'solid' | 'gradient') => {
+  const setButtonStyle = (style: 'solid' | 'gradient') => {
       form.setValue('buttonStyle', style, { shouldDirty: true });
       if (style === 'gradient') {
           form.setValue('theme', 'custom', { shouldDirty: true });
-      } else {
-          // If switching back from custom, reset to a default theme
-          if (form.getValues('theme') === 'custom') {
-            form.setValue('theme', 'light', { shouldDirty: true });
-          }
       }
   };
 
@@ -248,13 +244,13 @@ const CustomStylesCard = memo(function CustomStylesCard({ form }: { form: any })
       <Card>
           <CardHeader>
               <CardTitle>Color & Background Styles</CardTitle>
-              <CardDescription>Select a color style and toggle the animated background.</CardDescription>
+              <CardDescription>Select a button style and toggle the animated background.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
               <div className="space-y-2">
-                  <Label>Color Style</Label>
+                  <Label>Button Style</Label>
                   <RadioGroup
-                      onValueChange={(value) => setColorStyle(value as 'solid' | 'gradient')}
+                      onValueChange={(value) => setButtonStyle(value as 'solid' | 'gradient')}
                       value={form.watch('buttonStyle')}
                       className="grid grid-cols-2 gap-4"
                   >
@@ -343,14 +339,19 @@ export default function AppearancePage() {
 
   const handleThemeSelect = useCallback((themeId: string) => {
     form.setValue('theme', themeId, { shouldDirty: true });
+    // If a theme is selected, ensure button style is not gradient unless it's the custom theme.
+    if (themeId !== 'custom' && form.getValues('buttonStyle') === 'gradient') {
+        form.setValue('buttonStyle', 'solid', { shouldDirty: true });
+    }
   }, [form]);
 
   async function onSubmit(values: z.infer<typeof appearanceSchema>) {
     if (!user) return;
     setFormLoading(true);
     
-    if (values.buttonStyle === 'solid' && values.theme === 'custom') {
-        values.theme = 'light';
+    // If the button style is gradient, the theme MUST be custom.
+    if (values.buttonStyle === 'gradient') {
+        values.theme = 'custom';
     }
     
     const dataToUpdate = { ...values };
@@ -393,18 +394,18 @@ export default function AppearancePage() {
         <div className="w-full lg:col-span-1 space-y-6">
             <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                {watchedValues.buttonStyle === 'solid' ? (
-                  <ThemeCardContent 
-                    selectedTheme={watchedValues.theme || 'light'}
-                    onThemeSelect={handleThemeSelect}
-                  />
-                ) : (
-                  <CustomGradientCard form={form} />
-                )}
-                
+                <ThemeCardContent 
+                  selectedTheme={watchedValues.theme || 'light'}
+                  onThemeSelect={handleThemeSelect}
+                />
+
                 <CustomStylesCard 
                   form={form} 
                 />
+                
+                {watchedValues.buttonStyle === 'gradient' && (
+                  <CustomGradientCard form={form} />
+                )}
                 
                 <Button type="submit" disabled={formLoading} className="w-full lg:w-auto">
                     {formLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
