@@ -165,7 +165,9 @@ const CustomGradientSelection = memo(function CustomGradientSelection({ form }: 
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel className="text-xs text-muted-foreground">From</FormLabel>
-                                    <FormControl><ColorPicker value={field.value ?? ''} onChange={field.onChange} /></FormControl>
+                                    <FormControl>
+                                        <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
+                                    </FormControl>
                                 </FormItem>
                             )}
                         />
@@ -174,7 +176,9 @@ const CustomGradientSelection = memo(function CustomGradientSelection({ form }: 
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel className="text-xs text-muted-foreground">To</FormLabel>
-                                    <FormControl><ColorPicker value={field.value ?? ''} onChange={field.onChange} /></FormControl>
+                                    <FormControl>
+                                        <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
+                                    </FormControl>
                                 </FormItem>
                             )}
                         />
@@ -188,7 +192,9 @@ const CustomGradientSelection = memo(function CustomGradientSelection({ form }: 
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel className="text-xs text-muted-foreground">From</FormLabel>
-                                    <FormControl><ColorPicker value={field.value ?? ''} onChange={field.onChange} /></FormControl>
+                                    <FormControl>
+                                        <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
+                                    </FormControl>
                                 </FormItem>
                             )}
                         />
@@ -197,7 +203,9 @@ const CustomGradientSelection = memo(function CustomGradientSelection({ form }: 
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel className="text-xs text-muted-foreground">To</FormLabel>
-                                    <FormControl><ColorPicker value={field.value ?? ''} onChange={field.onChange} /></FormControl>
+                                    <FormControl>
+                                        <ColorPicker value={field.value ?? ''} onChange={field.onChange} />
+                                    </FormControl>
                                 </FormItem>
                             )}
                         />
@@ -406,5 +414,7 @@ export default function AppearancePage() {
     </div>
   );
 }
+
+    
 
     
