@@ -10,6 +10,7 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import ReactDOMServer from 'react-dom/server';
+import { themes } from '@/app/(dashboard)/dashboard/appearance/page';
 
 const globalCSS = `
 @tailwind base;
@@ -215,7 +216,7 @@ const EthIcon = () => (
 const SolIcon = () => (
   <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0">
     <title>Solana</title>
-    <path d="M4.236.427a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.532V-.001a.6.6 0 00-.128-.532.6.6 0 00-.49-.28L4.236.427zm10.02 6.046a.6.6 0 00-.532.127.6.6 0 00-.28.491v4.54a.6.6 0 00.28.49.6.6 0 00.532.128l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.532V5.76a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12zm-4.383 6.64a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533v-4.54a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12z" />
+    <path d="M4.236.427a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.532V-.001a.6.6 0 00-.128-.532.6.6 0 00-.49-.28L4.236.427zm10.02 6.046a.6.6 0 00-.532.127a.6.6 0 00-.28.491v4.54a.6.6 0 00.28.49.6.6 0 00.532.128l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.532V5.76a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12zm-4.383 6.64a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533v-4.54a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12z" />
   </svg>
 );
 
@@ -333,7 +334,6 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         return ta.value;
     }
     
-    // This script will be embedded in the iframe to handle communication
     const iframeScript = `
         function trackClick(linkId) {
             const data = { userId: '${user.uid}', linkId };
@@ -353,7 +353,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
                 type: 'COPY_TO_CLIPBOARD',
                 payload: { text, linkId }
             }, '*');
-            trackClick(linkId); // Also track the click on copy
+            trackClick(linkId);
         }
     `;
 
@@ -364,7 +364,9 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     const regularLinks = activeLinks.filter(l => !l.isSocial && !l.isSupport);
     
     const customStyles: React.CSSProperties = {};
-    if (user.theme === 'custom') {
+    const selectedThemeId = user.theme || 'light';
+
+    if (selectedThemeId === 'custom') {
         if (user.customThemeGradient?.from && user.customThemeGradient?.to) {
           (customStyles as any)['--background-gradient-from'] = user.customThemeGradient.from;
           (customStyles as any)['--background-gradient-to'] = user.customThemeGradient.to;
@@ -373,9 +375,15 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
           (customStyles as any)['--btn-gradient-from'] = user.customButtonGradient.from;
           (customStyles as any)['--btn-gradient-to'] = user.customButtonGradient.to;
         }
+    } else {
+        const selectedTheme = themes.find(t => t.id === selectedThemeId);
+        if (selectedTheme) {
+            (customStyles as any)['--background-gradient-from'] = selectedTheme.colors[0];
+            (customStyles as any)['--background-gradient-to'] = selectedTheme.colors[1];
+        }
     }
 
-    let pageContent = ReactDOMServer.renderToStaticMarkup(
+    const pageContent = ReactDOMServer.renderToStaticMarkup(
       <>
         <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
             {user.animatedBackground && <AnimatedBackground />}
@@ -422,34 +430,21 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         </footer>
       </>
     );
-
-    // Inject onclick handlers using string replacement. More robust than regex.
-    const addOnclickToElement = (html: string, attribute: string, linkId: string, handler: 'trackClick' | 'handleCopy', value?: string) => {
-        const marker = `data-${attribute}="${linkId}"`;
-        const onclickString = value ? `${handler}('${value}', '${linkId}')` : `${handler}('${linkId}')`;
-        return html.replace(marker, `${marker} onclick="${onclickString}"`);
-    };
-
-    // Add onclick for regular links and social icons
+    
+    let finalPageContent = pageContent;
     activeLinks.filter(l => !l.isSupport).forEach(link => {
-        pageContent = addOnclickToElement(pageContent, 'link-id', link.id, 'trackClick');
+        finalPageContent = finalPageContent.replace(`data-link-id="${link.id}"`, `data-link-id="${link.id}" onclick="trackClick('${link.id}')"`);
     });
-
-    // Add onclick for "Buy me a coffee"
     const bmcLink = supportLinks.find(l => l.title === 'Buy Me A Coffee');
     if (bmcLink) {
-        pageContent = addOnclickToElement(pageContent, 'link-id', bmcLink.id, 'trackClick');
+        finalPageContent = finalPageContent.replace(`data-link-id="${bmcLink.id}"`, `data-link-id="${bmcLink.id}" onclick="trackClick('${bmcLink.id}')"`);
     }
-
-    // Add onclick for E-Transfer
     const etLink = supportLinks.find(l => l.title === 'E-Transfer');
     if (etLink) {
-        pageContent = addOnclickToElement(pageContent, 'etransfer-id', etLink.id, 'handleCopy', etLink.url.replace('mailto:', ''));
+        finalPageContent = finalPageContent.replace(`data-etransfer-id="${etLink.id}"`, `data-etransfer-id="${etLink.id}" onclick="handleCopy('${etLink.url.replace('mailto:', '')}', '${etLink.id}')"`);
     }
-
-    // Add onclick for Crypto Logs
     supportLinks.filter(l => l.isSupport && ['BTC', 'ETH', 'SOL'].includes(l.title)).forEach(link => {
-        pageContent = addOnclickToElement(pageContent, 'cryptolog-id', link.id, 'handleCopy', link.url);
+        finalPageContent = finalPageContent.replace(`data-cryptolog-id="${link.id}"`, `data-cryptolog-id="${link.id}" onclick="handleCopy('${link.url}', '${link.id}')"`);
     });
 
     const rawEmbedScript = user.bot?.embedScript || '';
@@ -470,7 +465,9 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         </script>
     ` : '';
     
-    const styleAttr = Object.entries(customStyles).map(([key, value]) => `${key}: ${value}`).join('; ');
+    const styleString = Object.entries(customStyles)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join('; ');
     
     const finalHtml = `
       <html style="height: 100vh; overflow: hidden;">
@@ -488,9 +485,9 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
             data-theme="${user.theme || 'light'}"
             data-style="${user.buttonStyle || 'solid'}"
             class="relative flex flex-col bg-background h-full"
-            style="${styleAttr}"
+            style="${styleString}"
           >
-            ${pageContent}
+            ${finalPageContent}
           </div>
           <script>
             ${iframeScript}
@@ -515,5 +512,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     </div>
   );
 }
+
+    
 
     
