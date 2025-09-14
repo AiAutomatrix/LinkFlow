@@ -215,7 +215,7 @@ const EthIcon = () => (
 const SolIcon = () => (
   <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0">
     <title>Solana</title>
-    <path d="M4.236.427a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.532V-.001a.6.6 0 00-.128-.532.6.6 0 00-.49-.28L4.236.427zm10.02 6.046a.6.6 0 00-.532.127.6.6 0 00-.28.491v4.54a.6.6 0 00.28.49.6.6 0 00.532.128l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.532V5.76a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12zm-4.383 6.64a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533v-4.54a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12z" />
+    <path d="M4.236.427a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.532V-.001a.6.6 0 00-.128-.532.6.6 0 00-.49-.28L4.236.427zm10.02 6.046a.6.6 0 00-.532.127a.6.6 0 00-.28.491v4.54a.6.6 0 00.28.49.6.6 0 00.532.128l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.532V5.76a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12zm-4.383 6.64a.6.6 0 00-.532.127a.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533v-4.54a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12z" />
   </svg>
 );
 
@@ -358,13 +358,21 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
   
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
+        // IMPORTANT: Add origin check in production
+        // if (event.origin !== 'https://your-domain.com') return;
+        
         const { type, payload } = event.data;
 
         if (type === 'COPY_TO_CLIPBOARD') {
             navigator.clipboard.writeText(payload.text).then(() => {
                 toast({ title: "Copied to clipboard!" });
                 if (payload.linkId) {
-                    // Clicks for copy actions are tracked inside the iframe via postMessage
+                    // Clicks for copy actions are tracked via postMessage
+                     fetch('/api/clicks', {
+                        method: 'POST',
+                        body: JSON.stringify({ userId: user.uid, linkId: payload.linkId }),
+                        keepalive: true,
+                    }).catch(e => console.error("Error tracking copy click:", e));
                 }
             }).catch(err => {
                 console.error("Failed to copy from parent: ", err);
@@ -375,7 +383,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [toast]);
+  }, [toast, user.uid]);
 
 
   useEffect(() => {
@@ -419,11 +427,11 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         }
         
         function handleCopy(text, linkId) {
+            // The parent window will handle the clipboard and tracking
             window.parent.postMessage({
                 type: 'COPY_TO_CLIPBOARD',
                 payload: { text, linkId }
-            }, '*');
-            trackClick(linkId);
+            }, '*'); // Use a specific origin in production
         }
     `;
 
@@ -432,18 +440,22 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
       <ProfileLayout user={user} links={activeLinks} />
     );
     
-    // Add onclick handlers for tracking clicks
-    activeLinks.filter(l => !l.isSupport).forEach(link => {
-        pageContent = pageContent.replace(`data-link-id="${link.id}"`, `data-link-id="${link.id}" onclick="trackClick('${link.id}')"`);
+    // Add onclick handlers for tracking clicks.
+    // This is done via string replacement on the static HTML.
+    pageContent = pageContent.replace(/data-link-id="([^"]+)"/g, (match, linkId) => {
+        const link = activeLinks.find(l => l.id === linkId);
+        // Exclude support links from this generic tracker; they're handled separately.
+        if (link && !link.isSupport) {
+            return `${match} onclick="trackClick('${linkId}')"`;
+        }
+        return match;
     });
-    const bmcLink = activeLinks.find(l => l.isSupport && l.title === 'Buy Me A Coffee');
-    if (bmcLink) {
-        pageContent = pageContent.replace(`data-link-id="${bmcLink.id}"`, `data-link-id="${bmcLink.id}" onclick="trackClick('${bmcLink.id}')"`);
-    }
+
     const etLink = activeLinks.find(l => l.isSupport && l.title === 'E-Transfer');
     if (etLink) {
         pageContent = pageContent.replace(`data-etransfer-id="${etLink.id}"`, `data-etransfer-id="${etLink.id}" onclick="handleCopy('${etLink.url.replace('mailto:', '')}', '${etLink.id}')"`);
     }
+
     activeLinks.filter(l => l.isSupport && ['BTC', 'ETH', 'SOL'].includes(l.title)).forEach(link => {
         pageContent = pageContent.replace(`data-cryptolog-id="${link.id}"`, `data-cryptolog-id="${link.id}" onclick="handleCopy('${link.url}', '${link.id}')"`);
     });
