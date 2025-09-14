@@ -10,7 +10,6 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import ReactDOMServer from 'react-dom/server';
-import { themes } from '@/app/(dashboard)/dashboard/appearance/page';
 
 const globalCSS = `
 @tailwind base;
@@ -220,21 +219,18 @@ const SolIcon = () => (
   </svg>
 );
 
-
-const CryptoLog = ({ icon, name, address, linkId }: { icon: React.ReactNode, name: string, address: string, linkId: string }) => {
-    return (
-        <div data-cryptolog-id={linkId} className="flex items-center justify-between gap-4 text-sm font-mono">
-            <div className="flex items-center gap-2 text-muted-foreground shrink-0">
-                {icon}
-                <span className="font-sans font-medium text-foreground">{name}</span>
-            </div>
-            <p className="overflow-hidden truncate text-muted-foreground">{address}</p>
-            <button className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
-                <ClipboardCopy className="h-4 w-4" />
-            </button>
-        </div>
-    )
-}
+const CryptoLog = ({ icon, name, address, linkId }: { icon: React.ReactNode, name: string, address: string, linkId: string }) => (
+  <div data-cryptolog-id={linkId} className="flex items-center justify-between gap-4 text-sm font-mono">
+    <div className="flex items-center gap-2 text-muted-foreground shrink-0">
+      {icon}
+      <span className="font-sans font-medium text-foreground">{name}</span>
+    </div>
+    <p className="overflow-hidden truncate text-muted-foreground">{address}</p>
+    <button className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
+      <ClipboardCopy className="h-4 w-4" />
+    </button>
+  </div>
+);
 
 const SupportLinks = ({ links }: { links: LinkType[] }) => {
     const bmcLink = links.find(l => l.title === 'Buy Me A Coffee');
@@ -242,7 +238,6 @@ const SupportLinks = ({ links }: { links: LinkType[] }) => {
     const btcLink = links.find(l => l.title === 'BTC');
     const ethLink = links.find(l => l.title === 'ETH');
     const solLink = links.find(l => l.title === 'SOL');
-    
     const hasCrypto = btcLink || ethLink || solLink;
 
     if (!bmcLink && !etLink && !hasCrypto) {
@@ -279,6 +274,81 @@ const SupportLinks = ({ links }: { links: LinkType[] }) => {
     );
 };
 
+// This is a self-contained layout component that mirrors the logic of PublicProfilePreview
+// It correctly handles applying preset theme attributes and custom gradient styles.
+const ProfileLayout = ({ user, links }: { user: UserProfile, links: LinkType[]}) => {
+  const getInitials = (name: string = '') => name.split(' ').map(n => n[0]).join('');
+
+  const socialLinks = links.filter(l => l.isSocial);
+  const supportLinks = links.filter(l => l.isSupport);
+  const regularLinks = links.filter(l => !l.isSocial && !l.isSupport);
+
+  const customStyles: React.CSSProperties = {};
+  if (user.theme === 'custom') {
+    if (user.customThemeGradient?.from && user.customThemeGradient?.to) {
+      (customStyles as any)['--background-gradient-from'] = user.customThemeGradient.from;
+      (customStyles as any)['--background-gradient-to'] = user.customThemeGradient.to;
+    }
+    if (user.customButtonGradient?.from && user.customButtonGradient?.to) {
+      (customStyles as any)['--btn-gradient-from'] = user.customButtonGradient.from;
+      (customStyles as any)['--btn-gradient-to'] = user.customButtonGradient.to;
+    }
+  }
+
+  return (
+    <div
+      id="root"
+      data-theme={user.theme || 'light'}
+      data-style={user.buttonStyle || 'solid'}
+      className="relative flex flex-col bg-background h-full"
+      style={customStyles}
+    >
+      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
+          {user.animatedBackground && <AnimatedBackground />}
+      </div>
+      <div style={{ position: 'relative', zIndex: 10, flexGrow: 1, overflowY: 'auto', backgroundColor: 'transparent' }} className="w-full flex flex-col items-center pt-12 text-center p-4">
+          <Avatar className="h-24 w-24 border-2 border-white/50">
+              <AvatarImage src={user.photoURL || undefined} alt={user.displayName} />
+              <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+          </Avatar>
+          <h1 className="text-2xl font-bold mt-3 text-foreground">{user.displayName}</h1>
+          <p className="text-md text-muted-foreground">@{user.username}</p>
+          <p className="mt-2 text-sm max-w-xs text-foreground/80">{user.bio}</p>
+          
+          <div className="flex gap-4 justify-center mt-3 text-foreground/80">
+            {socialLinks.map(link => (
+              <a href={link.url} target="_blank" rel="noopener noreferrer" key={link.id} data-link-id={link.id} aria-label={`My ${link.title}`} className="hover:text-primary transition-colors">
+                <SocialIcon platform={link.title} />
+              </a>
+            ))}
+          </div>
+
+          <div className="mt-6 space-y-3 w-full max-w-xs mx-auto">
+            {regularLinks.map((link) => (
+              <a
+                key={link.id}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-link-id={link.id}
+                className={cn(
+                  "block w-full text-center bg-secondary text-secondary-foreground font-semibold p-4 rounded-lg shadow-md transition-transform transform hover:scale-105 active:scale-[0.98] truncate",
+                  "link-button"
+                )}
+              >
+                {link.title}
+              </a>
+            ))}
+          </div>
+          
+          <SupportLinks links={supportLinks} />
+      </div>
+      <footer className="w-full text-center py-4 shrink-0 text-foreground relative z-10">
+        <a href="/" target="_blank" rel="noopener noreferrer"><Logo /></a>
+      </footer>
+    </div>
+  );
+}
 
 
 // ---------- Main Component ----------
@@ -357,74 +427,25 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         }
     `;
 
-    const getInitials = (name: string = '') => name.split(' ').map(n => n[0]).join('');
-    
-    const socialLinks = activeLinks.filter(l => l.isSocial);
-    const supportLinks = activeLinks.filter(l => l.isSupport);
-    const regularLinks = activeLinks.filter(l => !l.isSocial && !l.isSupport);
-    
-    const pageContent = ReactDOMServer.renderToStaticMarkup(
-      <>
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
-            {user.animatedBackground && <AnimatedBackground />}
-        </div>
-        <div style={{ position: 'relative', zIndex: 10, flexGrow: 1, overflowY: 'auto', backgroundColor: 'transparent' }} className="w-full flex flex-col items-center pt-12 text-center p-4">
-            <Avatar className="h-24 w-24 border-2 border-white/50">
-                <AvatarImage src={user.photoURL || undefined} alt={user.displayName} />
-                <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
-            </Avatar>
-            <h1 className="text-2xl font-bold mt-3 text-foreground">{user.displayName}</h1>
-            <p className="text-md text-muted-foreground">@{user.username}</p>
-            <p className="mt-2 text-sm max-w-xs text-foreground/80">{user.bio}</p>
-            
-            <div className="flex gap-4 justify-center mt-3 text-foreground/80">
-              {socialLinks.map(link => (
-                <a href={link.url} target="_blank" rel="noopener noreferrer" key={link.id} data-link-id={link.id} aria-label={`My ${link.title}`} className="hover:text-primary transition-colors">
-                  <SocialIcon platform={link.title} />
-                </a>
-              ))}
-            </div>
-
-            <div className="mt-6 space-y-3 w-full max-w-xs mx-auto">
-              {regularLinks.map((link) => (
-                <a
-                  key={link.id}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-link-id={link.id}
-                  className={cn(
-                    "block w-full text-center bg-secondary text-secondary-foreground font-semibold p-4 rounded-lg shadow-md transition-transform transform hover:scale-105 active:scale-[0.98] truncate",
-                    "link-button"
-                  )}
-                >
-                  {link.title}
-                </a>
-              ))}
-            </div>
-            
-            <SupportLinks links={supportLinks} />
-        </div>
-        <footer className="w-full text-center py-4 shrink-0 text-foreground relative z-10">
-          <a href="/" target="_blank" rel="noopener noreferrer"><Logo /></a>
-        </footer>
-      </>
+    // Render the ProfileLayout component to a static HTML string.
+    let pageContent = ReactDOMServer.renderToStaticMarkup(
+      <ProfileLayout user={user} links={activeLinks} />
     );
     
-    let finalPageContent = pageContent;
+    // Add onclick handlers for tracking clicks
     activeLinks.filter(l => !l.isSupport).forEach(link => {
-        finalPageContent = finalPageContent.replace(`data-link-id="${link.id}"`, `data-link-id="${link.id}" onclick="trackClick('${link.id}')"`);
+        pageContent = pageContent.replace(`data-link-id="${link.id}"`, `data-link-id="${link.id}" onclick="trackClick('${link.id}')"`);
     });
-    const bmcLink = supportLinks.find(l => l.title === 'Buy Me A Coffee');
+    const bmcLink = activeLinks.find(l => l.isSupport && l.title === 'Buy Me A Coffee');
     if (bmcLink) {
-        finalPageContent = finalPageContent.replace(`data-link-id="${bmcLink.id}"`, `data-link-id="${bmcLink.id}" onclick="trackClick('${bmcLink.id}')"`);
+        pageContent = pageContent.replace(`data-link-id="${bmcLink.id}"`, `data-link-id="${bmcLink.id}" onclick="trackClick('${bmcLink.id}')"`);
     }
-    const etLink = supportLinks.find(l => l.title === 'E-Transfer');
+    const etLink = activeLinks.find(l => l.isSupport && l.title === 'E-Transfer');
     if (etLink) {
-        finalPageContent = finalPageContent.replace(`data-etransfer-id="${etLink.id}"`, `data-etransfer-id="${etLink.id}" onclick="handleCopy('${etLink.url.replace('mailto:', '')}', '${etLink.id}')"`);
+        pageContent = pageContent.replace(`data-etransfer-id="${etLink.id}"`, `data-etransfer-id="${etLink.id}" onclick="handleCopy('${etLink.url.replace('mailto:', '')}', '${etLink.id}')"`);
     }
-    supportLinks.filter(l => l.isSupport && ['BTC', 'ETH', 'SOL'].includes(l.title)).forEach(link => {
-        finalPageContent = finalPageContent.replace(`data-cryptolog-id="${link.id}"`, `data-cryptolog-id="${link.id}" onclick="handleCopy('${link.url}', '${link.id}')"`);
+    activeLinks.filter(l => l.isSupport && ['BTC', 'ETH', 'SOL'].includes(l.title)).forEach(link => {
+        pageContent = pageContent.replace(`data-cryptolog-id="${link.id}"`, `data-cryptolog-id="${link.id}" onclick="handleCopy('${link.url}', '${link.id}')"`);
     });
 
     const rawEmbedScript = user.bot?.embedScript || '';
@@ -444,19 +465,6 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
             window.addEventListener('load', initBotpress);
         </script>
     ` : '';
-    
-    let styleString = '';
-    if (user.theme === 'custom' && user.customThemeGradient?.from && user.customThemeGradient?.to) {
-        const customStyles = {
-            '--background-gradient-from': user.customThemeGradient.from,
-            '--background-gradient-to': user.customThemeGradient.to,
-        };
-        if (user.customButtonGradient?.from && user.customButtonGradient?.to) {
-            (customStyles as any)['--btn-gradient-from'] = user.customButtonGradient.from;
-            (customStyles as any)['--btn-gradient-to'] = user.customButtonGradient.to;
-        }
-        styleString = Object.entries(customStyles).map(([key, value]) => `${key}: ${value}`).join('; ');
-    }
 
     const finalHtml = `
       <html style="height: 100vh; overflow: hidden;">
@@ -469,15 +477,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
           ${embedScript}
         </head>
         <body style="height: 100%; margin: 0; background-color: transparent;">
-          <div
-            id="root"
-            data-theme="${user.theme || 'light'}"
-            data-style="${user.buttonStyle || 'solid'}"
-            class="relative flex flex-col bg-background h-full"
-            style="${styleString}"
-          >
-            ${finalPageContent}
-          </div>
+          ${pageContent}
           <script>
             ${iframeScript}
           </script>
@@ -501,5 +501,3 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     </div>
   );
 }
-
-    
