@@ -1,3 +1,4 @@
+
 "use client";
 import type { Link as LinkType, UserProfile } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -458,7 +459,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     ` : '';
     
     const customStyleString = user.theme === 'custom' 
-      ? `--background-gradient-from: ${user.customThemeGradient?.from || '#FFFFFF'}; --background-gradient-to: ${user.customThemeGradient?.to || '#AAAAAA'}; --btn-gradient-from: ${user.customButtonGradient?.from || '#AAAAAA'}; --btn-gradient-to: ${user.customButtonGradient?.to || '#FFFFFF'};`
+      ? `style="--background-gradient-from: ${user.customThemeGradient?.from || '#FFFFFF'}; --background-gradient-to: ${user.customThemeGradient?.to || '#AAAAAA'}; --btn-gradient-from: ${user.customButtonGradient?.from || '#AAAAAA'}; --btn-gradient-to: ${user.customButtonGradient?.to || '#FFFFFF'};"`
       : '';
 
     const finalHtml = `
@@ -477,7 +478,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
             data-theme="${user.theme || 'light'}"
             data-style="${user.buttonStyle || 'solid'}"
             class="relative flex flex-col bg-background"
-            style="min-height: 100vh; ${customStyleString}"
+            ${customStyleString}
           >
             ${pageContent}
           </div>
@@ -504,3 +505,5 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     </div>
   );
 }
+
+    
