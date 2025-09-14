@@ -477,7 +477,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
             id="root"
             data-theme="${user.theme || 'light'}"
             data-style="${user.buttonStyle || 'solid'}"
-            class="relative flex flex-col bg-background"
+            class="relative flex flex-col bg-background h-full"
             ${customStyleString}
           >
             ${pageContent}
