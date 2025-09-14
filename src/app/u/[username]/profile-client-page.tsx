@@ -363,6 +363,18 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     const supportLinks = activeLinks.filter(l => l.isSupport);
     const regularLinks = activeLinks.filter(l => !l.isSocial && !l.isSupport);
     
+    const customStyles: React.CSSProperties = {};
+    if (user.theme === 'custom') {
+        if (user.customThemeGradient?.from && user.customThemeGradient?.to) {
+          (customStyles as any)['--background-gradient-from'] = user.customThemeGradient.from;
+          (customStyles as any)['--background-gradient-to'] = user.customThemeGradient.to;
+        }
+        if (user.customButtonGradient?.from && user.customButtonGradient?.to) {
+          (customStyles as any)['--btn-gradient-from'] = user.customButtonGradient.from;
+          (customStyles as any)['--btn-gradient-to'] = user.customButtonGradient.to;
+        }
+    }
+
     let pageContent = ReactDOMServer.renderToStaticMarkup(
       <>
         <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
@@ -458,10 +470,8 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         </script>
     ` : '';
     
-    const customStyleString = user.theme === 'custom' 
-      ? `style="--background-gradient-from: ${user.customThemeGradient?.from || '#FFFFFF'}; --background-gradient-to: ${user.customThemeGradient?.to || '#AAAAAA'}; --btn-gradient-from: ${user.customButtonGradient?.from || '#AAAAAA'}; --btn-gradient-to: ${user.customButtonGradient?.to || '#FFFFFF'};"`
-      : '';
-
+    const styleAttr = Object.entries(customStyles).map(([key, value]) => `${key}: ${value}`).join('; ');
+    
     const finalHtml = `
       <html style="height: 100vh; overflow: hidden;">
         <head>
@@ -478,7 +488,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
             data-theme="${user.theme || 'light'}"
             data-style="${user.buttonStyle || 'solid'}"
             class="relative flex flex-col bg-background h-full"
-            ${customStyleString}
+            style="${styleAttr}"
           >
             ${pageContent}
           </div>
