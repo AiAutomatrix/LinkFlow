@@ -216,7 +216,7 @@ const EthIcon = () => (
 const SolIcon = () => (
   <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0">
     <title>Solana</title>
-    <path d="M4.236.427a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.532V-.001a.6.6 0 00-.128-.532.6.6 0 00-.49-.28L4.236.427zm10.02 6.046a.6.6 0 00-.532.127a.6.6 0 00-.28.491v4.54a.6.6 0 00.28.49.6.6 0 00.532.128l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.532V5.76a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12zm-4.383 6.64a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533v-4.54a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12z" />
+    <path d="M4.236.427a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.532V-.001a.6.6 0 00-.128-.532.6.6 0 00-.49-.28L4.236.427zm10.02 6.046a.6.6 0 00-.532.127.6.6 0 00-.28.491v4.54a.6.6 0 00.28.49.6.6 0 00.532.128l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.532V5.76a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12zm-4.383 6.64a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533v-4.54a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12z" />
   </svg>
 );
 
@@ -363,26 +363,6 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     const supportLinks = activeLinks.filter(l => l.isSupport);
     const regularLinks = activeLinks.filter(l => !l.isSocial && !l.isSupport);
     
-    const customStyles: React.CSSProperties = {};
-    const selectedThemeId = user.theme || 'light';
-
-    if (selectedThemeId === 'custom') {
-        if (user.customThemeGradient?.from && user.customThemeGradient?.to) {
-          (customStyles as any)['--background-gradient-from'] = user.customThemeGradient.from;
-          (customStyles as any)['--background-gradient-to'] = user.customThemeGradient.to;
-        }
-        if (user.customButtonGradient?.from && user.customButtonGradient?.to) {
-          (customStyles as any)['--btn-gradient-from'] = user.customButtonGradient.from;
-          (customStyles as any)['--btn-gradient-to'] = user.customButtonGradient.to;
-        }
-    } else {
-        const selectedTheme = themes.find(t => t.id === selectedThemeId);
-        if (selectedTheme) {
-            (customStyles as any)['--background-gradient-from'] = selectedTheme.colors[0];
-            (customStyles as any)['--background-gradient-to'] = selectedTheme.colors[1];
-        }
-    }
-
     const pageContent = ReactDOMServer.renderToStaticMarkup(
       <>
         <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
@@ -465,10 +445,19 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         </script>
     ` : '';
     
-    const styleString = Object.entries(customStyles)
-        .map(([key, value]) => `${key}: ${value}`)
-        .join('; ');
-    
+    let styleString = '';
+    if (user.theme === 'custom' && user.customThemeGradient?.from && user.customThemeGradient?.to) {
+        const customStyles = {
+            '--background-gradient-from': user.customThemeGradient.from,
+            '--background-gradient-to': user.customThemeGradient.to,
+        };
+        if (user.customButtonGradient?.from && user.customButtonGradient?.to) {
+            (customStyles as any)['--btn-gradient-from'] = user.customButtonGradient.from;
+            (customStyles as any)['--btn-gradient-to'] = user.customButtonGradient.to;
+        }
+        styleString = Object.entries(customStyles).map(([key, value]) => `${key}: ${value}`).join('; ');
+    }
+
     const finalHtml = `
       <html style="height: 100vh; overflow: hidden;">
         <head>
@@ -512,7 +501,3 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     </div>
   );
 }
-
-    
-
-    
