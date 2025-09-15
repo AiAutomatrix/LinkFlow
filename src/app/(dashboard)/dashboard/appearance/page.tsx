@@ -277,7 +277,7 @@ export default function AppearancePage() {
     if (user) {
         form.reset({
             theme: user.theme || 'light',
-            animatedBackground: user.animatedBackground || false,
+            animatedBackground: user.animatedBackground ?? false,
             buttonStyle: user.buttonStyle || 'solid',
             customThemeGradient: user.customThemeGradient || { from: '#FFFFFF', to: '#AAAAAA' },
             customButtonGradient: user.customButtonGradient || { from: '#AAAAAA', to: '#FFFFFF' },
@@ -364,9 +364,9 @@ export default function AppearancePage() {
             <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <div className="border rounded-lg p-2 flex justify-around bg-muted/50">
-                    <Button type="button" variant={activeTool === 'theme' ? "background" : "ghost"} onClick={() => handleToolChange('theme')} className="w-full"><Palette className="mr-2 h-4 w-4" /> Theme</Button>
-                    <Button type="button" variant={activeTool === 'custom' ? "background" : "ghost"} onClick={() => handleToolChange('custom')} className="w-full"><Sparkles className="mr-2 h-4 w-4" /> Custom</Button>
-                    <Button type="button" variant={activeTool === 'button' ? "background" : "ghost"} onClick={() => handleToolChange('button')} className="w-full"><ToyBrick className="mr-2 h-4 w-4" /> Buttons</Button>
+                    <Button type="button" variant={activeTool === 'theme' ? "secondary" : "ghost"} onClick={() => handleToolChange('theme')} className="w-full"><Palette className="mr-2 h-4 w-4" /> Theme</Button>
+                    <Button type="button" variant={activeTool === 'custom' ? "secondary" : "ghost"} onClick={() => handleToolChange('custom')} className="w-full"><Sparkles className="mr-2 h-4 w-4" /> Custom</Button>
+                    <Button type="button" variant={activeTool === 'button' ? "secondary" : "ghost"} onClick={() => handleToolChange('button')} className="w-full"><ToyBrick className="mr-2 h-4 w-4" /> Buttons</Button>
                 </div>
                 
                 <Card>
