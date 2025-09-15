@@ -119,7 +119,7 @@ const ThemeSelection = memo(function ThemeSelection({ selectedTheme, onThemeSele
       </CardHeader>
       <CardContent>
         <Carousel
-          opts={{ align: "start", slidesToScroll: "auto", draggable: false }}
+          opts={{ align: "start", slidesToScroll: "auto" }}
           className="w-full"
         >
           <CarouselContent className="-ml-1">
@@ -414,6 +414,8 @@ export default function AppearancePage() {
     </div>
   );
 }
+
+    
 
     
 
