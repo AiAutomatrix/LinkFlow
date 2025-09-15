@@ -306,15 +306,15 @@ export default function AppearancePage() {
     if (!user) return;
     setFormLoading(true);
     
-    // If the active tool is 'custom', force the theme to 'custom'.
-    if (activeTool === 'custom') {
-        values.theme = 'custom';
-    } else if (values.theme === 'custom' && activeTool !== 'custom') {
-        // If they were on custom but switched to a theme, set it back to a default theme.
-        values.theme = 'light';
-    }
-    
     const dataToUpdate = { ...values };
+
+    // Cleaner logic to sync theme with the active tool
+    if (activeTool === 'custom') {
+      dataToUpdate.theme = 'custom';
+    } else if (dataToUpdate.theme === 'custom') {
+      // Only reset if it's still 'custom' but the tool isn't 'custom'
+      dataToUpdate.theme = 'light'; // Fallback to a safe default
+    }
 
     try {
         const userRef = doc(db, "users", user.uid);
@@ -414,5 +414,7 @@ export default function AppearancePage() {
     </div>
   );
 }
+
+    
 
     
