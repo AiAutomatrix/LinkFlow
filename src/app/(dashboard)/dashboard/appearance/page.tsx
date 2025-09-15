@@ -279,8 +279,8 @@ export default function AppearancePage() {
             theme: user.theme || 'light',
             animatedBackground: user.animatedBackground ?? false,
             buttonStyle: user.buttonStyle || 'solid',
-            customThemeGradient: user.customThemeGradient || { from: '#FFFFFF', to: '#AAAAAA' },
-            customButtonGradient: user.customButtonGradient || { from: '#AAAAAA', to: '#FFFFFF' },
+            customThemeGradient: user.customThemeGradient || { from: '#FFFFFF', to: '#E2E8F0' },
+            customButtonGradient: user.customButtonGradient || { from: '#3B82F6', to: '#9333EA' },
         });
         if (user.theme === 'custom') {
             setActiveTool('custom');
@@ -306,14 +306,12 @@ export default function AppearancePage() {
     if (!user) return;
     setFormLoading(true);
     
-    const dataToUpdate = { ...values };
+    const dataToUpdate: Partial<UserProfile> = { ...values };
 
-    // Cleaner logic to sync theme with the active tool
     if (activeTool === 'custom') {
       dataToUpdate.theme = 'custom';
-    } else if (dataToUpdate.theme === 'custom') {
-      // Only reset if it's still 'custom' but the tool isn't 'custom'
-      dataToUpdate.theme = 'light'; // Fallback to a safe default
+    } else if (values.theme === 'custom') {
+      dataToUpdate.theme = 'light';
     }
 
     try {
@@ -352,7 +350,7 @@ export default function AppearancePage() {
         <div className="lg:sticky lg:top-6 w-full">
              <div className="w-full max-w-sm mx-auto">
                 <PublicProfilePreview 
-                    profile={previewProfile} 
+                    profile={previewProfile as UserProfile} 
                     links={links} 
                     isPreview 
                     showBot={true}
@@ -414,9 +412,5 @@ export default function AppearancePage() {
     </div>
   );
 }
-
-    
-
-    
 
     
