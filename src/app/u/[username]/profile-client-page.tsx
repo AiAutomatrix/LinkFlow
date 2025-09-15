@@ -262,18 +262,6 @@ const ProfileLayout = ({ user, links }: { user: UserProfile, links: LinkType[]})
   const socialLinks = links.filter(l => l.isSocial);
   const supportLinks = links.filter(l => l.isSupport);
   const regularLinks = links.filter(l => !l.isSocial && !l.isSupport);
-  const customStyles: React.CSSProperties = {};
-  
-  if (user.theme === 'custom') {
-    if (user.customThemeGradient?.from && user.customThemeGradient?.to) {
-      (customStyles as any)['--background-gradient-from'] = user.customThemeGradient.from;
-      (customStyles as any)['--background-gradient-to'] = user.customThemeGradient.to;
-    }
-    if (user.customButtonGradient?.from && user.customButtonGradient?.to) {
-      (customStyles as any)['--btn-gradient-from'] = user.customButtonGradient.from;
-      (customStyles as any)['--btn-gradient-to'] = user.customButtonGradient.to;
-    }
-  }
 
   return (
     <div
@@ -281,7 +269,6 @@ const ProfileLayout = ({ user, links }: { user: UserProfile, links: LinkType[]})
       data-theme={user.theme || 'light'}
       data-style={user.buttonStyle || 'solid'}
       className="relative flex flex-col bg-background h-full"
-      style={customStyles}
     >
       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
           {user.animatedBackground && <AnimatedBackground />}
