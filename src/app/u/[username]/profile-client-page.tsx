@@ -1,4 +1,3 @@
-
 "use client";
 import type { Link as LinkType, UserProfile } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -15,7 +14,6 @@ const globalCSS = `
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
 body {
   font-family: 'Inter', sans-serif;
   overflow-x: hidden; /* Prevent horizontal scroll */
@@ -25,7 +23,6 @@ body {
 body::-webkit-scrollbar {
   display: none; /* Safari and Chrome */
 }
-
 @layer base {
   :root, [data-theme="light"] {
     --background: 0 0% 100%;
@@ -49,7 +46,6 @@ body::-webkit-scrollbar {
     --ring: 222.2 84% 4.9%;
     --radius: 0.5rem;
   }
-
   [data-theme="dark"] {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
@@ -130,9 +126,7 @@ body::-webkit-scrollbar {
     --input: #E5E7EB;
     --ring: var(--btn-gradient-to, #AAAAAA);
   }
-
 }
-
 @layer base {
   * {
     @apply border-border;
@@ -141,18 +135,15 @@ body::-webkit-scrollbar {
     @apply bg-background text-foreground;
   }
 }
-
 /* ------------------------------ */
 /* ----- Button Style Logic ----- */
 /* ------------------------------ */
-
 /* Default Gradient Style */
 [data-style="gradient"] .link-button {
     background-image: linear-gradient(to right, hsl(var(--secondary)), hsl(var(--primary)));
     border: none;
     color: hsl(var(--primary-foreground));
 }
-
 /* Custom Solid Button Styles for Specific Themes */
 [data-style="solid"][data-theme="gradient-sunset"] .link-button {
   background-image: linear-gradient(to right, hsl(340, 90%, 60%), hsl(20, 95%, 60%));
@@ -180,18 +171,15 @@ body::-webkit-scrollbar {
   color: #fff;
   border: 1px solid #ffffff30;
 }
-
 [data-theme="custom"][data-style="gradient"] .link-button {
     background-image: linear-gradient(to right, var(--btn-gradient-from), var(--btn-gradient-to));
     border: none;
 }
-
 /* This is needed for the main page background to be transparent when a custom gradient is active */
 [data-theme="custom"] > .bg-background {
     background-color: transparent;
 }
 `;
-
 
 // ---------- Helper Components ----------
 const SocialIcon = ({ platform }: { platform: string }) => {
@@ -204,22 +192,18 @@ const SocialIcon = ({ platform }: { platform: string }) => {
     default: return null;
   }
 };
-
 const EthIcon = () => (
   <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0">
     <title>Ethereum</title>
     <path d="M11.944 17.97L4.58 13.62 11.943 24l7.365-10.38-7.364 4.35zM12.056 0L4.69 12.223l7.366-4.354 7.365 4.354L12.056 0z" />
   </svg>
 );
-
 const SolIcon = () => (
     <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0 fill-current">
         <title>Solana</title>
         <path d="M4.236.427a.6.6 0 00-.532.127.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533V-.001a.6.6 0 00-.128-.532.6.6 0 00-.49-.28L4.236.427zm10.02 6.046a.6.6 0 00-.532.127a.6.6 0 00-.28.491v4.54a.6.6 0 00.28.49.6.6 0 00.532.128l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.532V5.76a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12zm-4.383 6.64a.6.6 0 00-.532.127a.6.6 0 00-.28.49v4.54a.6.6 0 00.28.491.6.6 0 00.532.127l4.54-1.12a.6.6 0 00.49-.28.6.6 0 00.128-.533v-4.54a.6.6 0 00-.128-.532.6.6 0 00-.49-.28l-4.54 1.12z" />
     </svg>
 );
-
-
 const CryptoLog = ({ icon, name, address, linkId }: { icon: React.ReactNode, name: string, address: string, linkId: string }) => (
   <div data-cryptolog-id={linkId} className="flex items-center justify-between gap-4 text-sm font-mono">
     <div className="flex items-center gap-2 text-muted-foreground shrink-0">
@@ -232,7 +216,6 @@ const CryptoLog = ({ icon, name, address, linkId }: { icon: React.ReactNode, nam
     </button>
   </div>
 );
-
 const SupportLinks = ({ links }: { links: LinkType[] }) => {
     const bmcLink = links.find(l => l.title === 'Buy Me A Coffee');
     const etLink = links.find(l => l.title === 'E-Transfer');
@@ -240,11 +223,9 @@ const SupportLinks = ({ links }: { links: LinkType[] }) => {
     const ethLink = links.find(l => l.title === 'ETH');
     const solLink = links.find(l => l.title === 'SOL');
     const hasCrypto = btcLink || ethLink || solLink;
-
     if (!bmcLink && !etLink && !hasCrypto) {
         return null;
     }
-
     return (
         <div className="mt-6 w-full max-w-md mx-auto">
             <h3 className="text-xs font-semibold uppercase text-muted-foreground text-center mb-3">Support Me</h3>
@@ -274,17 +255,16 @@ const SupportLinks = ({ links }: { links: LinkType[] }) => {
         </div>
     );
 };
-
 // This is a self-contained layout component that mirrors the logic of PublicProfilePreview
 // It correctly handles applying preset theme attributes and custom gradient styles.
 const ProfileLayout = ({ user, links }: { user: UserProfile, links: LinkType[]}) => {
   const getInitials = (name: string = '') => name.split(' ').map(n => n[0]).join('');
-
   const socialLinks = links.filter(l => l.isSocial);
   const supportLinks = links.filter(l => l.isSupport);
   const regularLinks = links.filter(l => !l.isSocial && !l.isSupport);
-
   const customStyles: React.CSSProperties = {};
+  // The inline CSS variables applied here are used for when the layout is rendered in React
+  // (for dev preview) — but for the iframe we'll inject these variables on the iframe body.
   if (user.theme === 'custom') {
     if (user.customThemeGradient?.from && user.customThemeGradient?.to) {
       (customStyles as any)['--background-gradient-from'] = user.customThemeGradient.from;
@@ -295,7 +275,6 @@ const ProfileLayout = ({ user, links }: { user: UserProfile, links: LinkType[]})
       (customStyles as any)['--btn-gradient-to'] = user.customButtonGradient.to;
     }
   }
-
   return (
     <div
       id="root"
@@ -323,7 +302,6 @@ const ProfileLayout = ({ user, links }: { user: UserProfile, links: LinkType[]})
               </a>
             ))}
           </div>
-
           <div className="mt-6 space-y-3 w-full max-w-xs mx-auto">
             {regularLinks.map((link) => (
               <a
@@ -350,8 +328,6 @@ const ProfileLayout = ({ user, links }: { user: UserProfile, links: LinkType[]})
     </div>
   );
 }
-
-
 // ---------- Main Component ----------
 export default function ProfileClientPage({ user, links: serverLinks }: { user: UserProfile; links: LinkType[] }) {
   const [srcDoc, setSrcDoc] = useState('');
@@ -362,8 +338,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         // IMPORTANT: Add origin check in production
         // if (event.origin !== 'https://your-domain.com') return;
         
-        const { type, payload } = event.data;
-
+        const { type, payload } = event.data || {};
         if (type === 'COPY_TO_CLIPBOARD') {
             navigator.clipboard.writeText(payload.text).then(() => {
                 toast({ title: "Copied to clipboard!" });
@@ -381,12 +356,10 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
             });
         }
     }
-
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, [toast, user.uid]);
-
-
+  
   useEffect(() => {
     const toDate = (date: any): Date | null => {
         if (!date) return null;
@@ -395,7 +368,6 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         if (typeof date === 'string') return new Date(date);
         return null;
     };
-
     const now = new Date();
     const activeLinks = serverLinks.filter(link => {
       if (!link.active) return false;
@@ -405,7 +377,6 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
       if (endDate && now > endDate) return false;
       return true;
     });
-
     const unescapeHtml = (html: string) => {
         if (typeof window === 'undefined' || !html) return html;
         const ta = document.createElement("textarea");
@@ -435,35 +406,71 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
             }, '*'); // Use a specific origin in production
         }
     `;
-
     // Render the ProfileLayout component to a static HTML string.
     let pageContent = ReactDOMServer.renderToStaticMarkup(
       <ProfileLayout user={user} links={activeLinks} />
     );
     
-    // Add onclick handlers for tracking clicks.
-    // This is done via string replacement on the static HTML.
+    // Add onclick handlers for tracking clicks (on non-support links).
     pageContent = pageContent.replace(/data-link-id="([^"]+)"/g, (match, linkId) => {
         const link = activeLinks.find(l => l.id === linkId);
-        // Exclude support links from this generic tracker; they're handled separately.
         if (link && !link.isSupport) {
             return `${match} onclick="trackClick('${linkId}')"`;
         }
         return match;
     });
-
     const etLink = activeLinks.find(l => l.isSupport && l.title === 'E-Transfer');
     if (etLink) {
         pageContent = pageContent.replace(`data-etransfer-id="${etLink.id}"`, `data-etransfer-id="${etLink.id}" onclick="handleCopy('${etLink.url.replace('mailto:', '')}', '${etLink.id}')"`);
     }
-
     activeLinks.filter(l => l.isSupport && ['BTC', 'ETH', 'SOL'].includes(l.title)).forEach(link => {
         pageContent = pageContent.replace(`data-cryptolog-id="${link.id}"`, `data-cryptolog-id="${link.id}" onclick="handleCopy('${link.url}', '${link.id}')"`);
     });
 
     const rawEmbedScript = user.bot?.embedScript || '';
     const embedScript = unescapeHtml(rawEmbedScript);
+
+    // Build the inline style for the iframe <body> when theme is custom (or for extra overrides)
+    const htmlStyleParts: string[] = [];
+    // Support gradients specifically stored as customThemeGradient & customButtonGradient
+    if (user.theme === 'custom') {
+      if (user.customThemeGradient?.from) {
+        htmlStyleParts.push(`--background-gradient-from: ${user.customThemeGradient.from}`);
+      }
+      if (user.customThemeGradient?.to) {
+        htmlStyleParts.push(`--background-gradient-to: ${user.customThemeGradient.to}`);
+      }
+      if (user.customButtonGradient?.from) {
+        htmlStyleParts.push(`--btn-gradient-from: ${user.customButtonGradient.from}`);
+      }
+      if (user.customButtonGradient?.to) {
+        htmlStyleParts.push(`--btn-gradient-to: ${user.customButtonGradient.to}`);
+      }
+    }
     
+    // Also apply any arbitrary theme colors stored on the user object in common keys:
+    const possibleCustomContainers = ['themeColors', 'themeData', 'customColors', 'appearance', 'colors'];
+    possibleCustomContainers.forEach(key => {
+        const container = (user as any)[key];
+        if (container && typeof container === 'object') {
+            Object.entries(container).forEach(([varName, varValue]) => {
+                // Ensure variable names start with "--" — if not, assume they are keys like "background" and map to "--background"
+                const cssVarName = varName.startsWith('--') ? varName : `--${varName}`;
+                // Only add if value is non-empty
+                if (varValue !== null && varValue !== undefined && String(varValue).length > 0) {
+                    htmlStyleParts.push(`${cssVarName}: ${String(varValue)}`);
+                }
+            });
+        }
+    });
+
+    // Build final style string (semicolon separated)
+    const bodyInlineStyle = htmlStyleParts.length ? htmlStyleParts.join('; ') + ';' : '';
+
+    // Decide data-theme and data-style to put on <body> for CSS to apply properly
+    const themeAttr = encodeURIComponent(String(user.theme || 'light'));
+    const styleAttr = encodeURIComponent(String(user.buttonStyle || 'solid'));
+
     const autoOpenScript = user.bot?.autoOpen ? `
         <script>
             const initBotpress = () => {
@@ -479,9 +486,12 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         </script>
     ` : '';
 
+    // Final HTML: put data-theme & data-style on the <body> element, and inject any custom CSS variables into body style.
+    // This ensures selectors like [data-theme="cyberpunk"] and [data-theme="custom"] > .bg-background behave as expected.
     const finalHtml = `
       <html style="height: 100vh; overflow: hidden;">
         <head>
+          <meta name="viewport" content="width=device-width,initial-scale=1" />
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
           <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -489,7 +499,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
           <style>${globalCSS}</style>
           ${embedScript}
         </head>
-        <body style="height: 100%; margin: 0; background-color: transparent;">
+        <body data-theme="${user.theme || 'light'}" data-style="${user.buttonStyle || 'solid'}" style="height: 100%; margin: 0; background-color: transparent; ${bodyInlineStyle}">
           ${pageContent}
           <script>
             ${iframeScript}
@@ -498,9 +508,7 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         </body>
       </html>
     `;
-
     setSrcDoc(finalHtml);
-
   }, [user, serverLinks, toast]);
 
   return (
@@ -514,5 +522,3 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
     </div>
   );
 }
-
-    
