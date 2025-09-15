@@ -14,6 +14,8 @@ export interface UserProfile {
   buttonStyle: 'solid' | 'gradient';
   customThemeGradient?: { from?: string; to?: string };
   customButtonGradient?: { from?: string; to?: string };
+  themeColors?: Record<string, string>;
+  customColors?: Record<string, string>;
   bot: {
     embedScript: string;
     autoOpen?: boolean;
@@ -34,5 +36,3 @@ export interface Link {
   startDate?: Timestamp | Date | string;
   endDate?: Timestamp | Date | string;
 }
-
-    

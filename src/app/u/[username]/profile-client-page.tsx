@@ -274,6 +274,14 @@ const ProfileLayout = ({ user, links }: { user: UserProfile, links: LinkType[]})
       (customStyles as any)['--btn-gradient-from'] = user.customButtonGradient.from;
       (customStyles as any)['--btn-gradient-to'] = user.customButtonGradient.to;
     }
+    // If your appearance page stores arbitrary custom CSS vars on user.themeColors / user.customColors,
+    // we can apply them here for the in-app preview as well.
+    if (user.themeColors && typeof user.themeColors === 'object') {
+      Object.entries(user.themeColors).forEach(([k, v]) => (customStyles as any)[k] = String(v));
+    }
+    if (user.customColors && typeof user.customColors === 'object') {
+      Object.entries(user.customColors).forEach(([k, v]) => (customStyles as any)[k] = String(v));
+    }
   }
   return (
     <div
@@ -447,21 +455,20 @@ export default function ProfileClientPage({ user, links: serverLinks }: { user: 
         htmlStyleParts.push(`--btn-gradient-to: ${user.customButtonGradient.to}`);
       }
     }
-    
     // Also apply any arbitrary theme colors stored on the user object in common keys:
     const possibleCustomContainers = ['themeColors', 'themeData', 'customColors', 'appearance', 'colors'];
     possibleCustomContainers.forEach(key => {
-        const container = (user as any)[key];
-        if (container && typeof container === 'object') {
-            Object.entries(container).forEach(([varName, varValue]) => {
-                // Ensure variable names start with "--" — if not, assume they are keys like "background" and map to "--background"
-                const cssVarName = varName.startsWith('--') ? varName : `--${varName}`;
-                // Only add if value is non-empty
-                if (varValue !== null && varValue !== undefined && String(varValue).length > 0) {
-                    htmlStyleParts.push(`${cssVarName}: ${String(varValue)}`);
-                }
-            });
-        }
+      const container = (user as any)[key];
+      if (container && typeof container === 'object') {
+        Object.entries(container).forEach(([varName, varValue]) => {
+          // Ensure variable names start with "--" — if not, assume they are keys like "background" and map to "--background"
+          const cssVarName = varName.startsWith('--') ? varName : `--${varName}`;
+          // Only add if value is non-empty
+          if (varValue !== null && varValue !== undefined && String(varValue).length > 0) {
+            htmlStyleParts.push(`${cssVarName}: ${String(varValue)}`);
+          }
+        });
+      }
     });
 
     // Build final style string (semicolon separated)

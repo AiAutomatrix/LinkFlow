@@ -54,6 +54,10 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
             theme: 'light',
             animatedBackground: false,
             buttonStyle: 'solid',
+            customThemeGradient: { from: '#FFFFFF', to: '#E2E8F0' },
+            customButtonGradient: { from: '#3B82F6', to: '#9333EA' },
+            themeColors: {},
+            customColors: {},
             bot: { embedScript: '', autoOpen: false },
             createdAt: serverTimestamp(),
           };
@@ -116,6 +120,10 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
       theme: 'light',
       animatedBackground: false,
       buttonStyle: 'solid',
+      customThemeGradient: { from: '#FFFFFF', to: '#E2E8F0' },
+      customButtonGradient: { from: '#3B82F6', to: '#9333EA' },
+      themeColors: {},
+      customColors: {},
       bot: { embedScript: '', autoOpen: false },
     };
     // The onAuthStateChanged listener will handle creating the profile doc
@@ -174,5 +182,3 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
 };
 
 export default AuthProvider;
-
-    
